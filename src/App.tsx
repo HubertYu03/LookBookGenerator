@@ -1,4 +1,4 @@
-import { PDFViewer, pdf } from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
 import LookBook from "./pdf/LookBook";
 import { Button } from "./components/ui/button";
 
