@@ -34,7 +34,7 @@ type LookBookProps = {
 // Create Document Component
 const LookBook = ({ section_one, section_two, image }: LookBookProps) => (
   <Document>
-    <Page size="A4" style={styles.page}>
+    <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.section}>
         <Text>{section_one}</Text>
       </View>
