@@ -18,7 +18,7 @@ import _ from "lodash";
 // Register Font
 Font.register({
   family: "Montserrat",
-  src: "http://fonts.gstatic.com/s/montserrat/v10/zhcz-_WihjSQC0oHJ9TCYC3USBnSvpkopQaUR-2r7iU.ttf",
+  src: "https://fonts.gstatic.com/s/montserrat/v10/zhcz-_WihjSQC0oHJ9TCYC3USBnSvpkopQaUR-2r7iU.ttf",
 });
 
 // Create styles
