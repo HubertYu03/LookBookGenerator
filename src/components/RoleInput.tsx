@@ -1,12 +1,12 @@
 // Individual actor
 
 // Importing dependencies
-import { Label } from "@radix-ui/react-label";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { Input } from "./ui/input";
 
 // Importing global types
 import type { Role } from "@/types/global";
+
+// Import UI Components
 import {
   Card,
   CardAction,
@@ -16,14 +16,26 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { toast } from "sonner";
+import ImagesPreview from "./ImagesPreview";
 
 type RoleInputProps = {
-  id: number;
+  role_id: number;
   roles: Role[];
   updateRoles: Dispatch<SetStateAction<Role[]>>;
+  currentEmpty: number;
+  setCurrentEmpty: Dispatch<SetStateAction<number>>;
 };
 
-const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
+const RoleInput = ({
+  role_id,
+  roles,
+  updateRoles,
+  currentEmpty,
+  setCurrentEmpty,
+}: RoleInputProps) => {
   // States for fields
   const [roleName, setRoleName] = useState<string | null>(null);
   const [wardrobeStyle, setWardrobeStyle] = useState<string | null>(null);
@@ -34,14 +46,23 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
 
   // Helper function to remove a role
   function remove_role() {
-    updateRoles(roles.filter((role) => role.id != id));
+    // Clear the toasts
+    toast.dismiss();
+
+    // Check if the deletion would leave nothing
+    if (roles.filter((role) => role.id != role_id).length == 0) {
+      toast.warning("You must have at least one role!");
+    } else {
+      updateRoles(roles.filter((role) => role.id != role_id));
+      toast.success(`Role #${role_id} successfully deleted!`);
+    }
   }
 
   // Helper function to update the roles on the main page
   function update_role() {
     // Create temp role
     const updated_role: Role = {
-      id: id,
+      id: role_id,
       roleName: roleName,
       wardrobeStyle: wardrobeStyle,
       colorPalette: colorPalette,
@@ -51,7 +72,11 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
     };
 
     // Set the state
-    updateRoles(roles.map((role) => (role.id === id ? updated_role : role)));
+    updateRoles(
+      roles.map((role) => (role.id === role_id ? updated_role : role))
+    );
+
+    setCurrentEmpty(0);
   }
 
   // Handle image file selection
@@ -75,6 +100,8 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
                 if (typeof result === "string") {
                   if (field == "styling") {
                     setStylingSuggestions((prev) => [...prev, result]);
+                  } else if (field == "accessories") {
+                    setAccessories((prev) => [...prev, result]);
                   }
                 }
               };
@@ -118,9 +145,12 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
   ]);
 
   return (
-    <Card>
+    <Card
+      className={currentEmpty == role_id ? "border-red-500" : ""}
+      id={`role-${role_id}`}
+    >
       <CardHeader>
-        <CardTitle className="text-2xl">Role #{id}</CardTitle>
+        <CardTitle className="text-2xl">Role #{role_id}</CardTitle>
         <CardAction>
           <Button
             variant="destructive"
@@ -196,7 +226,7 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
             <img
               src={colorPalette}
               alt="color_palette"
-              className="h-40 object-cover"
+              className="h-28 object-cover w-1/2"
             />
           )}
         </div>
@@ -224,18 +254,31 @@ const RoleInput = ({ id, roles, updateRoles }: RoleInputProps) => {
             />
           </div>
           {stylingSuggestions.length > 0 && (
-            <div className="flex flex-wrap gap-4">
-              {stylingSuggestions.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt={`Styling Suggestion ${i + 1}`}
-                  className="h-32 w-32 object-cover rounded border"
-                />
-              ))}
-            </div>
+            <ImagesPreview images={stylingSuggestions} width="36" height="48" />
           )}
         </div>
+
+        <div className="grid w-1/3 max-w-sm items-center gap-3">
+          <Label>
+            Upload Accessories
+            <span
+              className={accessories.length != 0 ? "invisible" : "text-red-500"}
+            >
+              *
+            </span>
+          </Label>
+          <Input
+            type="file"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
+            onChange={(e) => {
+              handleImageChange(e, "accessories", true);
+            }}
+          />
+        </div>
+        {accessories.length != 0 && (
+          <ImagesPreview images={accessories} width="32" height="32" />
+        )}
       </CardContent>
     </Card>
   );
