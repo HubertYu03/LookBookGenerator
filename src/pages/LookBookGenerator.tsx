@@ -14,9 +14,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 
 // Importing Icons
-import { ChevronUp, Plus, FileText, CircleQuestionMark } from "lucide-react";
+import {
+  ChevronUp,
+  Plus,
+  FileText,
+  CircleQuestionMark,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
@@ -24,6 +32,7 @@ import RoleInput from "@/components/RoleInput";
 
 // Import Global Types
 import type { Role } from "@/types/global";
+import { DemoContent } from "@/assets/DemoContent";
 
 const LookBookGenerator = () => {
   // General Information
@@ -35,7 +44,7 @@ const LookBookGenerator = () => {
   const [currentEmpty, setCurrentEmpty] = useState<number>(0);
 
   // Demo states
-  const [currentDemoStep, setCurrentDemoStep] = useState<number | null>(null);
+  const [currentDemoStep, setCurrentDemoStep] = useState<number>(0);
 
   // Create an initial role
   let inital_role: Role = {
@@ -81,15 +90,15 @@ const LookBookGenerator = () => {
   }
 
   // Helper function to jump to a selected field
-  //   function jump_to_field(id: string) {
-  //     // Get the target we want to jump to
-  //     const target = document.getElementById(id);
+  function jump_to_field(id: string) {
+    // Get the target we want to jump to
+    const target = document.getElementById(id);
 
-  //     // Scroll to target
-  //     if (target) {
-  //       target.scrollIntoView({ behavior: "smooth" });
-  //     }
-  //   }
+    // Scroll to target
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  }
 
   // Helper function to jump to selected role id
   function jump_to_role(id: string) {
@@ -174,6 +183,13 @@ const LookBookGenerator = () => {
 
   // Helper function to begin the demo
   function start_demo() {
+    // Clear any toasts
+    toast.dismiss();
+
+    // Clear any errors
+    setCurrentError("");
+    setCurrentEmpty(0);
+
     // Disable scrolling
     document.body.style.overflow = "hidden";
 
@@ -181,38 +197,120 @@ const LookBookGenerator = () => {
     setCurrentDemoStep(1);
   }
 
+  // Helper function to iterate the demo one step
+  function demo_next_step() {
+    if (currentDemoStep) {
+      if (currentDemoStep == DemoContent.length) {
+        end_demo();
+        return;
+      }
+      console.log(currentDemoStep);
+
+      setCurrentDemoStep((prev) => prev + 1);
+      jump_to_field(DemoContent[currentDemoStep].id);
+    }
+  }
+
+  function demo_previous_step() {
+    if (currentDemoStep) {
+      if (currentDemoStep > 1) {
+        const previousStep = currentDemoStep - 1;
+        setCurrentDemoStep(previousStep);
+        jump_to_field(DemoContent[previousStep - 1].id);
+      }
+    }
+  }
+
   // Helper Function to end the demo
   function end_demo() {
     // Renable scrolling
     document.body.style.overflow = "auto";
 
-    setCurrentDemoStep(null);
+    console.log("demo ended");
+
+    setCurrentDemoStep(0);
   }
 
   return (
-    <div className="p-6 space-y-4" id="top-of-page">
+    <div className="p-6 space-y-4 relative z-0" id="top-of-page">
       {/* Overlay - dims the entire page for the demo */}
-      {currentDemoStep && (
+      {currentDemoStep != 0 && (
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-30" />
+      )}
+
+      {currentDemoStep != 0 && (
         <div
-          className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-40"
-          onClick={end_demo}
-        />
+          className={`fixed top-0 left-0 w-screen h-screen flex justify-center items-end pb-5 z-50 ${
+            currentDemoStep === 5 ? " pb-20" : ""
+          }`}
+        >
+          <div className="w-1/2" onClick={(e) => e.stopPropagation()}>
+            <Card className="p-4 flex justify-end items-end shadow-md">
+              {DemoContent[currentDemoStep - 1] && (
+                <div className="text-center w-full">
+                  {DemoContent[currentDemoStep - 1].text}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button
+                  className="hover:cursor-pointer w-30"
+                  onClick={end_demo}
+                >
+                  End Demo
+                </Button>
+
+                {currentDemoStep > 1 && (
+                  <Button
+                    className="hover:cursor-pointer w-30"
+                    onClick={demo_previous_step}
+                  >
+                    Previous
+                    <ArrowLeft />
+                  </Button>
+                )}
+
+                <Button
+                  className="hover:cursor-pointer w-30"
+                  onClick={demo_next_step}
+                >
+                  {currentDemoStep == DemoContent.length ? (
+                    "Finish"
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
       )}
 
       {/* Back to top button */}
-      <Button
-        className="fixed bottom-1 right-5 hover:cursor-pointer"
-        size="lg"
-        onClick={() => {
-          // Jump to the top of the page
-          const target: HTMLElement | null =
-            document.getElementById(`top-of-page`);
-          target?.scrollIntoView({ behavior: "smooth" });
-        }}
+      <div
+        id="step-5"
+        className={`fixed bottom-1 right-5${
+          DemoContent[currentDemoStep - 1]?.id === "step-5"
+            ? " z-40 bg-white p-3 max-w-lg rounded-sm fixed bottom-1 right-5"
+            : ""
+        }`}
       >
-        Back to Top
-        <ChevronUp />
-      </Button>
+        <Button
+          className="hover:cursor-pointer"
+          size="lg"
+          onClick={() => {
+            // Jump to the top of the page
+            const target: HTMLElement | null =
+              document.getElementById(`top-of-page`);
+            target?.scrollIntoView({ behavior: "smooth" });
+          }}
+        >
+          Back to Top
+          <ChevronUp />
+        </Button>
+      </div>
 
       <div className="flex flex-row justify-between">
         <div className="text-5xl font-semibold">Create New Lookbook</div>
@@ -226,19 +324,33 @@ const LookBookGenerator = () => {
             How To Use
             <CircleQuestionMark />
           </Button>
-          <Button
-            className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-            size="lg"
-            onClick={generate_look_book}
+          <div
+            className={`${
+              currentDemoStep - 1 === 7
+                ? " z-40 bg-white p-3 max-w-lg rounded-sm"
+                : ""
+            }`}
           >
-            Generate Lookbook
-            <FileText />
-          </Button>
+            <Button
+              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+              size="lg"
+              onClick={generate_look_book}
+            >
+              Generate Lookbook
+              <FileText />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Project Name input */}
-      <div className="grid w-full items-center gap-3">
+      <div
+        className={`flex flex-col items-start gap-3${
+          currentDemoStep === 2
+            ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+            : ""
+        }`}
+      >
         <Label className="text-2xl">
           Enter Project Name
           <span className={projectName ? "invisible" : "text-red-500"}>*</span>
@@ -283,15 +395,32 @@ const LookBookGenerator = () => {
       </div>
 
       {/* Adding Roles */}
-      <div className="flex flex-row justify-between items-center mt-10">
-        <Button
-          className="hover:cursor-pointer"
-          size="lg"
-          onClick={create_new_role}
+      <div
+        className="flex flex-row justify-between items-center mt-10"
+        id="step-3"
+      >
+        <div
+          className={`${
+            currentDemoStep === 4
+              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+              : ""
+          }`}
         >
-          Add Role <Plus />
-        </Button>
-        <div className="flex flex-row justify-between items-center gap-2">
+          <Button
+            className="hover:cursor-pointer"
+            size="lg"
+            onClick={create_new_role}
+          >
+            Add Role <Plus />
+          </Button>
+        </div>
+        <div
+          className={`flex flex-row justify-between items-center gap-2${
+            currentDemoStep === 6
+              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+              : ""
+          }`}
+        >
           <Label className="text-lg font-light">Jump to Role:</Label>
           <Select
             onValueChange={(id) => {
@@ -314,25 +443,42 @@ const LookBookGenerator = () => {
 
       <Label className="text-2xl">Add Roles:</Label>
 
-      {roles.map((role, index) => (
-        <RoleInput
-          key={index}
-          role_id={role.id}
-          updateRoles={setRoles}
-          roles={roles}
-          currentEmpty={Number(currentEmpty)}
-          setCurrentEmpty={setCurrentEmpty}
-        />
-      ))}
+      <div
+        id="step-2"
+        className={`${
+          currentDemoStep === 3
+            ? "relative z-40 bg-white p-3 w-full rounded-sm"
+            : ""
+        }`}
+      >
+        {roles.map((role, index) => (
+          <RoleInput
+            key={index}
+            role_id={role.id}
+            updateRoles={setRoles}
+            roles={roles}
+            currentEmpty={Number(currentEmpty)}
+            setCurrentEmpty={setCurrentEmpty}
+          />
+        ))}
+      </div>
 
-      <div className="flex items-center justify-center">
-        <Button
-          className="w-1/2 hover:cursor-pointer"
-          onClick={create_new_role}
+      <div id="step-4" className={`flex items-center justify-center `}>
+        <div
+          className={`w-1/2 ${
+            currentDemoStep === 5
+              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+              : ""
+          }`}
         >
-          Add Role
-          <Plus />
-        </Button>
+          <Button
+            className="w-full hover:cursor-pointer"
+            onClick={create_new_role}
+          >
+            Add Role
+            <Plus />
+          </Button>
+        </div>
       </div>
     </div>
   );

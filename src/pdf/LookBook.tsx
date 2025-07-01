@@ -212,6 +212,7 @@ const LookBook = ({
                   (styles.sectionTitle,
                   {
                     fontSize: "30px",
+                    fontFamily: "Montserrat",
                   })
                 }
               >
@@ -221,7 +222,11 @@ const LookBook = ({
               {/* Loading the images */}
               <View style={styles.stylingImagesContainer}>
                 {chunk.map((style, index) => (
-                  <Image src={style} key={index} style={styles.stylingImg} />
+                  <Image
+                    src={style.src}
+                    key={index}
+                    style={styles.stylingImg}
+                  />
                 ))}
                 {6 - chunk.length > 0 &&
                   Array.from({ length: 6 - chunk.length }, (_, i) => (
@@ -239,8 +244,8 @@ const LookBook = ({
               <View style={styles.accessoriesImgContainer}>
                 {accessoryChunks[index]?.map((accessory) => (
                   <Image
-                    src={accessory}
-                    key={accessory}
+                    src={accessory.src}
+                    key={accessory.id}
                     style={styles.accesoryImg}
                   />
                 ))}
@@ -313,6 +318,7 @@ const LookBook = ({
                   (styles.sectionTitle,
                   {
                     fontSize: "30px",
+                    fontFamily: "Montserrat",
                   })
                 }
               >
@@ -322,7 +328,11 @@ const LookBook = ({
               {/* Loading the images */}
               <View style={styles.stylingImagesContainer}>
                 {stylingChunks[index]?.map((style, index) => (
-                  <Image src={style} key={index} style={styles.stylingImg} />
+                  <Image
+                    src={style.src}
+                    key={index}
+                    style={styles.stylingImg}
+                  />
                 ))}
                 {6 - stylingChunks[index]?.length > 0 &&
                   Array.from(
@@ -352,8 +362,8 @@ const LookBook = ({
               <View style={styles.accessoriesImgContainer}>
                 {chunk.map((accessory) => (
                   <Image
-                    src={accessory}
-                    key={accessory}
+                    src={accessory.src}
+                    key={accessory.id}
                     style={styles.accesoryImg}
                   />
                 ))}

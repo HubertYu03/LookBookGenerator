@@ -4,7 +4,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 // Importing global types
-import type { Role } from "@/types/global";
+import type { Img, Role } from "@/types/global";
 
 // Import UI Components
 import {
@@ -41,8 +41,13 @@ const RoleInput = ({
   const [wardrobeStyle, setWardrobeStyle] = useState<string | null>(null);
   const [colorPalette, setColorPalette] = useState<string | null>(null);
   const [additionalNotes, setAdditionNotes] = useState<string | null>(null);
-  const [stylingSuggestions, setStylingSuggestions] = useState<string[]>([]);
-  const [accessories, setAccessories] = useState<string[]>([]);
+  const [stylingSuggestions, setStylingSuggestions] = useState<Img[]>([]);
+  const [accessories, setAccessories] = useState<Img[]>([]);
+
+  // Helper function to create a random image id for deletion tracking
+  function generate_image_id(): number {
+    return Math.floor(Math.random() * 9000000) + 1000000;
+  }
 
   // Helper function to remove a role
   function remove_role() {
@@ -79,6 +84,15 @@ const RoleInput = ({
     setCurrentEmpty(0);
   }
 
+  // Helper function to handle image removal
+  function remove_image(imgID: number) {
+    // Remove the selected img from their respective list
+    setStylingSuggestions(
+      stylingSuggestions.filter((image) => image.id != imgID)
+    );
+    setAccessories(accessories.filter((image) => image.id != imgID));
+  }
+
   // Handle image file selection
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -98,10 +112,14 @@ const RoleInput = ({
               reader.onload = (event) => {
                 const result = event.target?.result;
                 if (typeof result === "string") {
+                  const new_img: Img = {
+                    src: result,
+                    id: generate_image_id(),
+                  };
                   if (field == "styling") {
-                    setStylingSuggestions((prev) => [...prev, result]);
+                    setStylingSuggestions((prev) => [...prev, new_img]);
                   } else if (field == "accessories") {
-                    setAccessories((prev) => [...prev, result]);
+                    setAccessories((prev) => [...prev, new_img]);
                   }
                 }
               };
@@ -257,6 +275,7 @@ const RoleInput = ({
             <ImagesPreview
               images={stylingSuggestions}
               sizeClasses="w-36 h-48"
+              removeImage={remove_image}
             />
           )}
         </div>
@@ -280,7 +299,11 @@ const RoleInput = ({
           />
         </div>
         {accessories.length != 0 && (
-          <ImagesPreview images={accessories} sizeClasses="w-32 h-32" />
+          <ImagesPreview
+            images={accessories}
+            sizeClasses="w-32 h-32"
+            removeImage={remove_image}
+          />
         )}
       </CardContent>
     </Card>
