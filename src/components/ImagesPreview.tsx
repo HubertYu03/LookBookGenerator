@@ -1,5 +1,3 @@
-import React from "react";
-
 type ImagesPreviewProps = {
   images: string[];
   width: string;

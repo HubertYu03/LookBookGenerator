@@ -144,7 +144,7 @@ const LookBook = ({
     </Page>
 
     {roles.map((role) =>
-      _.chunk(role.stylingSuggestions, 6).map((chunk, index) => (
+      _.chunk(role.stylingSuggestions, 6).map((chunk) => (
         <Page
           size="A4"
           orientation="landscape"
@@ -183,7 +183,7 @@ const LookBook = ({
                 <Image src={style} key={index} style={styles.stylingImg} />
               ))}
               {6 - chunk.length > 0 &&
-                Array.from({ length: 6 - chunk.length }, (_, index) => (
+                Array.from({ length: 6 - chunk.length }, (_) => (
                   <View style={styles.stylingEmptyImg}>{""}</View>
                 ))}
             </View>
