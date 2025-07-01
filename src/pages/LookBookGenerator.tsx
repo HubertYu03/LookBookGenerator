@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 // Importing Icons
-import { ChevronUp, Plus, FileText } from "lucide-react";
+import { ChevronUp, Plus, FileText, CircleQuestionMark } from "lucide-react";
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
@@ -33,6 +33,9 @@ const LookBookGenerator = () => {
   const [currentError, setCurrentError] = useState<string>("");
 
   const [currentEmpty, setCurrentEmpty] = useState<number>(0);
+
+  // Demo states
+  const [currentDemoStep, setCurrentDemoStep] = useState<number | null>(null);
 
   // Create an initial role
   let inital_role: Role = {
@@ -69,6 +72,10 @@ const LookBookGenerator = () => {
     };
 
     setRoles((roles) => [...roles, new_role]);
+
+    setTimeout(() => {
+      jump_to_role(String(new_id));
+    }, 0);
 
     toast.success(`Role #${new_id} successfully created!`);
   }
@@ -165,8 +172,33 @@ const LookBookGenerator = () => {
     window.open(url, "_blank");
   };
 
+  // Helper function to begin the demo
+  function start_demo() {
+    // Disable scrolling
+    document.body.style.overflow = "hidden";
+
+    console.log("Demo started");
+    setCurrentDemoStep(1);
+  }
+
+  // Helper Function to end the demo
+  function end_demo() {
+    // Renable scrolling
+    document.body.style.overflow = "auto";
+
+    setCurrentDemoStep(null);
+  }
+
   return (
     <div className="p-6 space-y-4" id="top-of-page">
+      {/* Overlay - dims the entire page for the demo */}
+      {currentDemoStep && (
+        <div
+          className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-40"
+          onClick={end_demo}
+        />
+      )}
+
       {/* Back to top button */}
       <Button
         className="fixed bottom-1 right-5 hover:cursor-pointer"
@@ -184,13 +216,25 @@ const LookBookGenerator = () => {
 
       <div className="flex flex-row justify-between">
         <div className="text-5xl font-semibold">Create New Lookbook</div>
-        <Button
-          className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-          onClick={generate_look_book}
-        >
-          Generate Lookbook
-          <FileText />
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            className="hover:cursor-pointer"
+            variant="outline"
+            size="lg"
+            onClick={start_demo}
+          >
+            How To Use
+            <CircleQuestionMark />
+          </Button>
+          <Button
+            className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+            size="lg"
+            onClick={generate_look_book}
+          >
+            Generate Lookbook
+            <FileText />
+          </Button>
+        </div>
       </div>
 
       {/* Project Name input */}
@@ -240,7 +284,13 @@ const LookBookGenerator = () => {
 
       {/* Adding Roles */}
       <div className="flex flex-row justify-between items-center mt-10">
-        <Label className="text-2xl">Add Roles:</Label>
+        <Button
+          className="hover:cursor-pointer"
+          size="lg"
+          onClick={create_new_role}
+        >
+          Add Role <Plus />
+        </Button>
         <div className="flex flex-row justify-between items-center gap-2">
           <Label className="text-lg font-light">Jump to Role:</Label>
           <Select
@@ -261,6 +311,9 @@ const LookBookGenerator = () => {
           </Select>
         </div>
       </div>
+
+      <Label className="text-2xl">Add Roles:</Label>
+
       {roles.map((role, index) => (
         <RoleInput
           key={index}
@@ -271,6 +324,7 @@ const LookBookGenerator = () => {
           setCurrentEmpty={setCurrentEmpty}
         />
       ))}
+
       <div className="flex items-center justify-center">
         <Button
           className="w-1/2 hover:cursor-pointer"

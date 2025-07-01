@@ -23,6 +23,9 @@ Font.register({
 
 // Create styles
 const styles = StyleSheet.create({
+  font: {
+    fontFamily: "Montserrat",
+  },
   coverFormat: {
     backgroundColor: "#EDE8D0",
     display: "flex",
@@ -57,6 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   sectionTitle: {
+    fontFamily: "Montserrat",
     marginBottom: "30px",
   },
   pageLeft: {
@@ -72,18 +76,15 @@ const styles = StyleSheet.create({
     gap: "3px",
   },
   descriptionText: {
+    fontFamily: "Montserrat",
     fontSize: "14px",
   },
   pageMiddle: {
     width: "55%",
-    padding: "5px",
 
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
-
-    borderColor: "#4F4D46",
-    borderWidth: 1,
   },
   colorPaletteImg: {
     height: "40px",
@@ -98,12 +99,33 @@ const styles = StyleSheet.create({
     height: "80%",
   },
   stylingEmptyImg: {
-    width: "110px",
+    width: "120px",
     height: "170px",
+    backgroundColor: "#C9C5B1",
   },
   stylingImg: {
-    width: "110px",
+    width: "120px",
     height: "170px",
+  },
+  pageRight: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  accessoriesImgContainer: {
+    height: "80%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  accesoryImg: {
+    width: "100px",
+    height: "100px",
+  },
+  accesoryEmptyImg: {
+    width: "100px",
+    height: "100px",
+    backgroundColor: "#C9C5B1",
   },
 });
 
@@ -143,62 +165,218 @@ const LookBook = ({
       </View>
     </Page>
 
-    {roles.map((role) =>
-      _.chunk(role.stylingSuggestions, 6).map((chunk) => (
-        <Page
-          size="A4"
-          orientation="landscape"
-          style={styles.pageFormat}
-          key={role.id}
-        >
-          <View style={styles.pageLeft}>
-            <Text>{project_name}</Text>
-            <Text>{role.roleName}</Text>
+    {roles.map((role) => {
+      const stylingChunks = _.chunk(role.stylingSuggestions, 6);
+      const accessoryChunks = _.chunk(role.accessories, 4);
 
-            <View style={styles.titleDescContainer}>
-              <Text>Suggested Wardrobe Style</Text>
-              <Text style={styles.descriptionText}>{role.wardrobeStyle}</Text>
-            </View>
-
-            <View style={styles.titleDescContainer}>
-              <Text>Suggested Color Palette</Text>
-              {role.colorPalette && (
-                <Image src={role.colorPalette} style={styles.colorPaletteImg} />
-              )}
-            </View>
-
-            <View style={styles.titleDescContainer}>
-              <Text>Additional Notes</Text>
-              <Text style={styles.descriptionText}>{role.additionalNotes}</Text>
-            </View>
-          </View>
-
-          {/* Styling Section */}
-          <View style={styles.pageMiddle}>
-            <Text style={styles.sectionTitle}>Styling Suggestions</Text>
-
-            {/* Loading the images */}
-            <View style={styles.stylingImagesContainer}>
-              {chunk.map((style, index) => (
-                <Image src={style} key={index} style={styles.stylingImg} />
-              ))}
-              {6 - chunk.length > 0 &&
-                Array.from({ length: 6 - chunk.length }, (_) => (
-                  <View style={styles.stylingEmptyImg}>{""}</View>
-                ))}
-            </View>
-          </View>
-          <View
-            style={{
-              borderColor: "#4F4D46",
-              borderWidth: 1,
-            }}
+      // Render the PDF differently based on what overflow occurs
+      if (stylingChunks.length > accessoryChunks.length) {
+        return stylingChunks.map((chunk, index) => (
+          <Page
+            size="A4"
+            orientation="landscape"
+            style={styles.pageFormat}
+            key={String(`${role.id}-${index}`)}
           >
-            <Text style={styles.sectionTitle}>Accessories</Text>
-          </View>
-        </Page>
-      ))
-    )}
+            <View style={styles.pageLeft}>
+              <Text style={styles.font}>{project_name}</Text>
+              <Text style={styles.font}>{role.roleName}</Text>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Suggested Wardrobe Style</Text>
+                <Text style={styles.descriptionText}>{role.wardrobeStyle}</Text>
+              </View>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Suggested Color Palette</Text>
+                {role.colorPalette && (
+                  <Image
+                    src={role.colorPalette}
+                    style={styles.colorPaletteImg}
+                  />
+                )}
+              </View>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Additional Notes</Text>
+                <Text style={styles.descriptionText}>
+                  {role.additionalNotes}
+                </Text>
+              </View>
+            </View>
+
+            {/* Styling Section */}
+            <View style={styles.pageMiddle}>
+              <Text
+                style={
+                  (styles.sectionTitle,
+                  {
+                    fontSize: "30px",
+                  })
+                }
+              >
+                Styling Suggestions
+              </Text>
+
+              {/* Loading the images */}
+              <View style={styles.stylingImagesContainer}>
+                {chunk.map((style, index) => (
+                  <Image src={style} key={index} style={styles.stylingImg} />
+                ))}
+                {6 - chunk.length > 0 &&
+                  Array.from({ length: 6 - chunk.length }, (_, i) => (
+                    <View
+                      style={styles.stylingEmptyImg}
+                      key={String(`${role.id}-empty-${i}`)}
+                    >
+                      {""}
+                    </View>
+                  ))}
+              </View>
+            </View>
+            <View style={styles.pageRight}>
+              <Text style={styles.sectionTitle}>Accessories</Text>
+              <View style={styles.accessoriesImgContainer}>
+                {accessoryChunks[index]?.map((accessory) => (
+                  <Image
+                    src={accessory}
+                    key={accessory}
+                    style={styles.accesoryImg}
+                  />
+                ))}
+                {4 - accessoryChunks[index]?.length > 0 &&
+                  Array.from(
+                    { length: 4 - accessoryChunks[index]?.length },
+                    (_, i) => (
+                      <View
+                        style={styles.accesoryEmptyImg}
+                        key={String(
+                          `${role.id}-empty-accessories-${index}-${i}`
+                        )}
+                      >
+                        {""}
+                      </View>
+                    )
+                  )}
+                {!accessoryChunks[index] &&
+                  Array.from({ length: 4 }, (_, i) => (
+                    <View
+                      style={styles.accesoryEmptyImg}
+                      key={String(`${role.id}-empty-accessories-${index}-${i}`)}
+                    >
+                      {""}
+                    </View>
+                  ))}
+              </View>
+            </View>
+          </Page>
+        ));
+      } else {
+        return accessoryChunks.map((chunk, index) => (
+          <Page
+            size="A4"
+            orientation="landscape"
+            style={styles.pageFormat}
+            key={String(`${role.id}-${index}`)}
+          >
+            <View style={styles.pageLeft}>
+              <Text style={styles.font}>{project_name}</Text>
+              <Text style={styles.font}>{role.roleName}</Text>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Suggested Wardrobe Style</Text>
+                <Text style={styles.descriptionText}>{role.wardrobeStyle}</Text>
+              </View>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Suggested Color Palette</Text>
+                {role.colorPalette && (
+                  <Image
+                    src={role.colorPalette}
+                    style={styles.colorPaletteImg}
+                  />
+                )}
+              </View>
+
+              <View style={styles.titleDescContainer}>
+                <Text style={styles.font}>Additional Notes</Text>
+                <Text style={styles.descriptionText}>
+                  {role.additionalNotes}
+                </Text>
+              </View>
+            </View>
+
+            {/* Styling Section */}
+            <View style={styles.pageMiddle}>
+              <Text
+                style={
+                  (styles.sectionTitle,
+                  {
+                    fontSize: "30px",
+                  })
+                }
+              >
+                Styling Suggestions
+              </Text>
+
+              {/* Loading the images */}
+              <View style={styles.stylingImagesContainer}>
+                {stylingChunks[index]?.map((style, index) => (
+                  <Image src={style} key={index} style={styles.stylingImg} />
+                ))}
+                {6 - stylingChunks[index]?.length > 0 &&
+                  Array.from(
+                    { length: 6 - stylingChunks[index]?.length },
+                    (_, i) => (
+                      <View
+                        style={styles.stylingEmptyImg}
+                        key={String(`${role.id}-empty-${i}`)}
+                      >
+                        {""}
+                      </View>
+                    )
+                  )}
+                {!stylingChunks[index] &&
+                  Array.from({ length: 6 }, (_, i) => (
+                    <View
+                      style={styles.stylingEmptyImg}
+                      key={String(`${role.id}-empty-accessories-${index}-${i}`)}
+                    >
+                      {""}
+                    </View>
+                  ))}
+              </View>
+            </View>
+            <View style={styles.pageRight}>
+              <Text style={styles.sectionTitle}>Accessories</Text>
+              <View style={styles.accessoriesImgContainer}>
+                {chunk.map((accessory) => (
+                  <Image
+                    src={accessory}
+                    key={accessory}
+                    style={styles.accesoryImg}
+                  />
+                ))}
+                {4 - chunk.length > 0 &&
+                  Array.from(
+                    { length: 4 - accessoryChunks[index]?.length },
+                    (_, i) => (
+                      <View
+                        style={styles.accesoryEmptyImg}
+                        key={String(
+                          `${role.id}-empty-accessories-${index}-${i}`
+                        )}
+                      >
+                        {""}
+                      </View>
+                    )
+                  )}
+              </View>
+            </View>
+          </Page>
+        ));
+      }
+    })}
   </Document>
 );
 
