@@ -1,10 +1,9 @@
 type ImagesPreviewProps = {
   images: string[];
-  width: string;
-  height: string;
+  sizeClasses: string;
 };
 
-const ImagesPreview = ({ images, width, height }: ImagesPreviewProps) => {
+const ImagesPreview = ({ images, sizeClasses }: ImagesPreviewProps) => {
   return (
     <div className="flex flex-wrap gap-4">
       {images.map((src, i) => (
@@ -12,7 +11,7 @@ const ImagesPreview = ({ images, width, height }: ImagesPreviewProps) => {
           key={i}
           src={src}
           alt={`Styling Suggestion ${i + 1}`}
-          className={`h-${height} w-${width} object-cover rounded border`}
+          className={`${sizeClasses} object-cover rounded border`}
         />
       ))}
     </div>

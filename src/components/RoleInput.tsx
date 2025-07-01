@@ -254,7 +254,10 @@ const RoleInput = ({
             />
           </div>
           {stylingSuggestions.length > 0 && (
-            <ImagesPreview images={stylingSuggestions} width="36" height="48" />
+            <ImagesPreview
+              images={stylingSuggestions}
+              sizeClasses="w-36 h-48"
+            />
           )}
         </div>
 
@@ -277,7 +280,7 @@ const RoleInput = ({
           />
         </div>
         {accessories.length != 0 && (
-          <ImagesPreview images={accessories} width="32" height="32" />
+          <ImagesPreview images={accessories} sizeClasses="w-32 h-32" />
         )}
       </CardContent>
     </Card>
