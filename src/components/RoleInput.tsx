@@ -2,7 +2,7 @@
 
 // Importing dependencies
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { supabase } from "@/lib/supabaseClient";
+// import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
 import type { Img, Role } from "@/types/global";
