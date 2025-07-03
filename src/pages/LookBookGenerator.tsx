@@ -440,7 +440,12 @@ const LookBookGenerator = () => {
                 setDate(date);
                 setOpen(false);
               }}
-              className="text-sm" // Add this to control overall calendar text size
+              classNames={{
+                caption_dropdowns: "text-sm",
+                day: "text-sm",
+                head_cell: "text-sm",
+                cell: "text-sm",
+              }}
             />
           </PopoverContent>
         </Popover>
