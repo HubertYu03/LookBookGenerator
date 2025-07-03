@@ -1,7 +1,13 @@
 // Individual actor
 
 // Importing dependencies
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useRef,
+  useEffect,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 // import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
@@ -37,7 +43,10 @@ const RoleInput = ({
   // States for fields
   const [roleName, setRoleName] = useState<string | null>(null);
   const [wardrobeStyle, setWardrobeStyle] = useState<string | null>(null);
+
   const [colorPalette, setColorPalette] = useState<string | null>(null);
+  const colorPaletteInputRef = useRef<HTMLInputElement | null>(null);
+
   const [additionalNotes, setAdditionNotes] = useState<string | null>(null);
   const [stylingSuggestions, setStylingSuggestions] = useState<Img[]>([]);
   const [accessories, setAccessories] = useState<Img[]>([]);
@@ -97,6 +106,9 @@ const RoleInput = ({
   // Helper function to remove the seleced color palette photos
   function remove_color_palette() {
     setColorPalette(null);
+    if (colorPaletteInputRef.current) {
+      colorPaletteInputRef.current.value = "";
+    }
   }
 
   // Handle image file selection
@@ -171,7 +183,13 @@ const RoleInput = ({
   function clear_fields() {
     setRoleName(null);
     setWardrobeStyle(null);
+
+    // Clear the color palette ref
     setColorPalette(null);
+    if (colorPaletteInputRef.current) {
+      colorPaletteInputRef.current.value = "";
+    }
+
     setAdditionNotes(null);
     setStylingSuggestions([]);
     setAccessories([]);
@@ -248,6 +266,7 @@ const RoleInput = ({
           <div className="grid w-1/3 max-w-sm items-center gap-3">
             <Label>Upload Color Palette {"(optional)"}</Label>
             <Input
+              ref={colorPaletteInputRef}
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
               onChange={(e) => {
