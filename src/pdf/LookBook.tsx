@@ -15,6 +15,9 @@ import {
 } from "@react-pdf/renderer";
 import _ from "lodash";
 
+// Import Logo
+import logo from "../../public/PlayletLogo.png";
+
 // Register Font
 Font.register({
   family: "Montserrat",
@@ -31,6 +34,7 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    gap: "30px",
   },
   coverContent: {
     display: "flex",
@@ -81,7 +85,6 @@ const styles = StyleSheet.create({
   },
   pageMiddle: {
     width: "55%",
-
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
@@ -89,23 +92,27 @@ const styles = StyleSheet.create({
   colorPaletteImg: {
     height: "40px",
   },
-  stylingImagesContainer: {
+  stylingImageGrid: {
     display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: "20px",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: "column",
+    gap: "64px",
     height: "80%",
   },
+  stylingImagesRow: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flex: 1,
+    gap: 15,
+  },
   stylingEmptyImg: {
-    width: "120px",
-    height: "170px",
+    width: "140px",
+    height: "190px",
     backgroundColor: "#C9C5B1",
   },
   stylingImg: {
-    width: "120px",
-    height: "170px",
+    width: "140px",
+    height: "190px",
   },
   pageRight: {
     display: "flex",
@@ -133,6 +140,7 @@ type LookBookProps = {
   project_name: string;
   crew_name: string;
   director_name: string;
+  date: string;
   roles: Role[];
 };
 
@@ -141,11 +149,19 @@ const LookBook = ({
   project_name,
   crew_name,
   director_name,
+  date,
   roles,
 }: LookBookProps) => (
   <Document>
     {/* Title Page */}
     <Page size="A4" orientation="landscape" style={styles.coverFormat}>
+      <Image
+        src={logo}
+        style={{
+          width: "100px",
+          height: "100px",
+        }}
+      />
       <View style={styles.coverContent}>
         <View style={styles.coverTextContainer}>
           <Text style={styles.coverTitle}>Lookbook</Text>
@@ -159,8 +175,9 @@ const LookBook = ({
         </View>
 
         <View style={styles.coverTextContainer}>
-          <Text>{crew_name}</Text>
-          <Text>{director_name}</Text>
+          <Text>Crew Name: {crew_name}</Text>
+          <Text>Director: {director_name}</Text>
+          <Text>{date}</Text>
         </View>
       </View>
     </Page>
@@ -207,38 +224,63 @@ const LookBook = ({
 
             {/* Styling Section */}
             <View style={styles.pageMiddle}>
-              <Text
-                style={
-                  (styles.sectionTitle,
-                  {
-                    fontSize: "30px",
-                    fontFamily: "Montserrat",
-                  })
-                }
-              >
-                Styling Suggestions
-              </Text>
+              <View>
+                <Text
+                  style={
+                    (styles.sectionTitle,
+                    {
+                      fontSize: "30px",
+                      fontFamily: "Montserrat",
+                    })
+                  }
+                >
+                  Styling Suggestions
+                </Text>
+              </View>
 
-              {/* Loading the images */}
-              <View style={styles.stylingImagesContainer}>
-                {chunk.map((style, index) => (
-                  <Image
-                    src={style.src}
-                    key={index}
-                    style={styles.stylingImg}
-                  />
-                ))}
-                {6 - chunk.length > 0 &&
-                  Array.from({ length: 6 - chunk.length }, (_, i) => (
-                    <View
-                      style={styles.stylingEmptyImg}
-                      key={String(`${role.id}-empty-${i}`)}
-                    >
-                      {""}
-                    </View>
+              <View style={styles.stylingImageGrid}>
+                {/* Loading the images */}
+                <View style={styles.stylingImagesRow}>
+                  {chunk.slice(0, 3).map((style, i) => (
+                    <Image
+                      src={style.src}
+                      key={`row1-${i}`}
+                      style={styles.stylingImg}
+                    />
                   ))}
+                  {Array.from(
+                    { length: 3 - chunk.slice(0, 3).length },
+                    (_, i) => (
+                      <View
+                        key={`row1-empty-${i}`}
+                        style={styles.stylingEmptyImg}
+                      />
+                    )
+                  )}
+                </View>
+
+                <View style={styles.stylingImagesRow}>
+                  {chunk.slice(3, 6).map((style, i) => (
+                    <Image
+                      src={style.src}
+                      key={`row1-${i}`}
+                      style={styles.stylingImg}
+                    />
+                  ))}
+                  {Array.from(
+                    { length: 3 - chunk.slice(3, 6).length },
+                    (_, i) => (
+                      <View
+                        key={`row1-empty-${i}`}
+                        style={styles.stylingEmptyImg}
+                      />
+                    )
+                  )}
+                </View>
               </View>
             </View>
+
+            {/* Accessory Section */}
             <View style={styles.pageRight}>
               <Text style={styles.sectionTitle}>Accessories</Text>
               <View style={styles.accessoriesImgContainer}>
@@ -326,7 +368,7 @@ const LookBook = ({
               </Text>
 
               {/* Loading the images */}
-              <View style={styles.stylingImagesContainer}>
+              <View style={styles.stylingImagesRow}>
                 {stylingChunks[index]?.map((style, index) => (
                   <Image
                     src={style.src}

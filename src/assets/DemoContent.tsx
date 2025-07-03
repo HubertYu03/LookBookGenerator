@@ -8,7 +8,7 @@ export const DemoContent = [
     id: "top-of-page",
   },
   {
-    text: "Then you can begin to fill out the information in the specific roles. Make sure none of these fields are empty! You can also remove a role by clicking the 'Remove Role' button on the top right.",
+    text: "Then you can begin to fill out the information in the specific roles. The inputs with the red star indicate that that fields are required. You can clear all the fields in the role with the 'Clear Fields' button, and you can remove the whole role with the 'Remove Role' button. ",
     id: "step-2",
   },
   {
@@ -20,7 +20,7 @@ export const DemoContent = [
     id: "step-4",
   },
   {
-    text: "Each role created has an ID. This ID will not be reflected in the generated Lookbook. You can use this selection here to jump to specific roles to edit if there are too many roles to scroll through.",
+    text: "Each role created has an ID. This ID will not be reflected in the generated Lookbook. You can use this selection here to jump to specific roles to edit if there are too many roles to scroll through. You can find the role ID at the bottom left of the role creation card.",
     id: "step-3",
   },
   {

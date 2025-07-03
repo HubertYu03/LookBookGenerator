@@ -2,23 +2,21 @@
 
 // Importing dependencies
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
 import type { Img, Role } from "@/types/global";
 
 // Import UI Components
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
+import { CircleX } from "lucide-react";
+
+// Import custom components
 import ImagesPreview from "./ImagesPreview";
 
 type RoleInputProps = {
@@ -43,6 +41,9 @@ const RoleInput = ({
   const [additionalNotes, setAdditionNotes] = useState<string | null>(null);
   const [stylingSuggestions, setStylingSuggestions] = useState<Img[]>([]);
   const [accessories, setAccessories] = useState<Img[]>([]);
+
+  // State for deleteing the color palette photo
+  const [hoverClosePalette, setHoverClosePalette] = useState<boolean>(false);
 
   // Helper function to create a random image id for deletion tracking
   function generate_image_id(): number {
@@ -91,6 +92,11 @@ const RoleInput = ({
       stylingSuggestions.filter((image) => image.id != imgID)
     );
     setAccessories(accessories.filter((image) => image.id != imgID));
+  }
+
+  // Helper function to remove the seleced color palette photos
+  function remove_color_palette() {
+    setColorPalette(null);
   }
 
   // Handle image file selection
@@ -162,34 +168,51 @@ const RoleInput = ({
     accessories,
   ]);
 
+  function clear_fields() {
+    setRoleName(null);
+    setWardrobeStyle(null);
+    setColorPalette(null);
+    setAdditionNotes(null);
+    setStylingSuggestions([]);
+    setAccessories([]);
+  }
+
   return (
     <Card
       className={currentEmpty == role_id ? "border-red-500" : ""}
       id={`role-${role_id}`}
     >
-      <CardHeader>
-        <CardTitle className="text-2xl">Role #{role_id}</CardTitle>
-        <CardAction>
-          <Button
-            variant="destructive"
-            className="hover:cursor-pointer"
-            onClick={remove_role}
-          >
-            Remove Role
-          </Button>
-        </CardAction>
-      </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        <div className="grid w-1/3 max-w-sm items-center gap-3">
-          <Label>
-            Role Name
-            <span className={roleName ? "invisible" : "text-red-500"}>*</span>
-          </Label>
-          <Input
-            placeholder="Role Name"
-            onChange={(e) => setRoleName(e.target.value)}
-          />
+        <div className="flex flex-row justify-between items-start">
+          <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <Label>
+              Role Name
+              <span className={roleName ? "invisible" : "text-red-500"}>*</span>
+            </Label>
+            <Input
+              placeholder="Role Name"
+              onChange={(e) => setRoleName(e.target.value)}
+              value={roleName ? String(roleName) : ""}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="hover:cursor-pointer"
+              onClick={clear_fields}
+            >
+              Clear Fields
+            </Button>
+            <Button
+              variant="destructive"
+              className="hover:cursor-pointer"
+              onClick={remove_role}
+            >
+              Remove Role
+            </Button>
+          </div>
         </div>
+
         {/* Text Area Inputs */}
         <div className="flex flex-wrap gap-12">
           {/* Wardrobe style input */}
@@ -204,21 +227,18 @@ const RoleInput = ({
               className="h-32 resize-none"
               placeholder="Enter Wardrobe Style..."
               onChange={(e) => setWardrobeStyle(e.target.value)}
+              value={wardrobeStyle ? String(wardrobeStyle) : ""}
             />
           </div>
 
           {/* Addtional Comments Input */}
           <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>
-              Addition Notes
-              <span className={additionalNotes ? "invisible" : "text-red-500"}>
-                *
-              </span>
-            </Label>
+            <Label>Addition Notes {"(optional)"}</Label>
             <Textarea
               className="h-32 resize-none"
               placeholder="Add Additional Comments..."
               onChange={(e) => setAdditionNotes(e.target.value)}
+              value={additionalNotes ? String(additionalNotes) : ""}
             />
           </div>
         </div>
@@ -226,12 +246,7 @@ const RoleInput = ({
         {/* Color Palette Input */}
         <div className="flex flex-col gap-5">
           <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>
-              Upload Color Palette
-              <span className={colorPalette ? "invisible" : "text-red-500"}>
-                *
-              </span>
-            </Label>
+            <Label>Upload Color Palette {"(optional)"}</Label>
             <Input
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
@@ -241,11 +256,27 @@ const RoleInput = ({
             />
           </div>
           {colorPalette && (
-            <img
-              src={colorPalette}
-              alt="color_palette"
-              className="h-28 object-cover w-1/2"
-            />
+            <div
+              className="relative"
+              onMouseEnter={() => setHoverClosePalette(true)}
+              onMouseLeave={() => setHoverClosePalette(false)}
+            >
+              {hoverClosePalette && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-1 left-1 hover:cursor-pointer"
+                  onClick={remove_color_palette}
+                >
+                  <CircleX />
+                </Button>
+              )}
+              <img
+                src={colorPalette}
+                alt="color_palette"
+                className="h-28 object-cover w-1/2"
+              />
+            </div>
           )}
         </div>
 
@@ -281,14 +312,7 @@ const RoleInput = ({
         </div>
 
         <div className="grid w-1/3 max-w-sm items-center gap-3">
-          <Label>
-            Upload Accessories
-            <span
-              className={accessories.length != 0 ? "invisible" : "text-red-500"}
-            >
-              *
-            </span>
-          </Label>
+          <Label>Upload Accessories {"(optional)"}</Label>
           <Input
             type="file"
             multiple
@@ -306,6 +330,9 @@ const RoleInput = ({
           />
         )}
       </CardContent>
+      <CardFooter className="flex justify-end">
+        <div className="text-gray-500 italic text-sm">Role ID: {role_id}</div>
+      </CardFooter>
     </Card>
   );
 };

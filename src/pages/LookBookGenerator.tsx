@@ -15,6 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // Importing Icons
 import {
@@ -24,7 +30,9 @@ import {
   CircleQuestionMark,
   ArrowLeft,
   ArrowRight,
+  ChevronDownIcon,
 } from "lucide-react";
+import logo from "../../public/PlayletLogo.png";
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
@@ -39,6 +47,8 @@ const LookBookGenerator = () => {
   const [projectName, setProjectName] = useState<string | null>(null);
   const [crewName, setCrewName] = useState<string | null>(null);
   const [directorName, setDirectorName] = useState<string | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [currentError, setCurrentError] = useState<string>("");
 
   const [currentEmpty, setCurrentEmpty] = useState<number>(0);
@@ -139,17 +149,20 @@ const LookBookGenerator = () => {
       return;
     }
 
+    if (!date) {
+      setCurrentError("project_date");
+      toast.error("Please enter a Project Date!");
+      return;
+    }
+
     // Check for empty roles, then jump to the first empty one
     for (let role of roles) {
       if (
         role.roleName == null ||
         role.roleName == "" ||
-        role.additionalNotes == null ||
-        role.additionalNotes == "" ||
         role.wardrobeStyle == null ||
         role.wardrobeStyle == "" ||
-        role.stylingSuggestions.length == 0 ||
-        role.accessories.length == 0
+        role.stylingSuggestions.length == 0
       ) {
         // Set the current empty list
         setCurrentEmpty(role.id);
@@ -174,6 +187,7 @@ const LookBookGenerator = () => {
         project_name={String(projectName)}
         crew_name={String(crewName)}
         director_name={String(directorName)}
+        date={String(date?.toLocaleDateString())}
         roles={roles}
       />
     ).toBlob();
@@ -313,7 +327,10 @@ const LookBookGenerator = () => {
       </div>
 
       <div className="flex flex-row justify-between">
-        <div className="text-5xl font-semibold">Create New Lookbook</div>
+        <div className="flex flex-row items-center gap-3">
+          <img src={logo} alt="Playlet_Logo" className="h-18" />
+          <div className="text-5xl font-semibold">Create New Lookbook</div>
+        </div>
         <div className="flex gap-3">
           <Button
             className="hover:cursor-pointer"
@@ -383,7 +400,7 @@ const LookBookGenerator = () => {
       <div className="grid w-full items-center gap-3">
         <Label className="text-2xl">
           Enter Director Name
-          <span className={crewName ? "invisible" : "text-red-500"}>*</span>
+          <span className={directorName ? "invisible" : "text-red-500"}>*</span>
         </Label>
         <Input
           className={`w-1/3 ${
@@ -392,6 +409,40 @@ const LookBookGenerator = () => {
           placeholder="Enter Director Name..."
           onChange={(e) => setDirectorName(e.target.value)}
         />
+      </div>
+
+      {/* Date Input */}
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="date" className="text-2xl">
+          Project Date
+          <span className={date ? "invisible" : "text-red-500"}>*</span>
+        </Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger
+            asChild
+            className={currentError == "project_date" ? "border-red-500" : ""}
+          >
+            <Button
+              variant="outline"
+              id="date"
+              className="w-48 justify-between font-normal"
+            >
+              {date ? date.toLocaleDateString() : "Select date"}
+              <ChevronDownIcon />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              captionLayout="dropdown"
+              onSelect={(date) => {
+                setDate(date);
+                setOpen(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Adding Roles */}
