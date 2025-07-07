@@ -1,8 +1,12 @@
 // Importing dependencies
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Buffer } from "buffer";
-import { Toaster } from "sonner";
 import { useEffect, useState } from "react";
+import { Buffer } from "buffer";
+import { v4 } from "uuid";
+
+// Importing UI Components
+import { Toaster } from "sonner";
+import { Button } from "./components/ui/button";
 import {
   SidebarProvider,
   Sidebar,
@@ -32,11 +36,12 @@ import Home from "./pages/Home";
 
 // Importing supbase
 import { supabase } from "./lib/supabaseClient";
-import { Button } from "./components/ui/button";
-import { v4 } from "uuid";
+
+// Importing pages
 import MyLocationBooks from "./pages/MyLocationBooks";
 import LocationBookGenerator from "./pages/LocationBookGenerator";
 import Register from "./pages/Register";
+import AuthCallback from "./components/AuthCallback";
 
 window.Buffer = Buffer;
 
@@ -289,6 +294,7 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
       <Toaster richColors position="top-center" />
     </Router>
