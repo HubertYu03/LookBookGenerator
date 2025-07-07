@@ -8,7 +8,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-// import { supabase } from "@/lib/supabaseClient";
+
+// Importing database
+import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
 import type { Img, Role } from "@/types/global";
@@ -26,26 +28,32 @@ import { CircleX } from "lucide-react";
 import ImagesPreview from "./ImagesPreview";
 
 type RoleInputProps = {
-  role_id: number;
+  loaded_role: Role;
   roles: Role[];
   updateRoles: Dispatch<SetStateAction<Role[]>>;
   currentEmpty: number;
   setCurrentEmpty: Dispatch<SetStateAction<number>>;
+  canEdit: boolean;
 };
 
 const RoleInput = ({
-  role_id,
+  loaded_role,
   roles,
   updateRoles,
   currentEmpty,
   setCurrentEmpty,
+  canEdit,
 }: RoleInputProps) => {
   // States for fields
   const [roleName, setRoleName] = useState<string | null>(null);
   const [wardrobeStyle, setWardrobeStyle] = useState<string | null>(null);
 
-  const [colorPalette, setColorPalette] = useState<string | null>(null);
+  const [colorPalette, setColorPalette] = useState<Img | null>(null);
   const colorPaletteInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [colorPalettePreview, setColorPalettePreview] = useState<Img | null>(
+    null
+  );
 
   const [additionalNotes, setAdditionNotes] = useState<string | null>(null);
   const [stylingSuggestions, setStylingSuggestions] = useState<Img[]>([]);
@@ -65,11 +73,11 @@ const RoleInput = ({
     toast.dismiss();
 
     // Check if the deletion would leave nothing
-    if (roles.filter((role) => role.id != role_id).length == 0) {
+    if (roles.filter((role) => role.id != loaded_role.id).length == 0) {
       toast.warning("You must have at least one role!");
     } else {
-      updateRoles(roles.filter((role) => role.id != role_id));
-      toast.success(`Role #${role_id} successfully deleted!`);
+      updateRoles(roles.filter((role) => role.id != loaded_role.id));
+      toast.success(`Role #${loaded_role.id} successfully deleted!`);
     }
   }
 
@@ -77,7 +85,7 @@ const RoleInput = ({
   function update_role() {
     // Create temp role
     const updated_role: Role = {
-      id: role_id,
+      id: loaded_role.id,
       roleName: roleName,
       wardrobeStyle: wardrobeStyle,
       colorPalette: colorPalette,
@@ -88,7 +96,7 @@ const RoleInput = ({
 
     // Set the state
     updateRoles(
-      roles.map((role) => (role.id === role_id ? updated_role : role))
+      roles.map((role) => (role.id === loaded_role.id ? updated_role : role))
     );
 
     setCurrentEmpty(0);
@@ -105,6 +113,7 @@ const RoleInput = ({
 
   // Helper function to remove the seleced color palette photos
   function remove_color_palette() {
+    setColorPalettePreview(null);
     setColorPalette(null);
     if (colorPaletteInputRef.current) {
       colorPaletteInputRef.current.value = "";
@@ -159,7 +168,12 @@ const RoleInput = ({
           const result = event.target?.result;
           if (typeof result === "string") {
             if (field == "colorPalette") {
-              setColorPalette(result);
+              const new_img: Img = {
+                src: result,
+                id: generate_image_id(),
+              };
+              setColorPalette(new_img);
+              setColorPalettePreview(new_img);
             }
           }
         };
@@ -180,7 +194,10 @@ const RoleInput = ({
     accessories,
   ]);
 
+  // Function to clear all fields
   function clear_fields() {
+    console.log(colorPalette);
+
     setRoleName(null);
     setWardrobeStyle(null);
 
@@ -195,10 +212,50 @@ const RoleInput = ({
     setAccessories([]);
   }
 
+  // Function to load all existing data (if any)
+  async function load_role_data() {
+    // Load role name, wardrobe style, and additional notes
+    setRoleName(loaded_role.roleName);
+    setWardrobeStyle(loaded_role.wardrobeStyle);
+    setAdditionNotes(loaded_role.additionalNotes);
+
+    // Load color palette images if it exists
+    if (loaded_role.colorPalette) {
+      // If the image exists, get the img url
+
+      const path: string = loaded_role.colorPalette.src;
+      const { data: imgData, error } = await supabase.storage
+        .from("lookbook")
+        .createSignedUrl(path, 1800);
+
+      if (error) {
+        console.log(error);
+      }
+
+      // Set the image preview and color palette to the url or path and the id
+      if (imgData?.signedUrl) {
+        setColorPalettePreview({
+          src: imgData.signedUrl,
+          id: loaded_role.colorPalette.id,
+        });
+
+        setColorPalette({
+          src: path,
+          id: loaded_role.colorPalette.id,
+        });
+      }
+    }
+  }
+
+  useEffect(() => {
+    // Load any data if any
+    load_role_data();
+  }, []);
+
   return (
     <Card
-      className={currentEmpty == role_id ? "border-red-500" : ""}
-      id={`role-${role_id}`}
+      className={currentEmpty == loaded_role.id ? "border-red-500" : ""}
+      id={`role-${loaded_role.id}`}
     >
       <CardContent className="flex flex-col gap-5">
         <div className="flex flex-row justify-between items-start">
@@ -210,7 +267,8 @@ const RoleInput = ({
             <Input
               placeholder="Role Name"
               onChange={(e) => setRoleName(e.target.value)}
-              value={roleName ? String(roleName) : ""}
+              value={roleName ?? ""}
+              disabled={!canEdit}
             />
           </div>
           <div className="flex gap-3">
@@ -246,6 +304,7 @@ const RoleInput = ({
               placeholder="Enter Wardrobe Style..."
               onChange={(e) => setWardrobeStyle(e.target.value)}
               value={wardrobeStyle ? String(wardrobeStyle) : ""}
+              disabled={!canEdit}
             />
           </div>
 
@@ -257,6 +316,7 @@ const RoleInput = ({
               placeholder="Add Additional Comments..."
               onChange={(e) => setAdditionNotes(e.target.value)}
               value={additionalNotes ? String(additionalNotes) : ""}
+              disabled={!canEdit}
             />
           </div>
         </div>
@@ -272,9 +332,10 @@ const RoleInput = ({
               onChange={(e) => {
                 handleImageChange(e, "colorPalette", false);
               }}
+              disabled={!canEdit}
             />
           </div>
-          {colorPalette && (
+          {colorPalettePreview && (
             <div
               className="relative"
               onMouseEnter={() => setHoverClosePalette(true)}
@@ -291,7 +352,7 @@ const RoleInput = ({
                 </Button>
               )}
               <img
-                src={colorPalette}
+                src={colorPalettePreview.src}
                 alt="color_palette"
                 className="h-28 object-cover w-1/2"
               />
@@ -319,6 +380,7 @@ const RoleInput = ({
               onChange={(e) => {
                 handleImageChange(e, "styling", true);
               }}
+              disabled={!canEdit}
             />
           </div>
           {stylingSuggestions.length > 0 && (
@@ -339,6 +401,7 @@ const RoleInput = ({
             onChange={(e) => {
               handleImageChange(e, "accessories", true);
             }}
+            disabled={!canEdit}
           />
         </div>
         {accessories.length != 0 && (
@@ -350,7 +413,9 @@ const RoleInput = ({
         )}
       </CardContent>
       <CardFooter className="flex justify-end">
-        <div className="text-gray-500 italic text-sm">Role ID: {role_id}</div>
+        <div className="text-gray-500 italic text-sm">
+          Role ID: {loaded_role.id}
+        </div>
       </CardFooter>
     </Card>
   );

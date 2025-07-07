@@ -3,11 +3,22 @@ export type Img = {
   id: number
 }
 
+export type LookBook = {
+  lookbook_id: string;
+  author_id: string;
+  created_at: Date;
+  project_name: string;
+  crew_name: string;
+  director_name: string;
+  date: Date;
+  roles: Role[];
+}
+
 export type Role = {
   id: number;
   roleName: string | null;
   wardrobeStyle: string | null;
-  colorPalette: string | null;
+  colorPalette: Img | null;
   additionalNotes: string | null;
   stylingSuggestions: Img[];
   accessories: Img[];

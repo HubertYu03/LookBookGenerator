@@ -15,25 +15,27 @@ import {
 } from "@react-pdf/renderer";
 import _ from "lodash";
 
-// Import Logo
-import logo from "../../public/PlayletLogo.png";
+// Import Public
+import logo from "/PlayletLogo.png";
+import NotoSansCJK from "/NotoSansMonoCJKjp-Regular.otf";
 
 // Register Font
 Font.register({
-  family: "Montserrat",
-  src: "https://fonts.gstatic.com/s/montserrat/v10/zhcz-_WihjSQC0oHJ9TCYC3USBnSvpkopQaUR-2r7iU.ttf",
+  family: "Noto Sans CJK",
+  src: NotoSansCJK,
 });
 
 // Create styles
 const styles = StyleSheet.create({
   font: {
-    fontFamily: "Montserrat",
+    fontFamily: "Noto Sans CJK",
+    fontWeight: 500,
   },
   coverFormat: {
     backgroundColor: "#EDE8D0",
     display: "flex",
-    justifyContent: "center",
     alignItems: "center",
+    paddingTop: "50px",
     gap: "30px",
   },
   coverContent: {
@@ -43,7 +45,7 @@ const styles = StyleSheet.create({
     gap: "30px",
     width: "45%",
     padding: "20px",
-    fontFamily: "Montserrat",
+    fontFamily: "Noto Sans CJK",
     borderColor: "#4F4D46",
     borderWidth: 2,
   },
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   sectionTitle: {
-    fontFamily: "Montserrat",
+    fontFamily: "Noto Sans CJK",
     marginBottom: "30px",
   },
   pageLeft: {
@@ -77,11 +79,15 @@ const styles = StyleSheet.create({
   },
   titleDescContainer: {
     display: "flex",
+    flexDirection: "column",
+    width: "100%",
     gap: "3px",
   },
   descriptionText: {
-    fontFamily: "Montserrat",
-    fontSize: "14px",
+    fontFamily: "Noto Sans CJK",
+    fontSize: "12px",
+    width: "100%",
+    lineHeight: 1.4,
   },
   pageMiddle: {
     width: "55%",
@@ -144,6 +150,20 @@ type LookBookProps = {
   roles: Role[];
 };
 
+// Chinese Text Formatting
+function insertSpacesForChinese(text: string): string {
+  return text.replace(/([\u4e00-\u9fa5])/g, "$1 ");
+}
+
+function isMostlyChinese(text: string, threshold = 0.5): boolean {
+  const chineseChars = text.match(/[\u4e00-\u9fa5]/g) || [];
+  return chineseChars.length / text.length >= threshold;
+}
+
+function formatTextWithChineseSpacing(text: string): string {
+  return isMostlyChinese(text) ? insertSpacesForChinese(text) : text;
+}
+
 // Create Document Component
 const LookBook = ({
   project_name,
@@ -154,7 +174,7 @@ const LookBook = ({
 }: LookBookProps) => (
   <Document>
     {/* Title Page */}
-    <Page size="A4" orientation="landscape" style={styles.coverFormat}>
+    <Page size="A4" orientation="landscape" style={styles.coverFormat} wrap>
       <Image
         src={logo}
         style={{
@@ -177,7 +197,7 @@ const LookBook = ({
         <View style={styles.coverTextContainer}>
           <Text>Crew Name: {crew_name}</Text>
           <Text>Director: {director_name}</Text>
-          <Text>{date}</Text>
+          <Text>Date: {date}</Text>
         </View>
       </View>
     </Page>
@@ -194,21 +214,25 @@ const LookBook = ({
             orientation="landscape"
             style={styles.pageFormat}
             key={String(`${role.id}-${index}`)}
+            wrap
           >
             <View style={styles.pageLeft}>
               <Text style={styles.font}>{project_name}</Text>
-              <Text style={styles.font}>{role.roleName}</Text>
+              <Text style={styles.font}>Role Name: {role.roleName}</Text>
 
               <View style={styles.titleDescContainer}>
                 <Text style={styles.font}>Suggested Wardrobe Style</Text>
-                <Text style={styles.descriptionText}>{role.wardrobeStyle}</Text>
+                <Text style={styles.descriptionText} wrap>
+                  {role.wardrobeStyle &&
+                    formatTextWithChineseSpacing(role.wardrobeStyle)}
+                </Text>
               </View>
 
               <View style={styles.titleDescContainer}>
                 <Text style={styles.font}>Suggested Color Palette</Text>
                 {role.colorPalette && (
                   <Image
-                    src={role.colorPalette}
+                    src={role.colorPalette.src}
                     style={styles.colorPaletteImg}
                   />
                 )}
@@ -216,8 +240,9 @@ const LookBook = ({
 
               <View style={styles.titleDescContainer}>
                 <Text style={styles.font}>Additional Notes</Text>
-                <Text style={styles.descriptionText}>
-                  {role.additionalNotes}
+                <Text style={styles.descriptionText} wrap>
+                  {role.additionalNotes &&
+                    formatTextWithChineseSpacing(role.additionalNotes)}
                 </Text>
               </View>
             </View>
@@ -230,7 +255,7 @@ const LookBook = ({
                     (styles.sectionTitle,
                     {
                       fontSize: "30px",
-                      fontFamily: "Montserrat",
+                      fontFamily: "Noto Sans CJK",
                     })
                   }
                 >
@@ -330,15 +355,16 @@ const LookBook = ({
               orientation="landscape"
               style={styles.pageFormat}
               key={`${role.id}-${index}`}
+              wrap={true}
             >
               {/* LEFT PANEL */}
               <View style={styles.pageLeft}>
                 <Text style={styles.font}>{project_name}</Text>
-                <Text style={styles.font}>{role.roleName}</Text>
+                <Text style={styles.font}>Role Name: {role.roleName}</Text>
 
                 <View style={styles.titleDescContainer}>
                   <Text style={styles.font}>Suggested Wardrobe Style</Text>
-                  <Text style={styles.descriptionText}>
+                  <Text style={styles.descriptionText} wrap>
                     {role.wardrobeStyle}
                   </Text>
                 </View>
@@ -347,7 +373,7 @@ const LookBook = ({
                   <Text style={styles.font}>Suggested Color Palette</Text>
                   {role.colorPalette && (
                     <Image
-                      src={role.colorPalette}
+                      src={role.colorPalette.src}
                       style={styles.colorPaletteImg}
                     />
                   )}
@@ -355,7 +381,7 @@ const LookBook = ({
 
                 <View style={styles.titleDescContainer}>
                   <Text style={styles.font}>Additional Notes</Text>
-                  <Text style={styles.descriptionText}>
+                  <Text style={styles.descriptionText} wrap>
                     {role.additionalNotes}
                   </Text>
                 </View>
@@ -363,7 +389,7 @@ const LookBook = ({
 
               {/* MIDDLE STYLING PANEL */}
               <View style={styles.pageMiddle}>
-                <Text style={{ fontSize: "30px", fontFamily: "Montserrat" }}>
+                <Text style={{ fontSize: "30px", fontFamily: "Noto Sans CJK" }}>
                   Styling Suggestions
                 </Text>
 

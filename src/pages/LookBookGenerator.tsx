@@ -1,6 +1,11 @@
 // Import dependencies
 import { pdf } from "@react-pdf/renderer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { dataURLtoFile } from "@/lib/utils";
+
+// Import Supabase
+import { supabase } from "@/lib/supabaseClient";
 
 // Import UI Components
 import {
@@ -31,18 +36,26 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronDownIcon,
+  Save,
 } from "lucide-react";
-import logo from "../../public/PlayletLogo.png";
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
 import RoleInput from "@/components/RoleInput";
 
 // Import Global Types
-import type { Role } from "@/types/global";
+import type { Img, Role } from "@/types/global";
 import { DemoContent } from "@/assets/DemoContent";
 
 const LookBookGenerator = () => {
+  // Get the LookBook ID
+  const { look_book_id } = useParams();
+
+  // States for page start up
+  const [canEdit, setCanEdit] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
   // General Information
   const [projectName, setProjectName] = useState<string | null>(null);
   const [crewName, setCrewName] = useState<string | null>(null);
@@ -182,18 +195,62 @@ const LookBookGenerator = () => {
 
   // Function to open the generated pdf
   const openPDFInNewTab = async () => {
+    // We need to convert all our images into a temporary roles img links
+    let pdf_roles: Role[] = roles;
+
+    console.log(pdf_roles);
+
+    // Check for color palette photos
+    await Promise.all(
+      pdf_roles.map(async (role) => {
+        if (role.colorPalette?.src.startsWith("private")) {
+          const { data, error } = await supabase.storage
+            .from("lookbook")
+            .createSignedUrl(role.colorPalette.src, 60);
+
+          if (error) {
+            console.log(error);
+          }
+
+          if (data) {
+            role.colorPalette = {
+              src: data.signedUrl,
+              id: role.colorPalette.id,
+            };
+          }
+        }
+      })
+    );
+
     const blob = await pdf(
       <LookBook
         project_name={String(projectName)}
         crew_name={String(crewName)}
         director_name={String(directorName)}
         date={String(date?.toLocaleDateString())}
-        roles={roles}
+        roles={pdf_roles}
       />
     ).toBlob();
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
+
+  // Helper functions for saving the images
+  async function uploadImage(file: File, path: string) {
+    const { error } = await supabase.storage
+      .from("lookbook")
+      .upload(path, file, {
+        upsert: true,
+        metadata: {
+          owner: localStorage.getItem("PlayletUserID"),
+        },
+      });
+
+    if (error) {
+      console.error("Supabase Upload Error:", error);
+      throw error;
+    }
+  }
 
   // Helper function to begin the demo
   function start_demo() {
@@ -244,6 +301,162 @@ const LookBookGenerator = () => {
 
     setCurrentDemoStep(0);
   }
+
+  async function save_progress() {
+    // Clear all toasts and errors
+    toast.dismiss();
+    setCurrentError("");
+
+    // Only allow a save if the project name is not null
+    if (!projectName) {
+      setCurrentError("project_name");
+      toast.warning("Please enter a Project Name before saving!");
+      return;
+    }
+
+    // Save the fields
+    let lookbook_data = {
+      lookbook_id: look_book_id,
+      author_id: localStorage.getItem("PlayletUserID"),
+      project_name: projectName,
+      crew_name: crewName,
+      director_name: directorName,
+      date: date,
+      roles: roles,
+    };
+
+    // First check if the lookbook already exists
+    const { data } = await supabase
+      .from("lookbooks")
+      .select("*")
+      .eq("lookbook_id", look_book_id);
+
+    if (data?.length != 0) {
+      // If the lookbook exists
+      console.log("look book exists");
+
+      console.log(lookbook_data);
+
+      // We need to first process the role fields and images, loop through all the roles
+      roles.map(async (role, index) => {
+        // If there is an input from role
+        if (role.colorPalette) {
+          // First check if the file is still in data format
+          if (role.colorPalette.src.startsWith("data:image")) {
+            // Convert the file to a supabase path then insert it into the colorPalette path
+            const converted_file: File = dataURLtoFile(
+              role.colorPalette.src,
+              `${role.colorPalette.id}.png`
+            );
+
+            // Generate the path for color palettes and upload the image
+            const path_name: string = `private/${look_book_id}/color_palette/${role.colorPalette.id}.jpg`;
+            uploadImage(converted_file, path_name);
+
+            // Add this path name to the object that is going to be updated
+            const new_color_palette: Img = {
+              src: path_name,
+              id: role.colorPalette.id,
+            };
+            lookbook_data.roles[0].colorPalette = new_color_palette;
+          } else {
+            // If there is an existing color palette, check the ID
+          }
+        } else {
+          // If there is no images selected check if there exists a path in the database
+          let { data: role_data, error } = await supabase
+            .from("lookbooks")
+            .select("roles")
+            .eq("lookbook_id", look_book_id);
+          if (error) {
+            console.log(error);
+          }
+
+          if (role_data) {
+            const path: string = role_data[0].roles[index].colorPalette.src;
+
+            const { error } = await supabase.storage
+              .from("lookbook")
+              .remove([path]);
+
+            if (error) {
+              console.log(error);
+            }
+          }
+
+          console.log("Image Deleted");
+
+          lookbook_data.roles[index].colorPalette = null;
+        }
+      });
+
+      const { error } = await supabase
+        .from("lookbooks")
+        .update(lookbook_data)
+        .eq("lookbook_id", look_book_id)
+        .select();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      // Display success message and refetch data
+      toast.success("Saved Lookbook!");
+      get_lookbook_data();
+    } else {
+      // If the lookbook does not exist
+      // Insert the lookbook data into the database
+      const { error } = await supabase.from("lookbooks").insert(lookbook_data);
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      // Display success message and refetch data
+      toast.success("Saved Lookbook!");
+      get_lookbook_data();
+    }
+
+    setRefreshKey((prev) => prev + 1);
+  }
+
+  // Helper function to get the saved look book data
+  async function get_lookbook_data() {
+    // First check if the look book exists and belongs to someone else
+    // First check if the lookbook already exists
+    const { data } = await supabase
+      .from("lookbooks")
+      .select("*")
+      .eq("lookbook_id", look_book_id);
+
+    if (data && data.length !== 0) {
+      // That means this look book exists
+      if (localStorage.getItem("PlayletUserID") != data[0].author_id) {
+        setCanEdit(false);
+      } else {
+        console.log("You can edit this page!");
+      }
+
+      // Load the lookbook data into the editor
+      setProjectName(data[0].project_name);
+      setCrewName(data[0].crew_name);
+      setDirectorName(data[0].director_name);
+      setDate(new Date(data[0].date));
+      setRoles(data[0].roles);
+    }
+
+    // Set loading to false
+    setLoading(false);
+  }
+
+  // When the page loads, get the saved data if it exists
+  useEffect(() => {
+    document.title = "Lookbook Editor";
+
+    get_lookbook_data();
+  }, []);
 
   return (
     <div className="p-6 space-y-4 relative z-0" id="top-of-page">
@@ -326,21 +539,29 @@ const LookBookGenerator = () => {
         </Button>
       </div>
 
+      {/* Beginning of the page */}
       <div className="flex flex-row justify-between">
         <div className="flex flex-row items-center gap-3">
-          <img src={logo} alt="Playlet_Logo" className="h-18" />
-          <div className="text-5xl font-semibold">Create New Lookbook</div>
+          <div className="text-5xl font-semibold">Lookbook Editor</div>
         </div>
         <div className="flex gap-3">
           <Button
             className="hover:cursor-pointer"
             variant="outline"
-            size="lg"
             onClick={start_demo}
           >
             How To Use
             <CircleQuestionMark />
           </Button>
+
+          <Button
+            className="hover:cursor-pointer"
+            onClick={save_progress}
+            disabled={!canEdit}
+          >
+            Save <Save />
+          </Button>
+
           <div
             className={`${
               currentDemoStep - 1 === 7
@@ -350,7 +571,6 @@ const LookBookGenerator = () => {
           >
             <Button
               className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              size="lg"
               onClick={generate_look_book}
             >
               Generate Lookbook
@@ -360,183 +580,206 @@ const LookBookGenerator = () => {
         </div>
       </div>
 
-      {/* Project Name input */}
-      <div
-        className={`flex flex-col items-start gap-3${
-          currentDemoStep === 2
-            ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
-            : ""
-        }`}
-      >
-        <Label className="text-2xl">
-          Enter Project Name
-          <span className={projectName ? "invisible" : "text-red-500"}>*</span>
-        </Label>
-        <Input
-          className={`w-1/3 ${
-            currentError == "project_name" ? "border-red-500" : ""
-          }`}
-          placeholder="Enter Project Name..."
-          onChange={(e) => setProjectName(e.target.value)}
-        />
-      </div>
-
-      {/* Crew Name Input */}
-      <div className="grid w-full items-center gap-3">
-        <Label className="text-2xl">
-          Enter Crew Name
-          <span className={crewName ? "invisible" : "text-red-500"}>*</span>
-        </Label>
-        <Input
-          className={`w-1/3 ${
-            currentError == "crew_name" ? "border-red-500" : ""
-          }`}
-          placeholder="Enter Crew Name..."
-          onChange={(e) => setCrewName(e.target.value)}
-        />
-      </div>
-
-      {/* Director Name Input */}
-      <div className="grid w-full items-center gap-3">
-        <Label className="text-2xl">
-          Enter Director Name
-          <span className={directorName ? "invisible" : "text-red-500"}>*</span>
-        </Label>
-        <Input
-          className={`w-1/3 ${
-            currentError == "director_name" ? "border-red-500" : ""
-          }`}
-          placeholder="Enter Director Name..."
-          onChange={(e) => setDirectorName(e.target.value)}
-        />
-      </div>
-
-      {/* Date Input */}
-      <div className="flex flex-col gap-3">
-        <Label htmlFor="date" className="text-2xl">
-          Project Date
-          <span className={date ? "invisible" : "text-red-500"}>*</span>
-        </Label>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            asChild
-            className={currentError == "project_date" ? "border-red-500" : ""}
+      {loading ? (
+        <div>Loading Lookbook...</div>
+      ) : (
+        <>
+          {/* Project Name input */}
+          <div
+            className={`flex flex-col items-start gap-3${
+              currentDemoStep === 2
+                ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+                : ""
+            }`}
           >
-            <Button
-              variant="outline"
-              id="date"
-              className="w-48 justify-between font-normal"
-            >
-              {date ? date.toLocaleDateString() : "Select date"}
-              <ChevronDownIcon />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              captionLayout="dropdown"
-              onSelect={(date) => {
-                setDate(date);
-                setOpen(false);
-              }}
-              classNames={{
-                caption_dropdowns: "text-sm",
-                day: "text-sm",
-                head_cell: "text-sm",
-                cell: "text-sm",
-              }}
+            <Label className="text-2xl">
+              Enter Project Name
+              <span className={projectName ? "invisible" : "text-red-500"}>
+                *
+              </span>
+            </Label>
+            <Input
+              className={`w-1/3 ${
+                currentError == "project_name" ? "border-red-500" : ""
+              }`}
+              placeholder="Enter Project Name..."
+              onChange={(e) => setProjectName(e.target.value)}
+              value={projectName ?? ""}
+              disabled={!canEdit}
             />
-          </PopoverContent>
-        </Popover>
-      </div>
+          </div>
 
-      {/* Adding Roles */}
-      <div
-        className="flex flex-row justify-between items-center mt-10"
-        id="step-3"
-      >
-        <div
-          className={`${
-            currentDemoStep === 4
-              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
-              : ""
-          }`}
-        >
-          <Button
-            className="hover:cursor-pointer"
-            size="lg"
-            onClick={create_new_role}
+          {/* Crew Name Input */}
+          <div className="grid w-full items-center gap-3">
+            <Label className="text-2xl">
+              Enter Crew Name
+              <span className={crewName ? "invisible" : "text-red-500"}>*</span>
+            </Label>
+            <Input
+              className={`w-1/3 ${
+                currentError == "crew_name" ? "border-red-500" : ""
+              }`}
+              placeholder="Enter Crew Name..."
+              onChange={(e) => setCrewName(e.target.value)}
+              value={crewName ?? ""}
+              disabled={!canEdit}
+            />
+          </div>
+
+          {/* Director Name Input */}
+          <div className="grid w-full items-center gap-3">
+            <Label className="text-2xl">
+              Enter Director Name
+              <span className={directorName ? "invisible" : "text-red-500"}>
+                *
+              </span>
+            </Label>
+            <Input
+              className={`w-1/3 ${
+                currentError == "director_name" ? "border-red-500" : ""
+              }`}
+              placeholder="Enter Director Name..."
+              onChange={(e) => setDirectorName(e.target.value)}
+              value={directorName ?? ""}
+              disabled={!canEdit}
+            />
+          </div>
+
+          {/* Date Input */}
+          <div className="flex flex-col gap-3">
+            <Label htmlFor="date" className="text-2xl">
+              Project Date
+              <span className={date ? "invisible" : "text-red-500"}>*</span>
+            </Label>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger
+                asChild
+                className={
+                  currentError == "project_date" ? "border-red-500" : ""
+                }
+              >
+                <Button
+                  variant="outline"
+                  id="date"
+                  className="w-48 justify-between font-normal"
+                >
+                  {date ? date.toLocaleDateString() : "Select date"}
+                  <ChevronDownIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  captionLayout="dropdown"
+                  onSelect={(date) => {
+                    setDate(date);
+                    setOpen(false);
+                  }}
+                  classNames={{
+                    caption_dropdowns: "text-sm",
+                    day: "text-sm",
+                    head_cell: "text-sm",
+                    cell: "text-sm",
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Adding Roles */}
+          <div
+            className="flex flex-row justify-between items-center mt-10"
+            id="step-3"
           >
-            Add Role <Plus />
-          </Button>
-        </div>
-        <div
-          className={`flex flex-row justify-between items-center gap-2${
-            currentDemoStep === 6
-              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
-              : ""
-          }`}
-        >
-          <Label className="text-lg font-light">Jump to Role:</Label>
-          <Select
-            onValueChange={(id) => {
-              jump_to_role(id);
-            }}
+            <div
+              className={`${
+                currentDemoStep === 4
+                  ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+                  : ""
+              }`}
+            >
+              <Button
+                className="hover:cursor-pointer"
+                size="lg"
+                onClick={create_new_role}
+              >
+                Add Role <Plus />
+              </Button>
+            </div>
+            <div
+              className={`flex flex-row justify-between items-center gap-2${
+                currentDemoStep === 6
+                  ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+                  : ""
+              }`}
+            >
+              <Label className="text-lg font-light">Jump to Role:</Label>
+              <Select
+                onValueChange={(id) => {
+                  jump_to_role(id);
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Role ID" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role, index) => (
+                    <SelectItem key={index} value={String(role.id)}>
+                      {role.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Adding Roles */}
+          <Label className="text-2xl">Add Roles:</Label>
+          <div
+            id="step-2"
+            className={`flex flex-col gap-5${
+              currentDemoStep === 3
+                ? "relative z-40 bg-white p-3 w-full rounded-sm"
+                : ""
+            }`}
           >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Role ID" />
-            </SelectTrigger>
-            <SelectContent>
-              {roles.map((role) => (
-                <SelectItem key={role.id} value={String(role.id)}>
-                  {role.id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            {roles.map((role, index) => (
+              <RoleInput
+                key={`${index}-${refreshKey}`}
+                loaded_role={role}
+                updateRoles={setRoles}
+                roles={roles}
+                currentEmpty={Number(currentEmpty)}
+                setCurrentEmpty={setCurrentEmpty}
+                canEdit={canEdit}
+              />
+            ))}
+          </div>
 
-      <Label className="text-2xl">Add Roles:</Label>
-
-      <div
-        id="step-2"
-        className={`${
-          currentDemoStep === 3
-            ? "relative z-40 bg-white p-3 w-full rounded-sm"
-            : ""
-        }`}
-      >
-        {roles.map((role, index) => (
-          <RoleInput
-            key={index}
-            role_id={role.id}
-            updateRoles={setRoles}
-            roles={roles}
-            currentEmpty={Number(currentEmpty)}
-            setCurrentEmpty={setCurrentEmpty}
-          />
-        ))}
-      </div>
-
-      <div id="step-4" className={`flex items-center justify-center `}>
-        <div
-          className={`w-1/2 ${
-            currentDemoStep === 5
-              ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
-              : ""
-          }`}
-        >
-          <Button
-            className="w-full hover:cursor-pointer"
-            onClick={create_new_role}
-          >
-            Add Role
-            <Plus />
-          </Button>
-        </div>
-      </div>
+          {/* Add Roles Button */}
+          <div id="step-4" className={`flex items-center justify-center `}>
+            <div
+              className={`w-1/2 ${
+                currentDemoStep === 5
+                  ? " relative z-40 bg-white p-3 max-w-lg rounded-sm"
+                  : ""
+              }`}
+            >
+              <Button
+                className="w-full hover:cursor-pointer"
+                onClick={create_new_role}
+              >
+                Add Role
+                <Plus />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
