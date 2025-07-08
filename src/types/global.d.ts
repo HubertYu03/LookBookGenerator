@@ -23,3 +23,11 @@ export type Role = {
   stylingSuggestions: Img[];
   accessories: Img[];
 };
+
+export type User = {
+  user_id: string;
+  created_at: Date;
+  first_name: string;
+  last_name: string;
+  avatar: string;
+}

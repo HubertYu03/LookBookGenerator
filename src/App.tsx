@@ -3,10 +3,17 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Buffer } from "buffer";
 import { v4 } from "uuid";
+import { get_avatar } from "./lib/utils";
 
 // Importing UI Components
 import { Toaster } from "sonner";
 import { Button } from "./components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   SidebarProvider,
   Sidebar,
@@ -16,7 +23,7 @@ import {
   SidebarMenu,
   SidebarGroupLabel,
 } from "./components/ui/sidebar";
-import logo from "/PlayletLogo.png";
+
 import {
   BookPlus,
   BookText,
@@ -25,6 +32,7 @@ import {
   Map,
   MapPlus,
 } from "lucide-react";
+import logo from "/PlayletLogo.png";
 
 // Importing Pages
 import LookBookGenerator from "./pages/LookBookGenerator";
@@ -42,11 +50,17 @@ import Register from "./pages/Register";
 import AuthCallback from "./components/AuthCallback";
 import SidebarLinks from "./components/SidebarLinks";
 
+import type { User } from "./types/global";
+
 window.Buffer = Buffer;
 
 function App() {
   // Sidebar States
   const [open, setOpen] = useState<boolean>(true);
+
+  // User State
+  const [userData, setUserData] = useState<User>();
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   // Helper function to get the current user (if any)
   async function get_user() {
@@ -58,7 +72,23 @@ function App() {
       console.log(user.id);
       localStorage.setItem("PlayletUserID", user.id);
     } else {
-      console.log("There is not user logged in");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/";
+        return;
+      }
+    }
+
+    // Get the user data from the database
+    let { data: user_data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("user_id", localStorage.getItem("PlayletUserID"));
+
+    if (user_data) {
+      setUserData(user_data[0]);
+      setAvatar(get_avatar(user_data[0].avatar));
+    } else {
+      console.log(error);
     }
   }
 
@@ -158,9 +188,37 @@ function App() {
                   </SidebarContent>
 
                   {/* Sideber Footer */}
-                  <SidebarFooter className="flex-row items-center gap-2 text-nowrap">
-                    <img src={logo} alt="logo" className="w-12" />
-                    {open && <div className="font-semibold"></div>}
+                  <SidebarFooter>
+                    <div className="flex flex-row items-center gap-3 text-nowrap p-2 rounded-lg">
+                      {avatar ? (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <img
+                              src={avatar}
+                              alt="avatar"
+                              className="w-12 rounded-full border hover:cursor-pointer"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>TEST</TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Skeleton className="w-12 h-12 rounded-full" />
+                      )}
+                      {open && (
+                        <div>
+                          {userData ? (
+                            <div className="font-normal">
+                              {userData.first_name} {userData.last_name}
+                            </div>
+                          ) : (
+                            <>
+                              <Skeleton className="h-3 w-36" />
+                              <Skeleton className="h-3 w-20" />
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </SidebarFooter>
                 </Sidebar>
                 <main className="flex-grow overflow-y-auto">

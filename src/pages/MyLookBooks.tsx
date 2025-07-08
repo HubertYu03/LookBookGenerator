@@ -44,7 +44,8 @@ const MyLookBooks = () => {
   }, []);
 
   return (
-    <div>
+    <div className="p-6 space-y-4">
+      <div className="text-5xl font-semibold">My Lookbooks</div>
       {myLookbooks?.map((lookbook, index) => (
         <Button
           key={index}

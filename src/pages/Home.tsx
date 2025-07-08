@@ -1,7 +1,13 @@
+// Importing dependencies
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
+import { get_user } from "@/lib/utils";
+
+// Importing database
+import { supabase } from "@/lib/supabaseClient";
+
+// Importing UI components
+import { Button } from "@/components/ui/button";
 
 const Home = () => {
   // Navigate state
@@ -21,10 +27,12 @@ const Home = () => {
 
   useEffect(() => {
     document.title = "Playet Tools | Home";
+
+    get_user(navigate);
   }, []);
 
   return (
-    <div>
+    <div className="p-6">
       <div>Home</div>
       <Button onClick={sign_out}>Sign Out</Button>
       <Button

@@ -148,6 +148,7 @@ const Login = () => {
           <Button
             className="w-full hover:cursor-pointer"
             onClick={sign_in_user}
+            type="submit"
           >
             Login
           </Button>

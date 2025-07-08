@@ -373,18 +373,20 @@ const LookBookGenerator = () => {
           }
 
           if (role_data) {
-            const path: string = role_data[0].roles[index].colorPalette.src;
+            if (role_data[0].roles[index].colorPalette) {
+              const path: string = role_data[0].roles[index].colorPalette.src;
 
-            const { error } = await supabase.storage
-              .from("lookbook")
-              .remove([path]);
+              const { error } = await supabase.storage
+                .from("lookbook")
+                .remove([path]);
 
-            if (error) {
-              console.log(error);
+              if (error) {
+                console.log(error);
+              }
+
+              console.log("Image Deleted");
             }
           }
-
-          console.log("Image Deleted");
 
           lookbook_data.roles[index].colorPalette = null;
         }
