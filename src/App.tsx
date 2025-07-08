@@ -42,6 +42,7 @@ import MyLocationBooks from "./pages/MyLocationBooks";
 import LocationBookGenerator from "./pages/LocationBookGenerator";
 import Register from "./pages/Register";
 import AuthCallback from "./components/AuthCallback";
+import SidebarLinks from "./components/SidebarLinks";
 
 window.Buffer = Buffer;
 
@@ -121,23 +122,7 @@ function App() {
                   <SidebarContent>
                     {/* Home Button */}
                     <SidebarMenu>
-                      <SidebarMenuItem className="pl-1">
-                        <SidebarMenuButton
-                          tooltip="Home"
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            window.location.href = "/";
-                          }}
-                        >
-                          <a
-                            href="/"
-                            className="flex flex-row items-center gap-2"
-                          >
-                            <House />
-                            {open && <span>Home</span>}
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <SidebarLinks title="Home" path="/" icon={House} />
                     </SidebarMenu>
 
                     {/* Divider */}
@@ -147,50 +132,18 @@ function App() {
                     <SidebarGroupLabel>Lookbooks</SidebarGroupLabel>
                     <SidebarMenu>
                       {/* View all look books */}
-                      <SidebarMenuItem className="pl-1">
-                        <SidebarMenuButton
-                          tooltip="Your Lookbooks"
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            window.location.href = "/mylookbooks";
-                          }}
-                        >
-                          <a
-                            href="/"
-                            className="flex flex-row items-center gap-2"
-                          >
-                            <BookText />
-                            {open && (
-                              <span className="text-nowrap">
-                                Your Lookbooks
-                              </span>
-                            )}
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <SidebarLinks
+                        title="My Lookbooks"
+                        path="/mylookbooks"
+                        icon={BookText}
+                      />
 
                       {/* create new look book */}
-                      <SidebarMenuItem className="pl-1">
-                        <SidebarMenuButton
-                          tooltip="Create Lookbook"
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            window.location.href = `/lookbookgenerator/${v4()}`;
-                          }}
-                        >
-                          <a
-                            href={`/lookbookgenerator/${v4()}`}
-                            className="flex flex-row items-center gap-2"
-                          >
-                            <BookPlus />
-                            {open && (
-                              <span className="text-nowrap">
-                                Create Lookbook
-                              </span>
-                            )}
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <SidebarLinks
+                        title="Create New Lookbook"
+                        path={`/lookbookgenerator/${v4()}`}
+                        icon={BookPlus}
+                      />
                     </SidebarMenu>
 
                     {/* Divider */}
@@ -200,50 +153,18 @@ function App() {
                     <SidebarGroupLabel>Location Books</SidebarGroupLabel>
                     <SidebarMenu>
                       {/* View Your Location Books */}
-                      <SidebarMenuItem className="pl-1">
-                        <SidebarMenuButton
-                          tooltip="Your Location Books"
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            window.location.href = "/mylocationbooks";
-                          }}
-                        >
-                          <a
-                            href="/"
-                            className="flex flex-row items-center gap-2"
-                          >
-                            <Map />
-                            {open && (
-                              <span className="text-nowrap">
-                                Your Location Books
-                              </span>
-                            )}
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <SidebarLinks
+                        title="My Location Books"
+                        path="/mylocationbooks"
+                        icon={Map}
+                      />
 
                       {/* Create New Location Book */}
-                      <SidebarMenuItem className="pl-1">
-                        <SidebarMenuButton
-                          tooltip="Create Location Book"
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            window.location.href = `/locationbookgenerator/${v4()}`;
-                          }}
-                        >
-                          <a
-                            href={`/locationbookgenerator/${v4()}`}
-                            className="flex flex-row items-center gap-2"
-                          >
-                            <MapPlus />
-                            {open && (
-                              <span className="text-nowrap">
-                                Create Location Book
-                              </span>
-                            )}
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      <SidebarLinks
+                        title="Create New Location Book"
+                        path={`/locationbookgenerator/${v4()}`}
+                        icon={MapPlus}
+                      />
                     </SidebarMenu>
                   </SidebarContent>
 
