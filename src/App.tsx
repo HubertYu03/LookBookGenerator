@@ -13,9 +13,7 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarMenuItem,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarGroupLabel,
 } from "./components/ui/sidebar";
 import logo from "/PlayletLogo.png";
