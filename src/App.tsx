@@ -59,15 +59,6 @@ function App() {
       localStorage.setItem("PlayletUserID", user.id);
     } else {
       console.log("There is not user logged in");
-
-      // Redirect to login page
-      const currentPathname = window.location.pathname;
-      const isOnAuthPage: boolean =
-        currentPathname === "/login" || currentPathname === "/register";
-
-      if (!isOnAuthPage) {
-        window.location.href = "/login";
-      }
     }
   }
 
