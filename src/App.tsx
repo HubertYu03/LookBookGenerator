@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Buffer } from "buffer";
 import { v4 } from "uuid";
 import { get_avatar } from "./lib/utils";
+import Images from "./assets/avatar/AvatarIndex";
 
 // Importing UI Components
 import { Toaster } from "sonner";
@@ -14,6 +15,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   SidebarProvider,
   Sidebar,
@@ -191,16 +197,42 @@ function App() {
                   <SidebarFooter>
                     <div className="flex flex-row items-center gap-3 text-nowrap p-2 rounded-lg">
                       {avatar ? (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <img
-                              src={avatar}
-                              alt="avatar"
-                              className="w-12 rounded-full border hover:cursor-pointer"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>TEST</TooltipContent>
-                        </Tooltip>
+                        <Popover>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <PopoverTrigger asChild>
+                                <img
+                                  src={avatar}
+                                  alt="avatar"
+                                  className="w-12 h-12 rounded-full border object-cover hover:cursor-pointer"
+                                />
+                              </PopoverTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Click to change avatar
+                            </TooltipContent>
+                          </Tooltip>
+                          <PopoverContent>
+                            <div className="mb-3 font-light text-sm">
+                              Select avatar to change to:
+                            </div>
+                            <div className="flex flex-row justify-center items-center gap-2">
+                              {Images.map(
+                                (
+                                  img: { label: string; src: string },
+                                  index
+                                ) => (
+                                  <img
+                                    key={index}
+                                    src={img.src}
+                                    alt={`${img.label}_avatar`}
+                                    className="w-12 h-12 rounded-full border object-cover"
+                                  />
+                                )
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       ) : (
                         <Skeleton className="w-12 h-12 rounded-full" />
                       )}

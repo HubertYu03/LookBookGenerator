@@ -2,7 +2,11 @@
 import { pdf } from "@react-pdf/renderer";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { dataURLtoFile } from "@/lib/utils";
+import {
+  dataURLtoFile,
+  deleteAllFilesInBucket,
+  list_all_files,
+} from "@/lib/utils";
 
 // Import Supabase
 import { supabase } from "@/lib/supabaseClient";
@@ -338,59 +342,217 @@ const LookBookGenerator = () => {
       console.log(lookbook_data);
 
       // We need to first process the role fields and images, loop through all the roles
-      roles.map(async (role, index) => {
-        // If there is an input from role
-        if (role.colorPalette) {
-          // First check if the file is still in data format
-          if (role.colorPalette.src.startsWith("data:image")) {
-            // Convert the file to a supabase path then insert it into the colorPalette path
-            const converted_file: File = dataURLtoFile(
-              role.colorPalette.src,
-              `${role.colorPalette.id}.png`
+      await Promise.all(
+        roles.map(async (role, index) => {
+          // If there is an input from role
+          if (role.colorPalette) {
+            // First check if the file is still in data format
+            if (role.colorPalette.src.startsWith("data:image")) {
+              // Convert the file to a supabase path then insert it into the colorPalette path
+              const converted_file: File = dataURLtoFile(
+                role.colorPalette.src,
+                `${role.colorPalette.id}.png`
+              );
+
+              // Generate the path for color palettes and upload the image
+              const path_name: string = `private/${look_book_id}/color_palette/${role.colorPalette.id}.jpg`;
+              uploadImage(converted_file, path_name);
+
+              // Add this path name to the object that is going to be updated
+              const new_color_palette: Img = {
+                src: path_name,
+                id: role.colorPalette.id,
+              };
+
+              // Update the data sent to the database
+              lookbook_data.roles[index].colorPalette = new_color_palette;
+            } else {
+            }
+          } else {
+            // If there is no images selected check if there exists a path in the database
+            let { data: role_data, error } = await supabase
+              .from("lookbooks")
+              .select("roles")
+              .eq("lookbook_id", look_book_id);
+
+            if (error) {
+              console.log(error);
+            }
+
+            if (role_data) {
+              if (role_data[0].roles[index]) {
+                if (role_data[0].roles[index].colorPalette) {
+                  const path: string =
+                    role_data[0].roles[index].colorPalette.src;
+
+                  const { error } = await supabase.storage
+                    .from("lookbook")
+                    .remove([path]);
+
+                  if (error) {
+                    console.log(error);
+                  }
+
+                  console.log("Image Deleted");
+                }
+              }
+            }
+
+            lookbook_data.roles[index].colorPalette = null;
+          }
+
+          if (role.colorPalette) {
+            // After processing the color palette, check to see which images
+            // need to be deleted from the database if there are extra
+
+            // Get all the currently saved paths
+            let saved_img_list: string[] = [role.colorPalette.src];
+
+            // Get a list of the current images and the images in the storage
+            let storage_list = await list_all_files(
+              "lookbook",
+              `private/${look_book_id}/color_palette`
             );
 
-            // Generate the path for color palettes and upload the image
-            const path_name: string = `private/${look_book_id}/color_palette/${role.colorPalette.id}.jpg`;
-            uploadImage(converted_file, path_name);
+            // // convert the storage list in a list string
+            let file_img_list: string[] = [];
+            storage_list.forEach((filename) => {
+              file_img_list.push(
+                `private/${look_book_id}/color_palette/${filename}`
+              );
+            });
 
-            // Add this path name to the object that is going to be updated
-            const new_color_palette: Img = {
-              src: path_name,
-              id: role.colorPalette.id,
-            };
-            lookbook_data.roles[0].colorPalette = new_color_palette;
-          } else {
-            // If there is an existing color palette, check the ID
-          }
-        } else {
-          // If there is no images selected check if there exists a path in the database
-          let { data: role_data, error } = await supabase
-            .from("lookbooks")
-            .select("roles")
-            .eq("lookbook_id", look_book_id);
-          if (error) {
-            console.log(error);
-          }
+            console.log(saved_img_list);
+            console.log(file_img_list);
 
-          if (role_data) {
-            if (role_data[0].roles[index].colorPalette) {
-              const path: string = role_data[0].roles[index].colorPalette.src;
+            if (file_img_list.length != 0 || saved_img_list.length != 0) {
+              // // Get the non matching img names
+              let nonMatching: string[] = [
+                ...saved_img_list.filter(
+                  (item) => !file_img_list.includes(item)
+                ),
+                ...file_img_list.filter(
+                  (item) => !saved_img_list.includes(item)
+                ),
+              ];
 
-              const { error } = await supabase.storage
-                .from("lookbook")
-                .remove([path]);
+              console.log(nonMatching);
 
-              if (error) {
-                console.log(error);
+              // If there are non matching files, delete them from the database
+              if (nonMatching.length > 0) {
+                // Delete the files from the storage
+                const { error } = await supabase.storage
+                  .from("lookbook")
+                  .remove(nonMatching);
+                if (error) {
+                  console.log(error);
+                }
               }
-
-              console.log("Image Deleted");
             }
           }
 
-          lookbook_data.roles[index].colorPalette = null;
-        }
-      });
+          // Processing the styling images
+          if (role.stylingSuggestions.length > 0) {
+            console.log("There are styling images to save");
+            // Loop through all the images so we can begin processing
+
+            // Get a potential pathname
+            role.stylingSuggestions.forEach((img, i) => {
+              // If the image is a newly inputed image
+              if (img.src.startsWith("data:image")) {
+                // Convert the file to a supabase path then insert it into the styling storage bucket
+                const converted_file: File = dataURLtoFile(
+                  img.src,
+                  `${img.id}.jpg`
+                );
+
+                // Create the path to that image and upload
+                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+
+                uploadImage(converted_file, path_name);
+
+                // Add this path name to the object that is going to be updated
+                const new_styling_img: Img = {
+                  src: path_name,
+                  id: img.id,
+                };
+
+                role.stylingSuggestions[i] = new_styling_img;
+              } else if (!img.src.startsWith("private")) {
+                // Since the saved image was generated as a path, re-convert it into a path and replace it
+                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+
+                role.stylingSuggestions[i] = { src: path_name, id: img.id };
+              }
+            });
+          } else {
+            // If the list is empty, that means there are no images selected.
+            // Delete all the images in the bucket
+            deleteAllFilesInBucket(
+              "lookbook",
+              `private/${look_book_id}/styling`
+            );
+          }
+
+          // Delete files that are not part of the list
+          if (role.stylingSuggestions.length > 0) {
+            // After processing the images, check to see which images
+            // need to be deleted from the database if there are extra
+
+            // Get all the currently saved paths
+            let saved_img_list: string[] = [];
+            role.stylingSuggestions.forEach((img) => {
+              saved_img_list.push(img.src);
+            });
+
+            // Get a list of the current images and the images in the storage
+            let storage_list = await list_all_files(
+              "lookbook",
+              `private/${look_book_id}/styling/${role.id}`
+            );
+
+            // // convert the storage list in a list string
+            let file_img_list: string[] = [];
+            storage_list.forEach((filename) => {
+              file_img_list.push(
+                `private/${look_book_id}/styling/${role.id}/${filename}`
+              );
+            });
+
+            console.log(saved_img_list);
+            console.log(file_img_list);
+
+            if (file_img_list.length != 0 || saved_img_list.length != 0) {
+              // // Get the non matching img names
+              let nonMatching: string[] = [
+                ...saved_img_list.filter(
+                  (item) => !file_img_list.includes(item)
+                ),
+                ...file_img_list.filter(
+                  (item) => !saved_img_list.includes(item)
+                ),
+              ];
+
+              console.log(nonMatching);
+
+              // If there are non matching files, delete them from the database
+              if (nonMatching.length > 0) {
+                // Delete the files from the storage
+                const { error } = await supabase.storage
+                  .from("lookbook")
+                  .remove(nonMatching);
+                if (error) {
+                  console.log(error);
+                }
+              }
+            }
+          }
+
+          // Process the Accessory images
+        })
+      );
+
+      console.log(lookbook_data);
 
       const { error } = await supabase
         .from("lookbooks")

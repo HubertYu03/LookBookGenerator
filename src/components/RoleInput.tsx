@@ -203,6 +203,7 @@ const RoleInput = ({
 
     // Clear the color palette ref
     setColorPalette(null);
+    setColorPalettePreview(null);
     if (colorPaletteInputRef.current) {
       colorPaletteInputRef.current.value = "";
     }
@@ -244,6 +245,32 @@ const RoleInput = ({
           id: loaded_role.colorPalette.id,
         });
       }
+    }
+
+    // Load the styling images if they exist
+    if (loaded_role.stylingSuggestions.length > 0) {
+      const stylingImgs = await Promise.all(
+        loaded_role.stylingSuggestions.map(async (img) => {
+          const path: string = img.src;
+          const { data: imgData, error } = await supabase.storage
+            .from("lookbook")
+            .createSignedUrl(path, 1800);
+
+          if (error) {
+            console.error(error);
+            return null;
+          }
+
+          return imgData?.signedUrl
+            ? { src: imgData.signedUrl, id: img.id }
+            : null;
+        })
+      );
+
+      // Filter out any nulls
+      setStylingSuggestions(
+        stylingImgs.filter((img): img is Img => img !== null)
+      );
     }
   }
 
