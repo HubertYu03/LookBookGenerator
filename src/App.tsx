@@ -90,10 +90,10 @@ function App() {
       .select("*")
       .eq("user_id", localStorage.getItem("PlayletUserID"));
 
-    if (user_data) {
+    if (!error && user_data && user_data.length > 0) {
       setUserData(user_data[0]);
       setAvatar(get_avatar(user_data[0].avatar));
-    } else {
+    } else if (error) {
       console.log(error);
     }
   }

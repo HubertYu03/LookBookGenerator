@@ -490,7 +490,7 @@ const LookBookGenerator = () => {
             // Delete all the images in the bucket
             deleteAllFilesInBucket(
               "lookbook",
-              `private/${look_book_id}/styling`
+              `private/${look_book_id}/styling/${role.id}`
             );
           }
 
