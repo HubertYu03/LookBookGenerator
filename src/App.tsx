@@ -78,7 +78,8 @@ function App() {
       console.log(user.id);
       localStorage.setItem("PlayletUserID", user.id);
     } else {
-      if (window.location.pathname !== "/login") {
+      const path: string = window.location.pathname;
+      if (path !== "/login" && path !== "/register") {
         window.location.href = "/";
         return;
       }
