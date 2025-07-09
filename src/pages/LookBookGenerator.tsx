@@ -335,6 +335,38 @@ const LookBookGenerator = () => {
       .select("*")
       .eq("lookbook_id", look_book_id);
 
+    // If a role was deleted, delete all the fiels associated with that folder
+    if (data && data[0].roles.length > roles.length) {
+      console.log("There are roles to delete");
+
+      const saved_roles: Role[] = data[0].roles;
+      const current_roles: Role[] = roles;
+
+      // Extract IDs from current roles
+      const current_role_ids = current_roles.map((r) => r.id);
+
+      // Get roles that are in savedRoles but not in currentRoles
+      const roles_to_delete = saved_roles.filter(
+        (saved_role) => !current_role_ids.includes(saved_role.id)
+      );
+
+      console.log("Deleted Roles:", roles_to_delete);
+      // Delete all the files in the unused roles
+      roles_to_delete.map(async (role) => {
+        // Delete the color palettes
+        await deleteAllFilesInBucket(
+          "lookbook",
+          `private/${look_book_id}/color_palette/${role.id}`
+        );
+
+        // Delete the styles
+        await deleteAllFilesInBucket(
+          "lookbook",
+          `private/${look_book_id}/styling/${role.id}`
+        );
+      });
+    }
+
     if (data?.length != 0) {
       // If the lookbook exists
       console.log("look book exists");
@@ -355,8 +387,8 @@ const LookBookGenerator = () => {
               );
 
               // Generate the path for color palettes and upload the image
-              const path_name: string = `private/${look_book_id}/color_palette/${role.colorPalette.id}.jpg`;
-              uploadImage(converted_file, path_name);
+              const path_name: string = `private/${look_book_id}/color_palette/${role.id}/${role.colorPalette.id}.jpg`;
+              await uploadImage(converted_file, path_name);
 
               // Add this path name to the object that is going to be updated
               const new_color_palette: Img = {
@@ -411,14 +443,14 @@ const LookBookGenerator = () => {
             // Get a list of the current images and the images in the storage
             let storage_list = await list_all_files(
               "lookbook",
-              `private/${look_book_id}/color_palette`
+              `private/${look_book_id}/color_palette/${role.id}`
             );
 
             // // convert the storage list in a list string
             let file_img_list: string[] = [];
             storage_list.forEach((filename) => {
               file_img_list.push(
-                `private/${look_book_id}/color_palette/${filename}`
+                `private/${look_book_id}/color_palette/${role.id}/${filename}`
               );
             });
 
@@ -456,39 +488,31 @@ const LookBookGenerator = () => {
             console.log("There are styling images to save");
             // Loop through all the images so we can begin processing
 
-            // Get a potential pathname
-            role.stylingSuggestions.forEach((img, i) => {
-              // If the image is a newly inputed image
-              if (img.src.startsWith("data:image")) {
-                // Convert the file to a supabase path then insert it into the styling storage bucket
-                const converted_file: File = dataURLtoFile(
-                  img.src,
-                  `${img.id}.jpg`
-                );
+            await Promise.all(
+              role.stylingSuggestions.map(async (img, i) => {
+                if (img.src.startsWith("data:image")) {
+                  const converted_file: File = dataURLtoFile(
+                    img.src,
+                    `${img.id}.jpg`
+                  );
+                  const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
 
-                // Create the path to that image and upload
-                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+                  await uploadImage(converted_file, path_name);
 
-                uploadImage(converted_file, path_name);
-
-                // Add this path name to the object that is going to be updated
-                const new_styling_img: Img = {
-                  src: path_name,
-                  id: img.id,
-                };
-
-                role.stylingSuggestions[i] = new_styling_img;
-              } else if (!img.src.startsWith("private")) {
-                // Since the saved image was generated as a path, re-convert it into a path and replace it
-                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
-
-                role.stylingSuggestions[i] = { src: path_name, id: img.id };
-              }
-            });
+                  role.stylingSuggestions[i] = {
+                    src: path_name,
+                    id: img.id,
+                  };
+                } else if (!img.src.startsWith("private")) {
+                  const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+                  role.stylingSuggestions[i] = { src: path_name, id: img.id };
+                }
+              })
+            );
           } else {
             // If the list is empty, that means there are no images selected.
             // Delete all the images in the bucket
-            deleteAllFilesInBucket(
+            await deleteAllFilesInBucket(
               "lookbook",
               `private/${look_book_id}/styling/${role.id}`
             );
@@ -552,7 +576,7 @@ const LookBookGenerator = () => {
         })
       );
 
-      console.log(lookbook_data);
+      console.log(lookbook_data.roles);
 
       const { error } = await supabase
         .from("lookbooks")

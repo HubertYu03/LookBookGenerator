@@ -48,8 +48,6 @@ export const deleteAllFilesInBucket = async (
     return;
   }
 
-  console.log(files);
-
   // If there are files to delete, delete them
   if (files.length > 0) {
     const paths_to_delete: string[] = [];
