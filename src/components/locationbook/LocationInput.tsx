@@ -201,7 +201,10 @@ const LocationInput = ({
   }, [timeOfDay, locationType, locationName, locationImgs, scene]);
 
   return (
-    <Card id={`location-${loaded_location.id}`}>
+    <Card
+      id={`location-${loaded_location.id}`}
+      className={loaded_location.id == currentEmpty ? "border-red-500" : ""}
+    >
       <CardContent className="flex flex-col gap-5">
         {/* Scene Name Input */}
         <div className="flex flex-row justify-between items-start">

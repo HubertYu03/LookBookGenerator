@@ -568,7 +568,7 @@ const LocationBookGenerator = () => {
             {locations.map((location, index) => (
               <LocationInput
                 key={`${index}-${refreshKey}`}
-                canEdit={canEdit}
+                canEdit={true}
                 loaded_location={location}
                 locations={locations}
                 updateLocations={setLocations}
