@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Buffer } from "buffer";
 import { v4 } from "uuid";
 import { get_avatar } from "./lib/utils";
-import Images from "./assets/avatar/AvatarIndex";
+// import Images from "./assets/avatar/AvatarIndex";
 
 // Importing UI Components
 import { Toaster } from "sonner";
