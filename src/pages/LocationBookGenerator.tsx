@@ -404,6 +404,7 @@ const LocationBookGenerator = () => {
               document.getElementById(`top-of-page`);
             target?.scrollIntoView({ behavior: "smooth" });
           }}
+          disabled={!canEdit}
         >
           Back to Top
           <ChevronUp />
@@ -423,14 +424,18 @@ const LocationBookGenerator = () => {
             <CircleQuestionMark />
           </Button>
 
-          <Button className="hover:cursor-pointer" onClick={save_progress}>
+          <Button
+            className="hover:cursor-pointer"
+            onClick={save_progress}
+            disabled={!canEdit}
+          >
             Save <Save />
           </Button>
 
           <Button
             className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
             onClick={generate_location_book}
-            disabled={loading}
+            disabled={loading || !canEdit}
           >
             Generate Location Book
             <FileText />
@@ -458,6 +463,7 @@ const LocationBookGenerator = () => {
               onChange={(e) => {
                 setProjectName(e.target.value);
               }}
+              disabled={!canEdit}
             />
           </div>
 
@@ -471,6 +477,7 @@ const LocationBookGenerator = () => {
                 setCrewName(e.target.value);
               }}
               value={crewName ?? ""}
+              disabled={!canEdit}
             />
           </div>
 
@@ -484,6 +491,7 @@ const LocationBookGenerator = () => {
                 setDirectorName(e.target.value);
               }}
               value={directorName ?? ""}
+              disabled={!canEdit}
             />
           </div>
 
@@ -498,6 +506,7 @@ const LocationBookGenerator = () => {
                   variant="outline"
                   id="date"
                   className="w-48 justify-between font-normal"
+                  disabled={!canEdit}
                 >
                   {date ? date.toLocaleDateString() : "Select date"}
                   <ChevronDownIcon />
@@ -536,6 +545,7 @@ const LocationBookGenerator = () => {
               className="hover:cursor-pointer"
               size="lg"
               onClick={create_new_location}
+              disabled={!canEdit}
             >
               Add Location <Plus />
             </Button>
@@ -547,6 +557,7 @@ const LocationBookGenerator = () => {
                 onValueChange={(id) => {
                   jump_to_location(id);
                 }}
+                disabled={!canEdit}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Location ID" />
@@ -584,6 +595,7 @@ const LocationBookGenerator = () => {
               <Button
                 className="w-full hover:cursor-pointer"
                 onClick={create_new_location}
+                disabled={!canEdit}
               >
                 Add Location
                 <Plus />
