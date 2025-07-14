@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import LookBookPreview from "@/components/lookbook/LookBookPreview";
 import { Input } from "@/components/ui/input";
-import { Funnel, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const MyLookBooks = () => {
   const navigate = useNavigate();
