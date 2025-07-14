@@ -41,7 +41,7 @@ const MyLocationBooks = () => {
   async function search_lookbooks(search: string) {
     if (search) {
       let { data: location_books, error } = await supabase
-        .from("lookbooks")
+        .from("locationbook")
         .select("*")
         .eq("author_id", localStorage.getItem("PlayletUserID"))
         .ilike("project_name", `%${search.trimStart().trimEnd()}%`);
