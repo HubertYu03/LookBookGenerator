@@ -19,7 +19,7 @@ export default function SidebarLinks({
   return (
     <SidebarMenuItem className="pl-1">
       <SidebarMenuButton
-        tooltip="Your Lookbooks"
+        tooltip={title}
         className="hover:cursor-pointer"
         onClick={() => navigate(path)}
       >

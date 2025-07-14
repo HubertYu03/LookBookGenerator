@@ -12,6 +12,9 @@ import { v4 as uuidv4 } from "uuid";
 
 // Import UI Components
 import { toast } from "sonner";
+import LookBookPreview from "@/components/lookbook/LookBookPreview";
+import { Input } from "@/components/ui/input";
+import { Funnel, Plus } from "lucide-react";
 
 const MyLookBooks = () => {
   const navigate = useNavigate();
@@ -26,14 +29,32 @@ const MyLookBooks = () => {
       .select("*")
       .eq("author_id", localStorage.getItem("PlayletUserID"));
 
-    console.log(lookbooks);
-
     if (error) {
       console.log(error);
       return;
     }
 
     setMyLookbooks(lookbooks ?? undefined);
+  }
+
+  // Handle the search
+  async function search_lookbooks(search: string) {
+    if (search) {
+      let { data: lookbooks, error } = await supabase
+        .from("lookbooks")
+        .select("*")
+        .eq("author_id", localStorage.getItem("PlayletUserID"))
+        .ilike("project_name", `%${search.trimStart().trimEnd()}%`);
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      setMyLookbooks(lookbooks ?? undefined);
+    } else {
+      get_lookbooks();
+    }
   }
 
   useEffect(() => {
@@ -46,22 +67,32 @@ const MyLookBooks = () => {
   return (
     <div className="p-6 space-y-4">
       <div className="text-5xl font-semibold">My Lookbooks</div>
-      {myLookbooks?.map((lookbook, index) => (
-        <Button
-          key={index}
-          onClick={() => {
-            navigate(`/lookbookgenerator/${lookbook.lookbook_id}`);
-          }}
-        >
-          {lookbook.project_name}
-        </Button>
-      ))}
+
+      {/* Search bar and filter button */}
+      <Input
+        placeholder="Search Project Name..."
+        onChange={(e) => search_lookbooks(e.target.value)}
+      />
+
+      {myLookbooks?.length ? (
+        <div className="flex flex-col gap-3">
+          {myLookbooks.map((lookbook, index) => (
+            <LookBookPreview key={index} lookbook={lookbook} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex justify-center my-10 text-3xl">
+          No Lookbooks Found!
+        </div>
+      )}
+
       <Button
+        className="w-full bg-green-500 hover:cursor-pointer hover:bg-green-600"
         onClick={() => {
           navigate(`/lookbookgenerator/${uuidv4()}`);
         }}
       >
-        Create New Lookbook
+        Create New Lookbook <Plus />
       </Button>
     </div>
   );

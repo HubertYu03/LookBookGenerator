@@ -93,11 +93,20 @@ export async function list_all_files(
 // Helper function to set the users avatar
 import cat from "../assets/avatar/cat_avatar.png";
 import dog from "../assets/avatar/dog_avatar.jpg";
+import lily from "../assets/avatar/lily.webp";
 
 export function get_avatar(avatar_code: string): string {
   if (avatar_code == "cat") {
     return cat;
-  } else {
+  }
+
+  if (avatar_code == "lily") {
+    return lily;
+  }
+
+  if (avatar_code == "dog") {
     return dog;
   }
+
+  return cat;
 }

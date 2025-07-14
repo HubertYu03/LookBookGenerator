@@ -45,7 +45,7 @@ import {
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
-import RoleInput from "@/components/RoleInput";
+import RoleInput from "@/components/lookbook/RoleInput";
 
 // Import Global Types
 import type { Img, Role } from "@/types/global";
@@ -310,6 +310,10 @@ const LookBookGenerator = () => {
     // Clear all toasts and errors
     toast.dismiss();
     setCurrentError("");
+    // Set a loading toast message
+    toast.info("Saving Location Book...", {
+      id: "loading-toast",
+    });
 
     // Only allow a save if the project name is not null
     if (!projectName) {
@@ -327,6 +331,7 @@ const LookBookGenerator = () => {
       director_name: directorName,
       date: date,
       roles: roles,
+      last_edited: new Date(),
     };
 
     // First check if the lookbook already exists
@@ -335,41 +340,41 @@ const LookBookGenerator = () => {
       .select("*")
       .eq("lookbook_id", look_book_id);
 
-    // If a role was deleted, delete all the fiels associated with that folder
-    if (data && data[0].roles.length > roles.length) {
-      console.log("There are roles to delete");
-
-      const saved_roles: Role[] = data[0].roles;
-      const current_roles: Role[] = roles;
-
-      // Extract IDs from current roles
-      const current_role_ids = current_roles.map((r) => r.id);
-
-      // Get roles that are in savedRoles but not in currentRoles
-      const roles_to_delete = saved_roles.filter(
-        (saved_role) => !current_role_ids.includes(saved_role.id)
-      );
-
-      console.log("Deleted Roles:", roles_to_delete);
-      // Delete all the files in the unused roles
-      roles_to_delete.map(async (role) => {
-        // Delete the color palettes
-        await deleteAllFilesInBucket(
-          "lookbook",
-          `private/${look_book_id}/color_palette/${role.id}`
-        );
-
-        // Delete the styles
-        await deleteAllFilesInBucket(
-          "lookbook",
-          `private/${look_book_id}/styling/${role.id}`
-        );
-      });
-    }
-
     if (data?.length != 0) {
       // If the lookbook exists
       console.log("look book exists");
+
+      // If a role was deleted, delete all the fiels associated with that folder
+      if (data && data[0].roles.length > roles.length) {
+        console.log("There are roles to delete");
+
+        const saved_roles: Role[] = data[0].roles;
+        const current_roles: Role[] = roles;
+
+        // Extract IDs from current roles
+        const current_role_ids = current_roles.map((r) => r.id);
+
+        // Get roles that are in savedRoles but not in currentRoles
+        const roles_to_delete = saved_roles.filter(
+          (saved_role) => !current_role_ids.includes(saved_role.id)
+        );
+
+        console.log("Deleted Roles:", roles_to_delete);
+        // Delete all the files in the unused roles
+        roles_to_delete.map(async (role) => {
+          // Delete the color palettes
+          await deleteAllFilesInBucket(
+            "lookbook",
+            `private/${look_book_id}/color_palette/${role.id}`
+          );
+
+          // Delete the styles
+          await deleteAllFilesInBucket(
+            "lookbook",
+            `private/${look_book_id}/styling/${role.id}`
+          );
+        });
+      }
 
       console.log(lookbook_data);
 
@@ -573,6 +578,93 @@ const LookBookGenerator = () => {
           }
 
           // Process the Accessory images
+          if (role.accessories.length > 0) {
+            console.log("There are accessory images to save");
+            // Loop through all the images so we can begin processing
+
+            await Promise.all(
+              role.accessories.map(async (img, i) => {
+                if (img.src.startsWith("data:image")) {
+                  const converted_file: File = dataURLtoFile(
+                    img.src,
+                    `${img.id}.jpg`
+                  );
+                  const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
+
+                  await uploadImage(converted_file, path_name);
+
+                  role.accessories[i] = {
+                    src: path_name,
+                    id: img.id,
+                  };
+                } else if (!img.src.startsWith("private")) {
+                  const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
+                  role.accessories[i] = { src: path_name, id: img.id };
+                }
+              })
+            );
+          } else {
+            // If the list is empty, that means there are no images selected.
+            // Delete all the images in the bucket
+            await deleteAllFilesInBucket(
+              "lookbook",
+              `private/${look_book_id}/accessories/${role.id}`
+            );
+          }
+
+          // Delete files that are not part of the accessory list
+          if (role.accessories.length > 0) {
+            // After processing the images, check to see which images
+            // need to be deleted from the database if there are extra
+
+            // Get all the currently saved paths
+            let saved_img_list: string[] = [];
+            role.accessories.forEach((img) => {
+              saved_img_list.push(img.src);
+            });
+
+            // Get a list of the current images and the images in the storage
+            let storage_list = await list_all_files(
+              "lookbook",
+              `private/${look_book_id}/accessories/${role.id}`
+            );
+
+            // // convert the storage list in a list string
+            let file_img_list: string[] = [];
+            storage_list.forEach((filename) => {
+              file_img_list.push(
+                `private/${look_book_id}/accessories/${role.id}/${filename}`
+              );
+            });
+
+            console.log(saved_img_list);
+            console.log(file_img_list);
+
+            if (file_img_list.length != 0 || saved_img_list.length != 0) {
+              // // Get the non matching img names
+              let nonMatching: string[] = [
+                ...saved_img_list.filter(
+                  (item) => !file_img_list.includes(item)
+                ),
+                ...file_img_list.filter(
+                  (item) => !saved_img_list.includes(item)
+                ),
+              ];
+
+              console.log(nonMatching);
+
+              // If there are non matching files, delete them from the database
+              if (nonMatching.length > 0) {
+                // Delete the files from the storage
+                const { error } = await supabase.storage
+                  .from("lookbook")
+                  .remove(nonMatching);
+                if (error) {
+                  console.log(error);
+                }
+              }
+            }
+          }
         })
       );
 
@@ -590,6 +682,7 @@ const LookBookGenerator = () => {
       }
 
       // Display success message and refetch data
+      toast.dismiss("loading-toast");
       toast.success("Saved Lookbook!");
       get_lookbook_data();
     } else {
@@ -603,6 +696,7 @@ const LookBookGenerator = () => {
       }
 
       // Display success message and refetch data
+      toast.dismiss("loading-toast");
       toast.success("Saved Lookbook!");
       get_lookbook_data();
     }
@@ -769,7 +863,9 @@ const LookBookGenerator = () => {
       </div>
 
       {loading ? (
-        <div>Loading Lookbook...</div>
+        <div className="flex justify-center items-center min-h-screen pb-32 text-2xl">
+          Loading Lookbook...
+        </div>
       ) : (
         <>
           {/* Project Name input */}

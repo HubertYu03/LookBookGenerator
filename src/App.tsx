@@ -9,17 +9,6 @@ import Images from "./assets/avatar/AvatarIndex";
 // Importing UI Components
 import { Toaster } from "sonner";
 import { Button } from "./components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   SidebarProvider,
   Sidebar,
@@ -55,6 +44,7 @@ import LocationBookGenerator from "./pages/LocationBookGenerator";
 import Register from "./pages/Register";
 import AuthCallback from "./components/AuthCallback";
 import SidebarLinks from "./components/SidebarLinks";
+import SidebarProfileFooter from "./components/SidebarProfileFooter";
 
 import type { User } from "./types/global";
 
@@ -66,6 +56,7 @@ function App() {
 
   // User State
   const [userData, setUserData] = useState<User>();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
 
   // Helper function to get the current user (if any)
@@ -76,6 +67,11 @@ function App() {
 
     if (user) {
       console.log(user.id);
+
+      if (user.email) {
+        setUserEmail(user.email);
+      }
+
       localStorage.setItem("PlayletUserID", user.id);
     } else {
       const path: string = window.location.pathname;
@@ -196,64 +192,16 @@ function App() {
 
                   {/* Sideber Footer */}
                   <SidebarFooter>
-                    <div className="flex flex-row items-center gap-3 text-nowrap p-2 rounded-lg">
-                      {avatar ? (
-                        <Popover>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <PopoverTrigger asChild>
-                                <img
-                                  src={avatar}
-                                  alt="avatar"
-                                  className="w-12 h-12 rounded-full border object-cover hover:cursor-pointer"
-                                />
-                              </PopoverTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Click to change avatar
-                            </TooltipContent>
-                          </Tooltip>
-                          <PopoverContent>
-                            <div className="mb-3 font-light text-sm">
-                              Select avatar to change to:
-                            </div>
-                            <div className="flex flex-row justify-center items-center gap-2">
-                              {Images.map(
-                                (
-                                  img: { label: string; src: string },
-                                  index
-                                ) => (
-                                  <img
-                                    key={index}
-                                    src={img.src}
-                                    alt={`${img.label}_avatar`}
-                                    className="w-12 h-12 rounded-full border object-cover"
-                                  />
-                                )
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      ) : (
-                        <Skeleton className="w-12 h-12 rounded-full" />
-                      )}
-                      {open && (
-                        <div>
-                          {userData ? (
-                            <div className="font-normal">
-                              {userData.first_name} {userData.last_name}
-                            </div>
-                          ) : (
-                            <>
-                              <Skeleton className="h-3 w-36" />
-                              <Skeleton className="h-3 w-20" />
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <SidebarProfileFooter
+                      open={open}
+                      avatar={avatar ?? ""}
+                      email={userEmail ?? ""}
+                      first_name={userData?.first_name ?? ""}
+                      last_name={userData?.last_name ?? ""}
+                    />
                   </SidebarFooter>
                 </Sidebar>
+
                 <main className="flex-grow overflow-y-auto">
                   {/* Button to close the sidebar */}
                   <Button

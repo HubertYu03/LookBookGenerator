@@ -177,6 +177,13 @@ const Register = () => {
   useEffect(() => {
     // Change the tab title
     document.title = "Playlet Tools | Register";
+
+    // Check if the user is logged in
+    const user_id: string | null = localStorage.getItem("PlayletUserID");
+
+    if (user_id) {
+      navigate("/");
+    }
   }, []);
 
   return (

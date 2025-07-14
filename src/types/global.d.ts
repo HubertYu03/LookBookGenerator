@@ -1,8 +1,9 @@
 export type Img = {
-  src: string,
-  id: number
-}
+  src: string;
+  id: number;
+};
 
+// Lookbook Types
 export type LookBook = {
   lookbook_id: string;
   author_id: string;
@@ -12,7 +13,8 @@ export type LookBook = {
   director_name: string;
   date: Date;
   roles: Role[];
-}
+  last_edited: Date;
+};
 
 export type Role = {
   id: number;
@@ -24,10 +26,32 @@ export type Role = {
   accessories: Img[];
 };
 
+// Location Book Types
+export type Location = {
+  id: number;
+  scene: string | null;
+  time_of_day: "Day" | "Night" | null;
+  location_type: "Indoor" | "Outdoor" | null;
+  location_name: string | null;
+  images: Img[];
+};
+
+export type LocationBook = {
+  locationbook_id: string;
+  created_at: Date;
+  author_id: string;
+  last_edited: Date;
+  project_name: string;
+  crew_name: string;
+  director: string;
+  date: Date;
+  locations: Location[];
+};
+
 export type User = {
   user_id: string;
   created_at: Date;
   first_name: string;
   last_name: string;
   avatar: string;
-}
+};

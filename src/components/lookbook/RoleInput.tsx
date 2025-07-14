@@ -16,16 +16,16 @@ import { supabase } from "@/lib/supabaseClient";
 import type { Img, Role } from "@/types/global";
 
 // Import UI Components
-import { Card, CardContent, CardFooter } from "./ui/card";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Card, CardContent, CardFooter } from "../ui/card";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { toast } from "sonner";
 import { CircleX } from "lucide-react";
 
 // Import custom components
-import ImagesPreview from "./ImagesPreview";
+import ImagesPreview from "../ImagesPreview";
 
 type RoleInputProps = {
   loaded_role: Role;
@@ -249,7 +249,7 @@ const RoleInput = ({
 
     // Load the styling images if they exist
     if (loaded_role.stylingSuggestions.length > 0) {
-      const stylingImgs = await Promise.all(
+      const styling_imgs = await Promise.all(
         loaded_role.stylingSuggestions.map(async (img) => {
           const path: string = img.src;
           const { data: imgData, error } = await supabase.storage
@@ -269,8 +269,32 @@ const RoleInput = ({
 
       // Filter out any nulls
       setStylingSuggestions(
-        stylingImgs.filter((img): img is Img => img !== null)
+        styling_imgs.filter((img): img is Img => img !== null)
       );
+    }
+
+    // Load the accesssory images if they exist
+    if (loaded_role.accessories.length > 0) {
+      const accessory_imgs = await Promise.all(
+        loaded_role.accessories.map(async (img) => {
+          const path: string = img.src;
+          const { data: imgData, error } = await supabase.storage
+            .from("lookbook")
+            .createSignedUrl(path, 1800);
+
+          if (error) {
+            console.error(error);
+            return null;
+          }
+
+          return imgData?.signedUrl
+            ? { src: imgData.signedUrl, id: img.id }
+            : null;
+        })
+      );
+
+      // Filter out any nulls
+      setAccessories(accessory_imgs.filter((img): img is Img => img !== null));
     }
   }
 
@@ -303,6 +327,7 @@ const RoleInput = ({
               variant="outline"
               className="hover:cursor-pointer"
               onClick={clear_fields}
+              disabled={!canEdit}
             >
               Clear Fields
             </Button>
@@ -310,6 +335,7 @@ const RoleInput = ({
               variant="destructive"
               className="hover:cursor-pointer"
               onClick={remove_role}
+              disabled={!canEdit}
             >
               Remove Role
             </Button>
