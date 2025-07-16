@@ -25,7 +25,7 @@ const SidebarProfileFooter = ({
             <img
               src={avatar}
               alt="avatar"
-              className="w-12 h-12 rounded-full border-2 object-cover"
+              className={`rounded-full border-2 object-cover w-12`}
             />
             {open && (
               <div className="text-gray-500">

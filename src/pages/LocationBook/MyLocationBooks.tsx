@@ -62,7 +62,7 @@ const MyLocationBooks = () => {
     toast.dismiss();
 
     get_locationbooks();
-  }, []);
+  }, [myLocationBooks]);
 
   return (
     <div className="p-6 space-y-4">
@@ -77,7 +77,11 @@ const MyLocationBooks = () => {
       {myLocationBooks?.length ? (
         <div className="flex flex-col gap-3">
           {myLocationBooks.map((location_book, index) => (
-            <LocationBookPreview key={index} location_book={location_book} />
+            <LocationBookPreview
+              key={index}
+              location_book={location_book}
+              get_location_books={get_locationbooks}
+            />
           ))}
         </div>
       ) : (
@@ -86,14 +90,16 @@ const MyLocationBooks = () => {
         </div>
       )}
 
-      <Button
-        className="w-full bg-green-500 hover:cursor-pointer hover:bg-green-600"
-        onClick={() => {
-          navigate(`/locationbookgenerator/${uuidv4()}`);
-        }}
-      >
-        Create New Location Book <Plus />
-      </Button>
+      <div className="flex justify-center items-center">
+        <Button
+          className="w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
+          onClick={() => {
+            navigate(`/locationbookgenerator/${uuidv4()}`);
+          }}
+        >
+          Create New Location Book <Plus />
+        </Button>
+      </div>
     </div>
   );
 };

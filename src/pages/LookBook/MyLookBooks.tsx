@@ -62,7 +62,7 @@ const MyLookBooks = () => {
     toast.dismiss();
 
     get_lookbooks();
-  }, []);
+  }, [myLookbooks]);
 
   return (
     <div className="p-6 space-y-4">
@@ -77,7 +77,11 @@ const MyLookBooks = () => {
       {myLookbooks?.length ? (
         <div className="flex flex-col gap-3">
           {myLookbooks.map((lookbook, index) => (
-            <LookBookPreview key={index} lookbook={lookbook} />
+            <LookBookPreview
+              key={index}
+              lookbook={lookbook}
+              get_lookbooks={get_lookbooks}
+            />
           ))}
         </div>
       ) : (
@@ -86,14 +90,16 @@ const MyLookBooks = () => {
         </div>
       )}
 
-      <Button
-        className="w-full bg-green-500 hover:cursor-pointer hover:bg-green-600"
-        onClick={() => {
-          navigate(`/lookbookgenerator/${uuidv4()}`);
-        }}
-      >
-        Create New Lookbook <Plus />
-      </Button>
+      <div className="flex justify-center items-center">
+        <Button
+          className="w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
+          onClick={() => {
+            navigate(`/lookbookgenerator/${uuidv4()}`);
+          }}
+        >
+          Create New Lookbook <Plus />
+        </Button>
+      </div>
     </div>
   );
 };

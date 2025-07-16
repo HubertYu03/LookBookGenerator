@@ -340,11 +340,11 @@ const LookBookGenerator = () => {
       .select("*")
       .eq("lookbook_id", look_book_id);
 
-    if (data?.length != 0) {
-      // If the lookbook exists
-      console.log("look book exists");
+    // If the lookbook exists
+    console.log("look book exists");
 
-      // If a role was deleted, delete all the fiels associated with that folder
+    // If a role was deleted, delete all the fields associated with that folder
+    if (data?.length != 0) {
       if (data && data[0].roles.length > roles.length) {
         console.log("There are roles to delete");
 
@@ -375,48 +375,50 @@ const LookBookGenerator = () => {
           );
         });
       }
+    }
 
-      console.log(lookbook_data);
+    console.log(lookbook_data);
 
-      // We need to first process the role fields and images, loop through all the roles
-      await Promise.all(
-        roles.map(async (role, index) => {
-          // If there is an input from role
-          if (role.colorPalette) {
-            // First check if the file is still in data format
-            if (role.colorPalette.src.startsWith("data:image")) {
-              // Convert the file to a supabase path then insert it into the colorPalette path
-              const converted_file: File = dataURLtoFile(
-                role.colorPalette.src,
-                `${role.colorPalette.id}.png`
-              );
+    // We need to first process the role fields and images, loop through all the roles
+    await Promise.all(
+      roles.map(async (role, index) => {
+        // If there is an input from role
+        if (role.colorPalette) {
+          // First check if the file is still in data format
+          if (role.colorPalette.src.startsWith("data:image")) {
+            // Convert the file to a supabase path then insert it into the colorPalette path
+            const converted_file: File = dataURLtoFile(
+              role.colorPalette.src,
+              `${role.colorPalette.id}.png`
+            );
 
-              // Generate the path for color palettes and upload the image
-              const path_name: string = `private/${look_book_id}/color_palette/${role.id}/${role.colorPalette.id}.jpg`;
-              await uploadImage(converted_file, path_name);
+            // Generate the path for color palettes and upload the image
+            const path_name: string = `private/${look_book_id}/color_palette/${role.id}/${role.colorPalette.id}.jpg`;
+            await uploadImage(converted_file, path_name);
 
-              // Add this path name to the object that is going to be updated
-              const new_color_palette: Img = {
-                src: path_name,
-                id: role.colorPalette.id,
-              };
+            // Add this path name to the object that is going to be updated
+            const new_color_palette: Img = {
+              src: path_name,
+              id: role.colorPalette.id,
+            };
 
-              // Update the data sent to the database
-              lookbook_data.roles[index].colorPalette = new_color_palette;
-            } else {
-            }
+            // Update the data sent to the database
+            lookbook_data.roles[index].colorPalette = new_color_palette;
           } else {
-            // If there is no images selected check if there exists a path in the database
-            let { data: role_data, error } = await supabase
-              .from("lookbooks")
-              .select("roles")
-              .eq("lookbook_id", look_book_id);
+          }
+        } else {
+          // If there is no images selected check if there exists a path in the database
+          let { data: role_data, error } = await supabase
+            .from("lookbooks")
+            .select("roles")
+            .eq("lookbook_id", look_book_id);
 
-            if (error) {
-              console.log(error);
-            }
+          if (error) {
+            console.log(error);
+          }
 
-            if (role_data) {
+          if (role_data) {
+            if (role_data.length != 0) {
               if (role_data[0].roles[index]) {
                 if (role_data[0].roles[index].colorPalette) {
                   const path: string =
@@ -434,272 +436,246 @@ const LookBookGenerator = () => {
                 }
               }
             }
-
-            lookbook_data.roles[index].colorPalette = null;
           }
 
-          if (role.colorPalette) {
-            // After processing the color palette, check to see which images
-            // need to be deleted from the database if there are extra
+          lookbook_data.roles[index].colorPalette = null;
+        }
 
-            // Get all the currently saved paths
-            let saved_img_list: string[] = [role.colorPalette.src];
+        if (role.colorPalette) {
+          // After processing the color palette, check to see which images
+          // need to be deleted from the database if there are extra
 
-            // Get a list of the current images and the images in the storage
-            let storage_list = await list_all_files(
-              "lookbook",
-              `private/${look_book_id}/color_palette/${role.id}`
+          // Get all the currently saved paths
+          let saved_img_list: string[] = [role.colorPalette.src];
+
+          // Get a list of the current images and the images in the storage
+          let storage_list = await list_all_files(
+            "lookbook",
+            `private/${look_book_id}/color_palette/${role.id}`
+          );
+
+          // // convert the storage list in a list string
+          let file_img_list: string[] = [];
+          storage_list.forEach((filename) => {
+            file_img_list.push(
+              `private/${look_book_id}/color_palette/${role.id}/${filename}`
             );
+          });
 
-            // // convert the storage list in a list string
-            let file_img_list: string[] = [];
-            storage_list.forEach((filename) => {
-              file_img_list.push(
-                `private/${look_book_id}/color_palette/${role.id}/${filename}`
-              );
-            });
+          console.log(saved_img_list);
+          console.log(file_img_list);
 
-            console.log(saved_img_list);
-            console.log(file_img_list);
+          if (file_img_list.length != 0 || saved_img_list.length != 0) {
+            // // Get the non matching img names
+            let nonMatching: string[] = [
+              ...saved_img_list.filter((item) => !file_img_list.includes(item)),
+              ...file_img_list.filter((item) => !saved_img_list.includes(item)),
+            ];
 
-            if (file_img_list.length != 0 || saved_img_list.length != 0) {
-              // // Get the non matching img names
-              let nonMatching: string[] = [
-                ...saved_img_list.filter(
-                  (item) => !file_img_list.includes(item)
-                ),
-                ...file_img_list.filter(
-                  (item) => !saved_img_list.includes(item)
-                ),
-              ];
+            console.log(nonMatching);
 
-              console.log(nonMatching);
-
-              // If there are non matching files, delete them from the database
-              if (nonMatching.length > 0) {
-                // Delete the files from the storage
-                const { error } = await supabase.storage
-                  .from("lookbook")
-                  .remove(nonMatching);
-                if (error) {
-                  console.log(error);
-                }
+            // If there are non matching files, delete them from the database
+            if (nonMatching.length > 0) {
+              // Delete the files from the storage
+              const { error } = await supabase.storage
+                .from("lookbook")
+                .remove(nonMatching);
+              if (error) {
+                console.log(error);
               }
             }
           }
+        }
 
-          // Processing the styling images
-          if (role.stylingSuggestions.length > 0) {
-            console.log("There are styling images to save");
-            // Loop through all the images so we can begin processing
+        // Processing the styling images
+        if (role.stylingSuggestions.length > 0) {
+          console.log("There are styling images to save");
+          // Loop through all the images so we can begin processing
 
-            await Promise.all(
-              role.stylingSuggestions.map(async (img, i) => {
-                if (img.src.startsWith("data:image")) {
-                  const converted_file: File = dataURLtoFile(
-                    img.src,
-                    `${img.id}.jpg`
-                  );
-                  const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+          await Promise.all(
+            role.stylingSuggestions.map(async (img, i) => {
+              if (img.src.startsWith("data:image")) {
+                const converted_file: File = dataURLtoFile(
+                  img.src,
+                  `${img.id}.jpg`
+                );
+                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
 
-                  await uploadImage(converted_file, path_name);
+                await uploadImage(converted_file, path_name);
 
-                  role.stylingSuggestions[i] = {
-                    src: path_name,
-                    id: img.id,
-                  };
-                } else if (!img.src.startsWith("private")) {
-                  const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
-                  role.stylingSuggestions[i] = { src: path_name, id: img.id };
-                }
-              })
+                role.stylingSuggestions[i] = {
+                  src: path_name,
+                  id: img.id,
+                };
+              } else if (!img.src.startsWith("private")) {
+                const path_name: string = `private/${look_book_id}/styling/${role.id}/${img.id}.jpg`;
+                role.stylingSuggestions[i] = { src: path_name, id: img.id };
+              }
+            })
+          );
+        } else {
+          // If the list is empty, that means there are no images selected.
+          // Delete all the images in the bucket
+          await deleteAllFilesInBucket(
+            "lookbook",
+            `private/${look_book_id}/styling/${role.id}`
+          );
+        }
+
+        // Delete files that are not part of the list
+        if (role.stylingSuggestions.length > 0) {
+          // After processing the images, check to see which images
+          // need to be deleted from the database if there are extra
+
+          // Get all the currently saved paths
+          let saved_img_list: string[] = [];
+          role.stylingSuggestions.forEach((img) => {
+            saved_img_list.push(img.src);
+          });
+
+          // Get a list of the current images and the images in the storage
+          let storage_list = await list_all_files(
+            "lookbook",
+            `private/${look_book_id}/styling/${role.id}`
+          );
+
+          // // convert the storage list in a list string
+          let file_img_list: string[] = [];
+          storage_list.forEach((filename) => {
+            file_img_list.push(
+              `private/${look_book_id}/styling/${role.id}/${filename}`
             );
-          } else {
-            // If the list is empty, that means there are no images selected.
-            // Delete all the images in the bucket
-            await deleteAllFilesInBucket(
-              "lookbook",
-              `private/${look_book_id}/styling/${role.id}`
-            );
-          }
+          });
 
-          // Delete files that are not part of the list
-          if (role.stylingSuggestions.length > 0) {
-            // After processing the images, check to see which images
-            // need to be deleted from the database if there are extra
+          console.log(saved_img_list);
+          console.log(file_img_list);
 
-            // Get all the currently saved paths
-            let saved_img_list: string[] = [];
-            role.stylingSuggestions.forEach((img) => {
-              saved_img_list.push(img.src);
-            });
+          if (file_img_list.length != 0 || saved_img_list.length != 0) {
+            // // Get the non matching img names
+            let nonMatching: string[] = [
+              ...saved_img_list.filter((item) => !file_img_list.includes(item)),
+              ...file_img_list.filter((item) => !saved_img_list.includes(item)),
+            ];
 
-            // Get a list of the current images and the images in the storage
-            let storage_list = await list_all_files(
-              "lookbook",
-              `private/${look_book_id}/styling/${role.id}`
-            );
+            console.log(nonMatching);
 
-            // // convert the storage list in a list string
-            let file_img_list: string[] = [];
-            storage_list.forEach((filename) => {
-              file_img_list.push(
-                `private/${look_book_id}/styling/${role.id}/${filename}`
-              );
-            });
-
-            console.log(saved_img_list);
-            console.log(file_img_list);
-
-            if (file_img_list.length != 0 || saved_img_list.length != 0) {
-              // // Get the non matching img names
-              let nonMatching: string[] = [
-                ...saved_img_list.filter(
-                  (item) => !file_img_list.includes(item)
-                ),
-                ...file_img_list.filter(
-                  (item) => !saved_img_list.includes(item)
-                ),
-              ];
-
-              console.log(nonMatching);
-
-              // If there are non matching files, delete them from the database
-              if (nonMatching.length > 0) {
-                // Delete the files from the storage
-                const { error } = await supabase.storage
-                  .from("lookbook")
-                  .remove(nonMatching);
-                if (error) {
-                  console.log(error);
-                }
+            // If there are non matching files, delete them from the database
+            if (nonMatching.length > 0) {
+              // Delete the files from the storage
+              const { error } = await supabase.storage
+                .from("lookbook")
+                .remove(nonMatching);
+              if (error) {
+                console.log(error);
               }
             }
           }
+        }
 
-          // Process the Accessory images
-          if (role.accessories.length > 0) {
-            console.log("There are accessory images to save");
-            // Loop through all the images so we can begin processing
+        // Process the Accessory images
+        if (role.accessories.length > 0) {
+          console.log("There are accessory images to save");
+          // Loop through all the images so we can begin processing
 
-            await Promise.all(
-              role.accessories.map(async (img, i) => {
-                if (img.src.startsWith("data:image")) {
-                  const converted_file: File = dataURLtoFile(
-                    img.src,
-                    `${img.id}.jpg`
-                  );
-                  const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
+          await Promise.all(
+            role.accessories.map(async (img, i) => {
+              if (img.src.startsWith("data:image")) {
+                const converted_file: File = dataURLtoFile(
+                  img.src,
+                  `${img.id}.jpg`
+                );
+                const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
 
-                  await uploadImage(converted_file, path_name);
+                await uploadImage(converted_file, path_name);
 
-                  role.accessories[i] = {
-                    src: path_name,
-                    id: img.id,
-                  };
-                } else if (!img.src.startsWith("private")) {
-                  const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
-                  role.accessories[i] = { src: path_name, id: img.id };
-                }
-              })
+                role.accessories[i] = {
+                  src: path_name,
+                  id: img.id,
+                };
+              } else if (!img.src.startsWith("private")) {
+                const path_name: string = `private/${look_book_id}/accessories/${role.id}/${img.id}.jpg`;
+                role.accessories[i] = { src: path_name, id: img.id };
+              }
+            })
+          );
+        } else {
+          // If the list is empty, that means there are no images selected.
+          // Delete all the images in the bucket
+          await deleteAllFilesInBucket(
+            "lookbook",
+            `private/${look_book_id}/accessories/${role.id}`
+          );
+        }
+
+        // Delete files that are not part of the accessory list
+        if (role.accessories.length > 0) {
+          // After processing the images, check to see which images
+          // need to be deleted from the database if there are extra
+
+          // Get all the currently saved paths
+          let saved_img_list: string[] = [];
+          role.accessories.forEach((img) => {
+            saved_img_list.push(img.src);
+          });
+
+          // Get a list of the current images and the images in the storage
+          let storage_list = await list_all_files(
+            "lookbook",
+            `private/${look_book_id}/accessories/${role.id}`
+          );
+
+          // // convert the storage list in a list string
+          let file_img_list: string[] = [];
+          storage_list.forEach((filename) => {
+            file_img_list.push(
+              `private/${look_book_id}/accessories/${role.id}/${filename}`
             );
-          } else {
-            // If the list is empty, that means there are no images selected.
-            // Delete all the images in the bucket
-            await deleteAllFilesInBucket(
-              "lookbook",
-              `private/${look_book_id}/accessories/${role.id}`
-            );
-          }
+          });
 
-          // Delete files that are not part of the accessory list
-          if (role.accessories.length > 0) {
-            // After processing the images, check to see which images
-            // need to be deleted from the database if there are extra
+          console.log(saved_img_list);
+          console.log(file_img_list);
 
-            // Get all the currently saved paths
-            let saved_img_list: string[] = [];
-            role.accessories.forEach((img) => {
-              saved_img_list.push(img.src);
-            });
+          if (file_img_list.length != 0 || saved_img_list.length != 0) {
+            // // Get the non matching img names
+            let nonMatching: string[] = [
+              ...saved_img_list.filter((item) => !file_img_list.includes(item)),
+              ...file_img_list.filter((item) => !saved_img_list.includes(item)),
+            ];
 
-            // Get a list of the current images and the images in the storage
-            let storage_list = await list_all_files(
-              "lookbook",
-              `private/${look_book_id}/accessories/${role.id}`
-            );
+            console.log(nonMatching);
 
-            // // convert the storage list in a list string
-            let file_img_list: string[] = [];
-            storage_list.forEach((filename) => {
-              file_img_list.push(
-                `private/${look_book_id}/accessories/${role.id}/${filename}`
-              );
-            });
-
-            console.log(saved_img_list);
-            console.log(file_img_list);
-
-            if (file_img_list.length != 0 || saved_img_list.length != 0) {
-              // // Get the non matching img names
-              let nonMatching: string[] = [
-                ...saved_img_list.filter(
-                  (item) => !file_img_list.includes(item)
-                ),
-                ...file_img_list.filter(
-                  (item) => !saved_img_list.includes(item)
-                ),
-              ];
-
-              console.log(nonMatching);
-
-              // If there are non matching files, delete them from the database
-              if (nonMatching.length > 0) {
-                // Delete the files from the storage
-                const { error } = await supabase.storage
-                  .from("lookbook")
-                  .remove(nonMatching);
-                if (error) {
-                  console.log(error);
-                }
+            // If there are non matching files, delete them from the database
+            if (nonMatching.length > 0) {
+              // Delete the files from the storage
+              const { error } = await supabase.storage
+                .from("lookbook")
+                .remove(nonMatching);
+              if (error) {
+                console.log(error);
               }
             }
           }
-        })
-      );
+        }
+      })
+    );
 
-      console.log(lookbook_data.roles);
+    console.log(lookbook_data.roles);
 
-      const { error } = await supabase
-        .from("lookbooks")
-        .update(lookbook_data)
-        .eq("lookbook_id", look_book_id)
-        .select();
+    const { error } = await supabase
+      .from("lookbooks")
+      .upsert(lookbook_data)
+      .eq("lookbook_id", look_book_id)
+      .select();
 
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      // Display success message and refetch data
-      toast.dismiss("loading-toast");
-      toast.success("Saved Lookbook!");
-      get_lookbook_data();
-    } else {
-      // If the lookbook does not exist
-      // Insert the lookbook data into the database
-      const { error } = await supabase.from("lookbooks").insert(lookbook_data);
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      // Display success message and refetch data
-      toast.dismiss("loading-toast");
-      toast.success("Saved Lookbook!");
-      get_lookbook_data();
+    if (error) {
+      console.log(error);
+      return;
     }
+
+    // Display success message and refetch data
+    toast.dismiss("loading-toast");
+    toast.success("Saved Lookbook!");
+    get_lookbook_data();
 
     setRefreshKey((prev) => prev + 1);
   }

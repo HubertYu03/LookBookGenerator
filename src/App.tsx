@@ -30,23 +30,24 @@ import {
 import logo from "/PlayletLogo.png";
 
 // Importing Pages
-import LookBookGenerator from "./pages/LookBookGenerator";
-import MyLookBooks from "./pages/MyLookBooks";
-import Login from "./pages/Login";
+import LookBookGenerator from "./pages/LookBook/LookBookGenerator";
+import MyLookBooks from "./pages/LookBook/MyLookBooks";
+import Login from "./pages/auth/Login";
 import Home from "./pages/Home";
 
 // Importing supbase
 import { supabase } from "./lib/supabaseClient";
 
 // Importing pages
-import MyLocationBooks from "./pages/MyLocationBooks";
-import LocationBookGenerator from "./pages/LocationBookGenerator";
-import Register from "./pages/Register";
+import MyLocationBooks from "./pages/LocationBook/MyLocationBooks";
+import LocationBookGenerator from "./pages/LocationBook/LocationBookGenerator";
+import Register from "./pages/auth/Register";
 import AuthCallback from "./components/AuthCallback";
 import SidebarLinks from "./components/SidebarLinks";
 import SidebarProfileFooter from "./components/SidebarProfileFooter";
 
 import type { User } from "./types/global";
+import LoginCard from "./pages/auth/LoginCard";
 
 window.Buffer = Buffer;
 
@@ -56,6 +57,9 @@ function App() {
 
   // User State
   const [userData, setUserData] = useState<User>();
+  const [auth, setAuth] = useState<boolean>(true);
+  const [currentPath, setCurrentPath] = useState<string>("/");
+
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
 
@@ -74,10 +78,13 @@ function App() {
 
       localStorage.setItem("PlayletUserID", user.id);
     } else {
-      const path: string = window.location.pathname;
-      if (path !== "/login" && path !== "/register") {
-        window.location.href = "/";
-        return;
+      // Check the path of the site, if you are not logged in give an option to log in
+      if (
+        window.location.pathname != "/login" &&
+        window.location.pathname != "/register"
+      ) {
+        setCurrentPath(window.location.pathname);
+        setAuth(false);
       }
     }
 
@@ -105,7 +112,21 @@ function App() {
     setOpen(value);
   }
 
+  // User effect to stop background scrolling
   useEffect(() => {
+    if (!auth) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Clean up on unmount
+    };
+  }, [auth]);
+
+  useEffect(() => {
+    // Get the sidebar state on page load
     if (sessionStorage.getItem("sidebar_state")) {
       let sidebar_state = sessionStorage.getItem("sidebar_state");
       if (sidebar_state == "true") {
@@ -121,6 +142,17 @@ function App() {
 
   return (
     <Router>
+      {/* Modal for if the user is not signed in */}
+      {!auth && (
+        <div
+          className="fixed top-0 left-0 w-screen h-screen backdrop-blur-sm
+          bg-black/50 z-40 flex items-center justify-center"
+        >
+          <LoginCard current_path={currentPath} setAuth={setAuth} />
+        </div>
+      )}
+
+      {/* Routes  */}
       <Routes>
         <Route
           path="/*"
@@ -208,7 +240,7 @@ function App() {
                     size="icon"
                     variant="outline"
                     onClick={() => set_sidebar_state(!open)}
-                    className="fixed mt-1 -ml-2 z-50 hover:cursor-pointer"
+                    className="fixed mt-1 -ml-2 z-30 hover:cursor-pointer"
                   >
                     <ChevronRight
                       className={`${

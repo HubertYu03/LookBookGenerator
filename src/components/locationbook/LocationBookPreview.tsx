@@ -19,9 +19,11 @@ import { SquarePen, Trash } from "lucide-react";
 
 // Importing dependencies
 import { useNavigate } from "react-router-dom";
+import { delete_book } from "@/lib/utils";
 
 type LookBookPreviewProps = {
   location_book: LocationBook;
+  get_location_books: () => void;
 };
 
 const LocationBookPreview = ({ location_book }: LookBookPreviewProps) => {
@@ -69,7 +71,13 @@ const LocationBookPreview = ({ location_book }: LookBookPreviewProps) => {
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => {
-                    console.log("Delete", location_book.locationbook_id);
+                    delete_book(
+                      "locationbook",
+                      "locationbook",
+                      "locationbook_id",
+                      "locations",
+                      location_book.locationbook_id
+                    );
                   }}
                 >
                   Continue

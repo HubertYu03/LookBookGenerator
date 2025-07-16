@@ -230,8 +230,8 @@ const LocationBookGenerator = () => {
       .eq("locationbook_id", location_book_id);
 
     // If the location book exists, save it
+    // If a location was deleted, delete all the fiels associated with that folder
     if (data?.length != 0) {
-      // If a location was deleted, delete all the fiels associated with that folder
       if (data && data[0].locations.length > locations.length) {
         console.log("There are roles to delete");
 
@@ -255,132 +255,111 @@ const LocationBookGenerator = () => {
           );
         });
       }
+    }
 
-      // We need to process all the locations
-      await Promise.all(
-        locations.map(async (location) => {
-          // Check if there are locations to be processed
-          if (location.images.length > 0) {
-            console.log("There are location images to be saved");
+    // We need to process all the locations
+    await Promise.all(
+      locations.map(async (location) => {
+        // Check if there are locations to be processed
+        if (location.images.length > 0) {
+          console.log("There are location images to be saved");
 
-            // Loop through the image and process each one
-            await Promise.all(
-              location.images.map(async (img, i) => {
-                const path_name: string = `private/${location_book_id}/locations/${location.id}/${img.id}.jpg`;
-                if (img.src.startsWith("data:image")) {
-                  // Convert the data url into a file and upload to supabase
-                  const converted_file: File = dataURLtoFile(
-                    img.src,
-                    `${img.id}.jpg`
-                  );
+          // Loop through the image and process each one
+          await Promise.all(
+            location.images.map(async (img, i) => {
+              const path_name: string = `private/${location_book_id}/locations/${location.id}/${img.id}.jpg`;
+              if (img.src.startsWith("data:image")) {
+                // Convert the data url into a file and upload to supabase
+                const converted_file: File = dataURLtoFile(
+                  img.src,
+                  `${img.id}.jpg`
+                );
 
-                  await uploadImage(converted_file, path_name);
+                await uploadImage(converted_file, path_name);
 
-                  location.images[i] = {
-                    src: path_name,
-                    id: img.id,
-                  };
-                } else {
-                  location.images[i] = {
-                    src: path_name,
-                    id: img.id,
-                  };
-                }
-              })
+                location.images[i] = {
+                  src: path_name,
+                  id: img.id,
+                };
+              } else {
+                location.images[i] = {
+                  src: path_name,
+                  id: img.id,
+                };
+              }
+            })
+          );
+        } else {
+          // If the list is empty, that means there are no images selected.
+          // Delete all the images in the bucket
+          await deleteAllFilesInBucket(
+            "locationbook",
+            `private/${location_book_id}/locations/${location.id}`
+          );
+        }
+
+        // Delete files that are not part of the list
+        if (location.images.length > 0) {
+          // After processing the images, check to see which images
+          // need to be deleted from the database if there are extra
+
+          // Get all the currently saved paths
+          let saved_img_list: string[] = [];
+          location.images.forEach((img) => {
+            saved_img_list.push(img.src);
+          });
+
+          // Get a list of the current images and the images in the storage
+          let storage_list = await list_all_files(
+            "locationbook",
+            `private/${location_book_id}/locations/${location.id}`
+          );
+
+          // // convert the storage list in a list string
+          let file_img_list: string[] = [];
+          storage_list.forEach((filename) => {
+            file_img_list.push(
+              `private/${location_book_id}/locations/${location.id}/${filename}`
             );
-          } else {
-            // If the list is empty, that means there are no images selected.
-            // Delete all the images in the bucket
-            await deleteAllFilesInBucket(
-              "locationbook",
-              `private/${location_book_id}/locations/${location.id}`
-            );
-          }
+          });
 
-          // Delete files that are not part of the list
-          if (location.images.length > 0) {
-            // After processing the images, check to see which images
-            // need to be deleted from the database if there are extra
+          if (file_img_list.length != 0 || saved_img_list.length != 0) {
+            // // Get the non matching img names
+            let nonMatching: string[] = [
+              ...saved_img_list.filter((item) => !file_img_list.includes(item)),
+              ...file_img_list.filter((item) => !saved_img_list.includes(item)),
+            ];
 
-            // Get all the currently saved paths
-            let saved_img_list: string[] = [];
-            location.images.forEach((img) => {
-              saved_img_list.push(img.src);
-            });
-
-            // Get a list of the current images and the images in the storage
-            let storage_list = await list_all_files(
-              "locationbook",
-              `private/${location_book_id}/locations/${location.id}`
-            );
-
-            // // convert the storage list in a list string
-            let file_img_list: string[] = [];
-            storage_list.forEach((filename) => {
-              file_img_list.push(
-                `private/${location_book_id}/locations/${location.id}/${filename}`
-              );
-            });
-
-            if (file_img_list.length != 0 || saved_img_list.length != 0) {
-              // // Get the non matching img names
-              let nonMatching: string[] = [
-                ...saved_img_list.filter(
-                  (item) => !file_img_list.includes(item)
-                ),
-                ...file_img_list.filter(
-                  (item) => !saved_img_list.includes(item)
-                ),
-              ];
-
-              // If there are non matching files, delete them from the database
-              if (nonMatching.length > 0) {
-                // Delete the files from the storage
-                const { error } = await supabase.storage
-                  .from("locationbook")
-                  .remove(nonMatching);
-                if (error) {
-                  console.log(error);
-                }
+            // If there are non matching files, delete them from the database
+            if (nonMatching.length > 0) {
+              // Delete the files from the storage
+              const { error } = await supabase.storage
+                .from("locationbook")
+                .remove(nonMatching);
+              if (error) {
+                console.log(error);
               }
             }
           }
-        })
-      );
+        }
+      })
+    );
 
-      const { error } = await supabase
-        .from("locationbook")
-        .update(location_book_data)
-        .eq("locationbook_id", location_book_id)
-        .select();
+    const { error } = await supabase
+      .from("locationbook")
+      .upsert(location_book_data)
+      .eq("locationbook_id", location_book_id)
+      .select();
 
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      // Display success message and refetch data
-      toast.dismiss("loading-toast");
-      toast.success("Saved Lookbook!");
-      get_location_book_data();
-    } else {
-      // Location book does not exist so create a new one
-      // If the lookbook does not exist
-      // Insert the lookbook data into the database
-      const { error } = await supabase
-        .from("locationbook")
-        .insert(location_book_data);
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      // Display success message and refetch data
-      toast.dismiss("loading-toast");
-      toast.success("Saved Location Book!");
-      get_location_book_data();
+    if (error) {
+      console.log(error);
+      return;
     }
+
+    // Display success message and refetch data
+    toast.dismiss("loading-toast");
+    toast.success("Saved Lookbook!");
+    get_location_book_data();
 
     // Refresh the inputs
     setRefreshKey((prev) => prev + 1);

@@ -1,12 +1,16 @@
+// Importing Util dependencies
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-
-import { supabase } from "./supabaseClient";
-import type { NavigateFunction } from "react-router-dom";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Importing supabase client
+import { supabase } from "./supabaseClient";
+
+// Importing global types
+import type { Location, Role } from "@/types/global";
 
 // Helpter function to convert a string URL to a file
 export function dataURLtoFile(dataurl: string, filename: string): File {
@@ -17,20 +21,6 @@ export function dataURLtoFile(dataurl: string, filename: string): File {
   const u8arr = new Uint8Array(n);
   while (n--) u8arr[n] = bstr.charCodeAt(n);
   return new File([u8arr], filename, { type: mime });
-}
-
-// Helper function to get the current user (if any)
-export async function get_user(navigate: NavigateFunction) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    console.log(user.id);
-    localStorage.setItem("PlayletUserID", user.id);
-  } else {
-    navigate("/login");
-  }
 }
 
 // Helper function to delete all the images in a file
@@ -90,10 +80,98 @@ export async function list_all_files(
   return files_in_folder;
 }
 
+// Function that deletes all the files for a specific
+export async function delete_book(
+  bucket: string,
+  table_name: string,
+  id_column_name: string,
+  column_name: string,
+  id: string
+) {
+  // Get all the files associated with the bucket
+  let { data, error } = await supabase
+    .from(table_name)
+    .select(column_name)
+    .eq(id_column_name, id);
+
+  if (error) {
+    console.log(error);
+  }
+
+  if (data) {
+    // Create the paths to delete for a lookbook
+    if (bucket == "lookbook") {
+      // We need to get the paths for the color palette, styling images, and accessories
+      const roles: Role[] = (data?.[0] as unknown as { roles: Role[] }).roles;
+      await Promise.all(
+        roles.map(async (role) => {
+          // In each role first check if a color palette exists
+          if (role.colorPalette) {
+            const folder_path: string = `private/${id}/color_palette/${role.id}`;
+
+            deleteAllFilesInBucket(bucket, folder_path);
+          }
+
+          // Next get the paths for the styling suggestion images
+          if (role.stylingSuggestions) {
+            const folder_path: string = `private/${id}/styling/${role.id}`;
+
+            deleteAllFilesInBucket(bucket, folder_path);
+          }
+
+          // Finally, get the paths for the accessories
+          if (role.accessories) {
+            const folder_path: string = `private/${id}/accessories/${role.id}`;
+
+            deleteAllFilesInBucket(bucket, folder_path);
+          }
+        })
+      );
+
+      // Then remove the lookbook from the database
+      const { error: del_error } = await supabase
+        .from(table_name)
+        .delete()
+        .eq(id_column_name, id);
+
+      if (del_error) {
+        console.log(del_error);
+        return;
+      }
+    } else if (bucket == "locationbook") {
+      const locations: Location[] = (
+        data?.[0] as unknown as { locations: Location[] }
+      ).locations;
+
+      // Delete all the files for each location
+      await Promise.all(
+        locations.map((location) => {
+          // For each location delete the images for that location
+
+          const folder_path: string = `private/${id}/locations/${location.id}`;
+
+          deleteAllFilesInBucket(bucket, folder_path);
+        })
+      );
+
+      // Then delete the location book from the database
+      const { error: del_error } = await supabase
+        .from(table_name)
+        .delete()
+        .eq(id_column_name, id);
+
+      if (del_error) {
+        console.log(del_error);
+        return;
+      }
+    }
+  }
+}
+
 // Helper function to set the users avatar
 import cat from "../assets/avatar/cat_avatar.png";
-import dog from "../assets/avatar/dog_avatar.jpg";
 import lily from "../assets/avatar/lily.webp";
+import capybara from "../assets/avatar/capybara.webp";
 
 export function get_avatar(avatar_code: string): string {
   if (avatar_code == "cat") {
@@ -104,8 +182,8 @@ export function get_avatar(avatar_code: string): string {
     return lily;
   }
 
-  if (avatar_code == "dog") {
-    return dog;
+  if (avatar_code == "capybara") {
+    return capybara;
   }
 
   return cat;

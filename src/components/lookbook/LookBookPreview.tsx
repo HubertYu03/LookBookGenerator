@@ -15,16 +15,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+// Importing Icons
 import { SquarePen, Trash } from "lucide-react";
 
 // Importing dependencies
 import { useNavigate } from "react-router-dom";
+import { delete_book } from "@/lib/utils";
 
 type LookBookPreviewProps = {
   lookbook: LookBook;
+  get_lookbooks: () => void;
 };
 
-const LookBookPreview = ({ lookbook }: LookBookPreviewProps) => {
+const LookBookPreview = ({ lookbook, get_lookbooks }: LookBookPreviewProps) => {
   // Navigate state object
   const navigate = useNavigate();
 
@@ -59,14 +63,24 @@ const LookBookPreview = ({ lookbook }: LookBookPreviewProps) => {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete
-                  your account and remove your data from our servers.
+                  this lookbook and all the data associated with this lookbook.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="hover:cursor-pointer">
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
+                  className="bg-red-600 hover:cursor-pointer hover:bg-red-700"
                   onClick={() => {
-                    console.log("Delete", lookbook.lookbook_id);
+                    delete_book(
+                      "lookbook",
+                      "lookbooks",
+                      "lookbook_id",
+                      "roles",
+                      lookbook.lookbook_id
+                    );
+                    get_lookbooks();
                   }}
                 >
                   Continue
