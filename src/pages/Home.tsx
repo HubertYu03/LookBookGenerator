@@ -5,12 +5,16 @@ import { get_user, sign_out } from "@/lib/authUtils";
 
 // Importing UI components
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Home = () => {
   // Navigate state
   const navigate: NavigateFunction = useNavigate();
 
   useEffect(() => {
+    // Dismiss all toasts
+    toast.dismiss();
+
     document.title = "Playet Tools | Home";
 
     get_user();

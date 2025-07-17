@@ -184,7 +184,7 @@ const LookBook = ({
       />
       <View style={styles.coverContent}>
         <View style={styles.coverTextContainer}>
-          <Text style={styles.coverTitle}>Lookbook</Text>
+          <Text style={styles.coverTitle}>LOOKBOOK</Text>
           <Text
             style={{
               fontSize: "28px",

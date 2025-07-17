@@ -25,16 +25,35 @@ import { delete_book } from "@/lib/utils";
 
 type LookBookPreviewProps = {
   lookbook: LookBook;
-  get_lookbooks: () => void;
+  delete_success_message: (value: string) => void;
+  refresh_look_books: () => void;
 };
 
-const LookBookPreview = ({ lookbook, get_lookbooks }: LookBookPreviewProps) => {
+const LookBookPreview = ({
+  lookbook,
+  delete_success_message,
+  refresh_look_books,
+}: LookBookPreviewProps) => {
   // Navigate state object
   const navigate = useNavigate();
 
   // Funciton to navigate to selected look book
   function handle_lookbook_edit() {
     navigate(`/lookbookgenerator/${lookbook.lookbook_id}`);
+  }
+
+  // Function to delete lookbook
+  async function delete_look_book() {
+    await delete_book(
+      "lookbook",
+      "lookbooks",
+      "lookbook_id",
+      "roles",
+      lookbook.lookbook_id
+    );
+
+    delete_success_message(lookbook.project_name);
+    refresh_look_books();
   }
 
   return (
@@ -72,16 +91,7 @@ const LookBookPreview = ({ lookbook, get_lookbooks }: LookBookPreviewProps) => {
                 </AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-red-600 hover:cursor-pointer hover:bg-red-700"
-                  onClick={() => {
-                    delete_book(
-                      "lookbook",
-                      "lookbooks",
-                      "lookbook_id",
-                      "roles",
-                      lookbook.lookbook_id
-                    );
-                    get_lookbooks();
-                  }}
+                  onClick={delete_look_book}
                 >
                   Continue
                 </AlertDialogAction>

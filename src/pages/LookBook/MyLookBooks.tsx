@@ -34,7 +34,9 @@ const MyLookBooks = () => {
       return;
     }
 
-    setMyLookbooks(lookbooks ?? undefined);
+    if (lookbooks) {
+      setMyLookbooks(lookbooks);
+    }
   }
 
   // Handle the search
@@ -57,12 +59,16 @@ const MyLookBooks = () => {
     }
   }
 
+  // Helper function for playing a success message on deletion
+  function delete_success_message(project_name: string) {
+    toast.success(`Successfully Deleted ${project_name}!`);
+  }
+
   useEffect(() => {
     // Clear all toast
     toast.dismiss();
-
     get_lookbooks();
-  }, [myLookbooks]);
+  }, []);
 
   return (
     <div className="p-6 space-y-4">
@@ -80,7 +86,8 @@ const MyLookBooks = () => {
             <LookBookPreview
               key={index}
               lookbook={lookbook}
-              get_lookbooks={get_lookbooks}
+              delete_success_message={delete_success_message}
+              refresh_look_books={get_lookbooks}
             />
           ))}
         </div>

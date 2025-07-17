@@ -46,6 +46,7 @@ import {
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
 import RoleInput from "@/components/lookbook/RoleInput";
+import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
 
 // Import Global Types
 import type { Img, Role } from "@/types/global";
@@ -701,7 +702,11 @@ const LookBookGenerator = () => {
       setProjectName(data[0].project_name);
       setCrewName(data[0].crew_name);
       setDirectorName(data[0].director_name);
-      setDate(new Date(data[0].date));
+
+      // Check the date
+      const parsedDate = data[0].date ? new Date(data[0].date) : undefined;
+      setDate(parsedDate);
+
       setRoles(data[0].roles);
     }
 
@@ -815,26 +820,30 @@ const LookBookGenerator = () => {
           <Button
             className="hover:cursor-pointer"
             onClick={save_progress}
-            disabled={!canEdit}
+            disabled={loading || !canEdit}
           >
             Save <Save />
           </Button>
 
-          <div
-            className={`${
-              currentDemoStep - 1 === 7
-                ? " z-40 bg-white p-3 max-w-lg rounded-sm"
-                : ""
-            }`}
+          <Button
+            className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+            onClick={generate_look_book}
+            disabled={loading || !canEdit}
           >
-            <Button
-              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              onClick={generate_look_book}
-            >
-              Generate Lookbook
-              <FileText />
-            </Button>
-          </div>
+            Generate Lookbook
+            <FileText />
+          </Button>
+
+          <LookBookMenuButton
+            book_type="Look Book"
+            bucket="lookbook"
+            column_name="roles"
+            id={look_book_id ?? ""}
+            id_column_name="lookbook_id"
+            table_name="lookbooks"
+            path="/mylookbooks"
+            disabled={loading || !canEdit}
+          />
         </div>
       </div>
 

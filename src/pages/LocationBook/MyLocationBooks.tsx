@@ -34,7 +34,9 @@ const MyLocationBooks = () => {
       return;
     }
 
-    setMyLocationBooks(location_books ?? undefined);
+    if (location_books) {
+      setMyLocationBooks(location_books);
+    }
   }
 
   // Handle the search
@@ -57,12 +59,17 @@ const MyLocationBooks = () => {
     }
   }
 
+  // Helper function for playing a success message on deletion
+  function delete_success_message(project_name: string) {
+    toast.success(`Successfully Deleted ${project_name}!`);
+  }
+
   useEffect(() => {
     // Clear all toast
     toast.dismiss();
 
     get_locationbooks();
-  }, [myLocationBooks]);
+  }, []);
 
   return (
     <div className="p-6 space-y-4">
@@ -80,7 +87,8 @@ const MyLocationBooks = () => {
             <LocationBookPreview
               key={index}
               location_book={location_book}
-              get_location_books={get_locationbooks}
+              delete_success_message={delete_success_message}
+              refresh_location_books={get_locationbooks}
             />
           ))}
         </div>

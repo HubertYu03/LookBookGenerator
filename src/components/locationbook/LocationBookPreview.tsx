@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
 import { SquarePen, Trash } from "lucide-react";
 
 // Importing dependencies
@@ -23,16 +24,35 @@ import { delete_book } from "@/lib/utils";
 
 type LookBookPreviewProps = {
   location_book: LocationBook;
-  get_location_books: () => void;
+  delete_success_message: (value: string) => void;
+  refresh_location_books: () => void;
 };
 
-const LocationBookPreview = ({ location_book }: LookBookPreviewProps) => {
+const LocationBookPreview = ({
+  location_book,
+  delete_success_message,
+  refresh_location_books,
+}: LookBookPreviewProps) => {
   // Navigate state object
   const navigate = useNavigate();
 
   // Funciton to navigate to selected look book
   function handle_lookbook_edit() {
     navigate(`/locationbookgenerator/${location_book.locationbook_id}`);
+  }
+
+  // Function to delete location book
+  async function delete_location_book() {
+    await delete_book(
+      "locationbook",
+      "locationbook",
+      "locationbook_id",
+      "locations",
+      location_book.locationbook_id
+    );
+
+    delete_success_message(location_book.project_name);
+    refresh_location_books();
   }
 
   return (
@@ -69,17 +89,7 @@ const LocationBookPreview = ({ location_book }: LookBookPreviewProps) => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    delete_book(
-                      "locationbook",
-                      "locationbook",
-                      "locationbook_id",
-                      "locations",
-                      location_book.locationbook_id
-                    );
-                  }}
-                >
+                <AlertDialogAction onClick={delete_location_book}>
                   Continue
                 </AlertDialogAction>
               </AlertDialogFooter>

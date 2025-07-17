@@ -41,6 +41,7 @@ import {
 // Importing custom components
 import LocationInput from "@/components/locationbook/LocationInput";
 import LocationBook from "@/pdf/LocationBook";
+import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
 
 // Importing supabase
 import { supabase } from "@/lib/supabaseClient";
@@ -366,6 +367,9 @@ const LocationBookGenerator = () => {
   }
 
   useEffect(() => {
+    // Clear all the toasts
+    toast.dismiss();
+
     // Get the location book data
     get_location_book_data();
   }, []);
@@ -406,7 +410,7 @@ const LocationBookGenerator = () => {
           <Button
             className="hover:cursor-pointer"
             onClick={save_progress}
-            disabled={!canEdit}
+            disabled={loading || !canEdit}
           >
             Save <Save />
           </Button>
@@ -419,6 +423,17 @@ const LocationBookGenerator = () => {
             Generate Location Book
             <FileText />
           </Button>
+
+          <LookBookMenuButton
+            book_type="Location Book"
+            bucket="locationbook"
+            column_name="locations"
+            id={location_book_id ?? ""}
+            id_column_name="locationbook_id"
+            table_name="locationbook"
+            path="/mylocationbooks"
+            disabled={loading || !canEdit}
+          />
         </div>
       </div>
 
