@@ -90,8 +90,13 @@ const LookBookMenuButton = ({
 
   // Function to delete the book and navigate to respective book page
   async function delete_book_wrapper() {
-    await delete_book(bucket, table_name, id_column_name, column_name, id);
-    navigate(path);
+    if (exists) {
+      await delete_book(bucket, table_name, id_column_name, column_name, id);
+      navigate(path);
+    } else {
+      // If the book does not exist, you cannot delete it
+      toast.warning("You must save progress before sharing link!");
+    }
   }
 
   // Function to handle sharing a link

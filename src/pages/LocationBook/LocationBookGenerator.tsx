@@ -224,17 +224,17 @@ const LocationBookGenerator = () => {
     // Clear all toasts and errors
     toast.dismiss();
 
-    // Set a loading toast message
-    toast.info("Saving Location Book...", {
-      id: "loading-toast",
-    });
-
     // Only allow a save if the project name is not null
     if (!projectName) {
       setCurrentError("project_name");
       toast.warning("Please enter a Project Name before saving!");
       return;
     }
+
+    // Set a loading toast message
+    toast.info("Saving Location Book...", {
+      id: "loading-toast",
+    });
 
     // The location data that needs to be saved
     let location_book_data = {

@@ -248,10 +248,6 @@ const LookBookGenerator = () => {
     // Clear all toasts and errors
     toast.dismiss();
     setCurrentError("");
-    // Set a loading toast message
-    toast.info("Saving Location Book...", {
-      id: "loading-toast",
-    });
 
     // Only allow a save if the project name is not null
     if (!projectName) {
@@ -259,6 +255,11 @@ const LookBookGenerator = () => {
       toast.warning("Please enter a Project Name before saving!");
       return;
     }
+
+    // Set a loading toast message
+    toast.info("Saving Location Book...", {
+      id: "loading-toast",
+    });
 
     // Save the fields
     let lookbook_data = {
@@ -661,13 +662,13 @@ const LookBookGenerator = () => {
       setDate(parsedDate);
 
       setRoles(data[0].roles);
+
+      // Set the book existing to be true
+      setExists(true);
     }
 
     // Set loading to false
     setLoading(false);
-
-    // Set the book existing to be true
-    setExists(true);
   }
 
   // When the page loads, get the saved data if it exists
