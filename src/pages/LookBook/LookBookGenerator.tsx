@@ -36,8 +36,6 @@ import {
   Plus,
   FileText,
   CircleQuestionMark,
-  ArrowLeft,
-  ArrowRight,
   ChevronDownIcon,
   Save,
 } from "lucide-react";
