@@ -31,7 +31,7 @@ import { useParams } from "react-router-dom";
 import _ from "lodash";
 
 // Importing global types
-import type { Location } from "@/types/global";
+import type { User, Location } from "@/types/global";
 import {
   dataURLtoFile,
   deleteAllFilesInBucket,
@@ -42,6 +42,7 @@ import {
 import LocationInput from "@/components/locationbook/LocationInput";
 import LocationBook from "@/pdf/LocationBook";
 import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
+import AuthorCard from "@/components/AuthorCard";
 
 // Importing supabase
 import { supabase } from "@/lib/supabaseClient";
@@ -52,6 +53,7 @@ const LocationBookGenerator = () => {
 
   // General Information
   const [loading, setLoading] = useState<boolean>(true);
+  const [exists, setExists] = useState<boolean>(false);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const [projectName, setProjectName] = useState<string | null>(null);
@@ -67,6 +69,7 @@ const LocationBookGenerator = () => {
 
   // State for editing
   const [canEdit, setCanEdit] = useState<boolean>(true);
+  const [authorData, setAuthorData] = useState<User | null>(null);
 
   // Set initial locations
   const initial_location: Location = {
@@ -163,6 +166,22 @@ const LocationBookGenerator = () => {
     window.open(url, "_blank");
   };
 
+  // Function to fetch the author data id needed
+  // Helper function to get the current user (if any)
+  async function get_user(author_id: string) {
+    // Get the user data from the database
+    let { data: user_data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("user_id", author_id);
+
+    if (!error && user_data && user_data.length > 0) {
+      setAuthorData(user_data[0]);
+    } else if (error) {
+      console.log(error);
+    }
+  }
+
   // Function to load lookbook data
   async function get_location_book_data() {
     // Get the location book data
@@ -171,10 +190,13 @@ const LocationBookGenerator = () => {
       .select("*")
       .eq("locationbook_id", location_book_id);
 
+    console.log(data);
+
     if (data && data.length !== 0) {
       // That means this look book exists
       if (localStorage.getItem("PlayletUserID") != data[0].author_id) {
         setCanEdit(false);
+        get_user(data[0].author_id);
       } else {
         console.log("You can edit this page!");
       }
@@ -189,6 +211,8 @@ const LocationBookGenerator = () => {
       setDate(parsedDate);
 
       setLocations(data[0].locations);
+
+      setExists(true);
     }
 
     // Set the loading to false
@@ -387,7 +411,6 @@ const LocationBookGenerator = () => {
               document.getElementById(`top-of-page`);
             target?.scrollIntoView({ behavior: "smooth" });
           }}
-          disabled={!canEdit}
         >
           Back to Top
           <ChevronUp />
@@ -395,46 +418,66 @@ const LocationBookGenerator = () => {
       </div>
 
       {/* Top of the page */}
-      <div className="flex flex-row justify-between">
+      <div className="flex flex-row justify-between items-start">
         <div className="flex flex-row items-center gap-3">
           <div className="text-5xl font-semibold">Location Book Editor</div>
         </div>
 
         {/* Top of the page buttons */}
-        <div className="flex gap-3">
-          <Button className="hover:cursor-pointer" variant="outline">
-            How To Use
-            <CircleQuestionMark />
-          </Button>
+        {canEdit ? (
+          <div className="flex gap-3">
+            <Button
+              className="hover:cursor-pointer"
+              variant="outline"
+              disabled={loading}
+            >
+              How To Use
+              <CircleQuestionMark />
+            </Button>
 
-          <Button
-            className="hover:cursor-pointer"
-            onClick={save_progress}
-            disabled={loading || !canEdit}
-          >
-            Save <Save />
-          </Button>
+            <Button
+              className="hover:cursor-pointer"
+              onClick={save_progress}
+              disabled={loading || !canEdit}
+            >
+              Save <Save />
+            </Button>
 
-          <Button
-            className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-            onClick={generate_location_book}
-            disabled={loading || !canEdit}
-          >
-            Generate Location Book
-            <FileText />
-          </Button>
+            <Button
+              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+              onClick={generate_location_book}
+              disabled={loading || !canEdit}
+            >
+              Generate Location Book
+              <FileText />
+            </Button>
 
-          <LookBookMenuButton
-            book_type="Location Book"
-            bucket="locationbook"
-            column_name="locations"
-            id={location_book_id ?? ""}
-            id_column_name="locationbook_id"
-            table_name="locationbook"
-            path="/mylocationbooks"
-            disabled={loading || !canEdit}
-          />
-        </div>
+            <LookBookMenuButton
+              book_type="Location Book"
+              bucket="locationbook"
+              column_name="locations"
+              id={location_book_id ?? ""}
+              id_column_name="locationbook_id"
+              table_name="locationbook"
+              path="/mylocationbooks"
+              disabled={loading || !canEdit}
+              exists={exists}
+            />
+          </div>
+        ) : (
+          <div className="absolute right-6 flex flex-row gap-4">
+            <Button
+              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+              onClick={generate_location_book}
+              disabled={loading}
+            >
+              Generate Lookbook
+              <FileText />
+            </Button>
+
+            <AuthorCard author={authorData} />
+          </div>
+        )}
       </div>
 
       {/* Field inputs */}
@@ -573,7 +616,7 @@ const LocationBookGenerator = () => {
             {locations.map((location, index) => (
               <LocationInput
                 key={`${index}-${refreshKey}`}
-                canEdit={true}
+                canEdit={canEdit}
                 loaded_location={location}
                 locations={locations}
                 updateLocations={setLocations}

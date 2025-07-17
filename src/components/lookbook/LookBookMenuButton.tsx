@@ -31,7 +31,7 @@ import {
 
 // Importing dependencies
 import { useLocation, useNavigate } from "react-router-dom";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 // Importing Icons
 import { Menu, Share, Trash } from "lucide-react";
@@ -47,6 +47,7 @@ type LookBookMenuButtonProps = {
   book_type: string;
   path: string;
   disabled: boolean;
+  exists: boolean;
 };
 
 const LookBookMenuButton = ({
@@ -58,6 +59,7 @@ const LookBookMenuButton = ({
   book_type,
   path,
   disabled,
+  exists,
 }: LookBookMenuButtonProps) => {
   // Get the current path
   const location = useLocation();
@@ -71,6 +73,9 @@ const LookBookMenuButton = ({
     location.pathname +
     location.search +
     location.hash;
+
+  // Dialog states
+  const [open, setOpen] = useState<boolean>(false);
 
   // Copy link text button
   const input_ref = useRef<HTMLInputElement>(null);
@@ -90,6 +95,19 @@ const LookBookMenuButton = ({
     navigate(path);
   }
 
+  // Function to handle sharing a link
+  const handle_share_link = () => {
+    // Clear toasts
+    toast.dismiss();
+
+    if (exists) {
+      setOpen(true);
+    } else {
+      // If the book does not exist, you cannot share the link
+      toast.warning("You must save progress before sharing link!");
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -102,14 +120,16 @@ const LookBookMenuButton = ({
           <Menu />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="flex flex-col w-40 gap-3">
+      <PopoverContent className="flex flex-col w-50 gap-3">
         {/* Sharing Dialog */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="hover:cursor-pointer">
-              Share <Share />
-            </Button>
-          </DialogTrigger>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <Button
+            variant="outline"
+            className="hover:cursor-pointer"
+            onClick={handle_share_link}
+          >
+            Share <Share />
+          </Button>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl">Share Link</DialogTitle>
