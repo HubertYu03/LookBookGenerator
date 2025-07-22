@@ -104,7 +104,7 @@ const LoginCard = ({ current_path, setAuth }: LoginCardProps) => {
       className="w-full max-w-sm z-50"
       onKeyDownCapture={(e) => {
         if (e.key == "Enter") {
-          e.preventDefault(); // Optional: prevents form from submitting traditionally
+          e.preventDefault();
           sign_in_user();
         }
       }}

@@ -13,7 +13,7 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
-import type { Img, Role } from "@/types/global";
+import type { Img, Role, User } from "@/types/global";
 
 // Import UI Components
 import { Card, CardContent, CardFooter } from "../ui/card";
@@ -22,10 +22,11 @@ import { Textarea } from "../ui/textarea";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { toast } from "sonner";
-import { CircleX } from "lucide-react";
+import { BrushCleaning, CircleX, MessageSquareText, Trash } from "lucide-react";
 
 // Import custom components
 import ImagesPreview from "../ImagesPreview";
+import CommentSheet from "../Comments/CommentSheet";
 
 type RoleInputProps = {
   loaded_role: Role;
@@ -34,6 +35,8 @@ type RoleInputProps = {
   currentEmpty: number;
   setCurrentEmpty: Dispatch<SetStateAction<number>>;
   canEdit: boolean;
+  currentUser: User | null;
+  lookbook_id: string;
 };
 
 const RoleInput = ({
@@ -43,6 +46,8 @@ const RoleInput = ({
   currentEmpty,
   setCurrentEmpty,
   canEdit,
+  currentUser,
+  lookbook_id,
 }: RoleInputProps) => {
   // States for fields
   const [roleName, setRoleName] = useState<string | null>(null);
@@ -58,9 +63,13 @@ const RoleInput = ({
   const [additionalNotes, setAdditionNotes] = useState<string | null>(null);
   const [stylingSuggestions, setStylingSuggestions] = useState<Img[]>([]);
   const [accessories, setAccessories] = useState<Img[]>([]);
+  const [newlyCreated, setNewlyCreated] = useState<boolean>(true);
 
   // State for deleteing the color palette photo
   const [hoverClosePalette, setHoverClosePalette] = useState<boolean>(false);
+
+  // Commenting states
+  const [commentOpen, setCommentOpen] = useState<boolean>(false);
 
   // Helper function to create a random image id for deletion tracking
   function generate_image_id(): number {
@@ -92,6 +101,7 @@ const RoleInput = ({
       additionalNotes: additionalNotes,
       stylingSuggestions: stylingSuggestions,
       accessories: accessories,
+      newly_created: true,
     };
 
     // Set the state
@@ -219,6 +229,7 @@ const RoleInput = ({
     setRoleName(loaded_role.roleName);
     setWardrobeStyle(loaded_role.wardrobeStyle);
     setAdditionNotes(loaded_role.additionalNotes);
+    setNewlyCreated(loaded_role.newly_created);
 
     // Load color palette images if it exists
     if (loaded_role.colorPalette) {
@@ -304,173 +315,201 @@ const RoleInput = ({
   }, []);
 
   return (
-    <Card
-      className={currentEmpty == loaded_role.id ? "border-red-500" : ""}
-      id={`role-${loaded_role.id}`}
-    >
-      <CardContent className="flex flex-col gap-5">
-        <div className="flex flex-row justify-between items-start">
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>
-              Role Name
-              <span className={roleName ? "invisible" : "text-red-500"}>*</span>
-            </Label>
-            <Input
-              placeholder="Role Name"
-              onChange={(e) => setRoleName(e.target.value)}
-              value={roleName ?? ""}
-              disabled={!canEdit}
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="hover:cursor-pointer"
-              onClick={clear_fields}
-              disabled={!canEdit}
-            >
-              Clear Fields
-            </Button>
-            <Button
-              variant="destructive"
-              className="hover:cursor-pointer"
-              onClick={remove_role}
-              disabled={!canEdit}
-            >
-              Remove Role
-            </Button>
-          </div>
-        </div>
-
-        {/* Text Area Inputs */}
-        <div className="flex flex-wrap gap-12">
-          {/* Wardrobe style input */}
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>
-              Wardrobe Style
-              <span className={wardrobeStyle ? "invisible" : "text-red-500"}>
-                *
-              </span>
-            </Label>
-            <Textarea
-              className="h-32 resize-none"
-              placeholder="Enter Wardrobe Style..."
-              onChange={(e) => setWardrobeStyle(e.target.value)}
-              value={wardrobeStyle ? String(wardrobeStyle) : ""}
-              disabled={!canEdit}
-            />
-          </div>
-
-          {/* Addtional Comments Input */}
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>Addition Notes {"(optional)"}</Label>
-            <Textarea
-              className="h-32 resize-none"
-              placeholder="Add Additional Comments..."
-              onChange={(e) => setAdditionNotes(e.target.value)}
-              value={additionalNotes ? String(additionalNotes) : ""}
-              disabled={!canEdit}
-            />
-          </div>
-        </div>
-
-        {/* Color Palette Input */}
-        <div className="flex flex-col gap-5">
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>Upload Color Palette {"(optional)"}</Label>
-            <Input
-              ref={colorPaletteInputRef}
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
-              onChange={(e) => {
-                handleImageChange(e, "colorPalette", false);
-              }}
-              disabled={!canEdit}
-            />
-          </div>
-          {colorPalettePreview && (
-            <div
-              className="relative"
-              onMouseEnter={() => setHoverClosePalette(true)}
-              onMouseLeave={() => setHoverClosePalette(false)}
-            >
-              {hoverClosePalette && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-1 left-1 hover:cursor-pointer"
-                  onClick={remove_color_palette}
-                >
-                  <CircleX />
-                </Button>
-              )}
-              <img
-                src={colorPalettePreview.src}
-                alt="color_palette"
-                className="h-28 object-cover w-1/2"
+    <>
+      <Card
+        className={currentEmpty == loaded_role.id ? "border-red-500" : ""}
+        id={`role-${loaded_role.id}`}
+      >
+        <CardContent className="flex flex-col gap-5">
+          <div className="flex flex-row justify-between items-start">
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>
+                Role Name
+                <span className={roleName ? "invisible" : "text-red-500"}>
+                  *
+                </span>
+              </Label>
+              <Input
+                placeholder="Role Name"
+                onChange={(e) => setRoleName(e.target.value)}
+                value={roleName ?? ""}
+                disabled={!canEdit}
               />
             </div>
-          )}
-        </div>
+            <div className="flex gap-3">
+              {!newlyCreated && (
+                <Button
+                  className="hover:cursor-pointer"
+                  onClick={() => setCommentOpen(true)}
+                >
+                  Comments <MessageSquareText />
+                </Button>
+              )}
 
-        {/* Styling Suggestions Picker */}
-        <div className="flex flex-col gap-5">
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>
-              Upload Styling Suggestions
-              <span
-                className={
-                  stylingSuggestions.length != 0 ? "invisible" : "text-red-500"
-                }
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={clear_fields}
+                disabled={!canEdit}
               >
-                *
-              </span>
-            </Label>
+                Clear Fields
+                <BrushCleaning />
+              </Button>
+              <Button
+                variant="destructive"
+                className="hover:cursor-pointer"
+                onClick={remove_role}
+                disabled={!canEdit}
+              >
+                Remove Role
+                <Trash />
+              </Button>
+            </div>
+          </div>
+
+          {/* Text Area Inputs */}
+          <div className="flex flex-wrap gap-12">
+            {/* Wardrobe style input */}
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>
+                Wardrobe Style
+                <span className={wardrobeStyle ? "invisible" : "text-red-500"}>
+                  *
+                </span>
+              </Label>
+              <Textarea
+                className="h-32 resize-none"
+                placeholder="Enter Wardrobe Style..."
+                onChange={(e) => setWardrobeStyle(e.target.value)}
+                value={wardrobeStyle ? String(wardrobeStyle) : ""}
+                disabled={!canEdit}
+              />
+            </div>
+
+            {/* Addtional Comments Input */}
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>Addition Notes {"(optional)"}</Label>
+              <Textarea
+                className="h-32 resize-none"
+                placeholder="Add Additional Comments..."
+                onChange={(e) => setAdditionNotes(e.target.value)}
+                value={additionalNotes ? String(additionalNotes) : ""}
+                disabled={!canEdit}
+              />
+            </div>
+          </div>
+
+          {/* Color Palette Input */}
+          <div className="flex flex-col gap-5">
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>Upload Color Palette {"(optional)"}</Label>
+              <Input
+                ref={colorPaletteInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
+                onChange={(e) => {
+                  handleImageChange(e, "colorPalette", false);
+                }}
+                disabled={!canEdit}
+              />
+            </div>
+            {colorPalettePreview && (
+              <div
+                className="relative"
+                onMouseEnter={() => setHoverClosePalette(true)}
+                onMouseLeave={() => setHoverClosePalette(false)}
+              >
+                {hoverClosePalette && canEdit && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-1 left-1 hover:cursor-pointer"
+                    onClick={remove_color_palette}
+                  >
+                    <CircleX />
+                  </Button>
+                )}
+                <img
+                  src={colorPalettePreview.src}
+                  alt="color_palette"
+                  className="h-28 object-cover w-1/2"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Styling Suggestions Picker */}
+          <div className="flex flex-col gap-5">
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>
+                Upload Styling Suggestions
+                <span
+                  className={
+                    stylingSuggestions.length != 0
+                      ? "invisible"
+                      : "text-red-500"
+                  }
+                >
+                  *
+                </span>
+              </Label>
+              <Input
+                type="file"
+                multiple
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
+                onChange={(e) => {
+                  handleImageChange(e, "styling", true);
+                }}
+                disabled={!canEdit}
+              />
+            </div>
+            {stylingSuggestions.length > 0 && (
+              <ImagesPreview
+                images={stylingSuggestions}
+                sizeClasses="w-36 h-48"
+                removeImage={remove_image}
+                canEdit={canEdit}
+              />
+            )}
+          </div>
+
+          <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <Label>Upload Accessories {"(optional)"}</Label>
             <Input
               type="file"
               multiple
               accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
               onChange={(e) => {
-                handleImageChange(e, "styling", true);
+                handleImageChange(e, "accessories", true);
               }}
               disabled={!canEdit}
             />
           </div>
-          {stylingSuggestions.length > 0 && (
+          {accessories.length != 0 && (
             <ImagesPreview
-              images={stylingSuggestions}
-              sizeClasses="w-36 h-48"
+              images={accessories}
+              sizeClasses="w-32 h-32"
               removeImage={remove_image}
+              canEdit={canEdit}
             />
           )}
-        </div>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <div className="text-gray-500 italic text-sm">
+            Role ID: {loaded_role.id}
+          </div>
+        </CardFooter>
+      </Card>
 
-        <div className="grid w-1/3 max-w-sm items-center gap-3">
-          <Label>Upload Accessories {"(optional)"}</Label>
-          <Input
-            type="file"
-            multiple
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
-            onChange={(e) => {
-              handleImageChange(e, "accessories", true);
-            }}
-            disabled={!canEdit}
-          />
-        </div>
-        {accessories.length != 0 && (
-          <ImagesPreview
-            images={accessories}
-            sizeClasses="w-32 h-32"
-            removeImage={remove_image}
-          />
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <div className="text-gray-500 italic text-sm">
-          Role ID: {loaded_role.id}
-        </div>
-      </CardFooter>
-    </Card>
+      {/* Comment Sheet Component */}
+      <CommentSheet
+        open={commentOpen}
+        setOpenChange={setCommentOpen}
+        currentUser={currentUser}
+        section_id={loaded_role.id}
+        book_id={lookbook_id}
+      />
+    </>
   );
 };
 

@@ -47,7 +47,7 @@ import SidebarLinks from "./components/SidebarLinks";
 import SidebarProfileFooter from "./components/SidebarProfileFooter";
 
 import type { User } from "./types/global";
-import LoginCard from "./pages/auth/LoginCard";
+import LoginCard from "./components/LoginCard";
 
 window.Buffer = Buffer;
 

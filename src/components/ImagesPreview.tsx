@@ -12,12 +12,14 @@ type ImagesPreviewProps = {
   images: Img[];
   sizeClasses: string;
   removeImage: (value: number) => void;
+  canEdit: boolean;
 };
 
 const ImagesPreview = ({
   images,
   sizeClasses,
   removeImage,
+  canEdit,
 }: ImagesPreviewProps) => {
   const [hover, setHover] = useState<number | null>(null);
 
@@ -30,7 +32,7 @@ const ImagesPreview = ({
           onMouseEnter={() => setHover(i)}
           onMouseLeave={() => setHover(null)}
         >
-          {hover == i && (
+          {hover == i && canEdit && (
             <Button
               variant="destructive"
               size="sm"

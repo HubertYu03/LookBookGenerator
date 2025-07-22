@@ -5,11 +5,18 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { toast } from "sonner";
 
+// Importing Icons
+import { MessageSquareText } from "lucide-react";
+
+// Importing custom components
+import CommentSheet from "../Comments/CommentSheet";
+import ImagesPreview from "../ImagesPreview";
+
 // Importing dependencies
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 // Import global types
-import type { Img, Location } from "@/types/global";
+import type { Img, Location, User } from "@/types/global";
 import {
   Select,
   SelectContent,
@@ -17,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import ImagesPreview from "../ImagesPreview";
+
+// Importing database
 import { supabase } from "@/lib/supabaseClient";
 
 type LocationInputProps = {
@@ -27,6 +35,8 @@ type LocationInputProps = {
   currentEmpty: number;
   setCurrentEmpty: Dispatch<SetStateAction<number>>;
   canEdit: boolean;
+  currentUser: User | null;
+  locationbook_id: string;
 };
 
 const LocationInput = ({
@@ -36,6 +46,8 @@ const LocationInput = ({
   currentEmpty,
   setCurrentEmpty,
   canEdit,
+  currentUser,
+  locationbook_id,
 }: LocationInputProps) => {
   // States for inputs
   const [scene, setScene] = useState<string | null>(null);
@@ -45,6 +57,10 @@ const LocationInput = ({
   );
   const [locationName, setLocationName] = useState<string | null>(null);
   const [locationImgs, setLocationImgs] = useState<Img[]>([]);
+
+  // States for comments
+  const [commentOpen, setCommentOpen] = useState<boolean>(false);
+  const [newlyCreated, setNewlyCreated] = useState<boolean>(true);
 
   // Helper function to create a random image id for deletion tracking
   function generate_image_id(): number {
@@ -80,6 +96,7 @@ const LocationInput = ({
       location_name: locationName,
       location_type: locationType,
       images: locationImgs,
+      newly_created: true,
     };
 
     // Set the state
@@ -108,6 +125,7 @@ const LocationInput = ({
     setTimeOfDay(loaded_location.time_of_day);
     setLocationType(loaded_location.location_type);
     setLocationName(loaded_location.location_name);
+    setNewlyCreated(loaded_location.newly_created);
 
     // Loading the images from the database if there are any images
     if (loaded_location.images) {
@@ -201,134 +219,155 @@ const LocationInput = ({
   }, [timeOfDay, locationType, locationName, locationImgs, scene]);
 
   return (
-    <Card
-      id={`location-${loaded_location.id}`}
-      className={loaded_location.id == currentEmpty ? "border-red-500" : ""}
-    >
-      <CardContent className="flex flex-col gap-5">
-        {/* Scene Name Input */}
-        <div className="flex flex-row justify-between items-start">
+    <>
+      <Card
+        id={`location-${loaded_location.id}`}
+        className={loaded_location.id == currentEmpty ? "border-red-500" : ""}
+      >
+        <CardContent className="flex flex-col gap-5">
+          {/* Scene Name Input */}
+          <div className="flex flex-row justify-between items-start">
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>Scene:</Label>
+              <Input
+                placeholder="Scene"
+                value={scene ?? ""}
+                onChange={(e) => {
+                  setScene(e.target.value);
+                }}
+                disabled={!canEdit}
+              />
+            </div>
+            <div className="flex gap-3">
+              {!newlyCreated && (
+                <Button
+                  className="hover:cursor-pointer"
+                  onClick={() => setCommentOpen(true)}
+                >
+                  Comments <MessageSquareText />
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={clear_fields}
+                disabled={!canEdit}
+              >
+                Clear Fields
+              </Button>
+              <Button
+                variant="destructive"
+                className="hover:cursor-pointer"
+                onClick={remove_location}
+                disabled={!canEdit}
+              >
+                Remove Role
+              </Button>
+            </div>
+          </div>
+
+          {/* Container for select inputs */}
+          <div className="flex flex-row w-1/3 gap-3">
+            {/* Day/Night Selection */}
+            <div className="grid max-w-sm items-center gap-3">
+              <Label>Day/Night:</Label>
+              <Select
+                value={timeOfDay ?? ""}
+                onValueChange={(time) => {
+                  setTimeOfDay(time as "Day" | "Night");
+                }}
+                disabled={!canEdit}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Time of Day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Day", "Night"].map((time, index) => (
+                    <SelectItem key={index} value={time}>
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Location Type Input */}
+            <div className="grid max-w-sm items-center gap-3">
+              <Label>Outdoor/Indoor:</Label>
+              <Select
+                value={locationType ?? ""}
+                onValueChange={(type) => {
+                  setLocationType(type as "Outdoor" | "Indoor");
+                }}
+                disabled={!canEdit}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Location Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Outdoor", "Indoor"].map((type, index) => (
+                    <SelectItem key={index} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Location Name Input */}
           <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>Scene:</Label>
+            <Label>Location Name:</Label>
             <Input
-              placeholder="Scene"
-              value={scene ?? ""}
+              value={locationName ?? ""}
+              placeholder="Location Name"
               onChange={(e) => {
-                setScene(e.target.value);
+                setLocationName(e.target.value);
               }}
               disabled={!canEdit}
             />
           </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="hover:cursor-pointer"
-              onClick={clear_fields}
-              disabled={!canEdit}
-            >
-              Clear Fields
-            </Button>
-            <Button
-              variant="destructive"
-              className="hover:cursor-pointer"
-              onClick={remove_location}
-              disabled={!canEdit}
-            >
-              Remove Role
-            </Button>
-          </div>
-        </div>
 
-        {/* Container for select inputs */}
-        <div className="flex flex-row w-1/3 gap-3">
-          {/* Day/Night Selection */}
-          <div className="grid max-w-sm items-center gap-3">
-            <Label>Day/Night:</Label>
-            <Select
-              value={timeOfDay ?? ""}
-              onValueChange={(time) => {
-                setTimeOfDay(time as "Day" | "Night");
-              }}
-              disabled={!canEdit}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Time of Day" />
-              </SelectTrigger>
-              <SelectContent>
-                {["Day", "Night"].map((time, index) => (
-                  <SelectItem key={index} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-5">
+            <div className="grid w-1/3 max-w-sm items-center gap-3">
+              <Label>Upload Location Images (3 Max)</Label>
+              <Input
+                type="file"
+                multiple
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
+                onChange={(e) => {
+                  handleImageChange(e, true);
+                }}
+                disabled={!canEdit}
+              />
+            </div>
+            {locationImgs.length > 0 && (
+              <ImagesPreview
+                images={locationImgs}
+                sizeClasses="h-32 w-56"
+                removeImage={remove_image}
+                canEdit={canEdit}
+              />
+            )}
           </div>
-
-          {/* Location Type Input */}
-          <div className="grid max-w-sm items-center gap-3">
-            <Label>Outdoor/Indoor:</Label>
-            <Select
-              value={locationType ?? ""}
-              onValueChange={(type) => {
-                setLocationType(type as "Outdoor" | "Indoor");
-              }}
-              disabled={!canEdit}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Location Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {["Outdoor", "Indoor"].map((type, index) => (
-                  <SelectItem key={index} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <div className="text-gray-500 italic text-sm">
+            Location ID: {loaded_location.id}
           </div>
-        </div>
+        </CardFooter>
+      </Card>
 
-        {/* Location Name Input */}
-        <div className="grid w-1/3 max-w-sm items-center gap-3">
-          <Label>Location Name:</Label>
-          <Input
-            value={locationName ?? ""}
-            placeholder="Location Name"
-            onChange={(e) => {
-              setLocationName(e.target.value);
-            }}
-            disabled={!canEdit}
-          />
-        </div>
-
-        <div className="flex flex-col gap-5">
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
-            <Label>Upload Location Images (3 Max)</Label>
-            <Input
-              type="file"
-              multiple
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp"
-              onChange={(e) => {
-                handleImageChange(e, true);
-              }}
-              disabled={!canEdit}
-            />
-          </div>
-          {locationImgs.length > 0 && (
-            <ImagesPreview
-              images={locationImgs}
-              sizeClasses="h-32 w-56"
-              removeImage={remove_image}
-            />
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <div className="text-gray-500 italic text-sm">
-          Location ID: {loaded_location.id}
-        </div>
-      </CardFooter>
-    </Card>
+      {/* Comments Sheet Component */}
+      <CommentSheet
+        open={commentOpen}
+        setOpenChange={setCommentOpen}
+        currentUser={currentUser}
+        section_id={loaded_location.id}
+        book_id={locationbook_id}
+      />
+    </>
   );
 };
 

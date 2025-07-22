@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 // Importing dependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { pdf } from "@react-pdf/renderer";
 import { useParams } from "react-router-dom";
 import _ from "lodash";
@@ -70,6 +70,7 @@ const LocationBookGenerator = () => {
   // State for editing
   const [canEdit, setCanEdit] = useState<boolean>(true);
   const [authorData, setAuthorData] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Set initial locations
   const initial_location: Location = {
@@ -79,6 +80,7 @@ const LocationBookGenerator = () => {
     location_type: null,
     location_name: null,
     images: [],
+    newly_created: true,
   };
 
   const [locations, setLocations] = useState<Location[]>([initial_location]);
@@ -120,6 +122,7 @@ const LocationBookGenerator = () => {
       location_type: null,
       location_name: null,
       images: [],
+      newly_created: true,
     };
 
     setLocations((locations) => [...locations, new_location]);
@@ -150,6 +153,11 @@ const LocationBookGenerator = () => {
 
   // Function to open the generated pdf
   const openPDFInNewTab = async () => {
+    // Set loading toast
+    toast.info("Generating Lookbook...", {
+      id: "loading-message",
+    });
+
     // We need to convert all our images into a temporary roles img links
     let pdf_locations_chunks: Location[][] = _.chunk(locations, 3);
 
@@ -164,19 +172,25 @@ const LocationBookGenerator = () => {
     ).toBlob();
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
+
+    // Clear the loading search
+    toast.dismiss("loading-message");
   };
 
   // Function to fetch the author data id needed
   // Helper function to get the current user (if any)
-  async function get_user(author_id: string) {
+  async function get_user(
+    id: string,
+    setState: Dispatch<SetStateAction<User | null>>
+  ) {
     // Get the user data from the database
     let { data: user_data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("user_id", author_id);
+      .eq("user_id", id);
 
     if (!error && user_data && user_data.length > 0) {
-      setAuthorData(user_data[0]);
+      setState(user_data[0]);
     } else if (error) {
       console.log(error);
     }
@@ -196,7 +210,7 @@ const LocationBookGenerator = () => {
       // That means this look book exists
       if (localStorage.getItem("PlayletUserID") != data[0].author_id) {
         setCanEdit(false);
-        get_user(data[0].author_id);
+        get_user(data[0].author_id, setAuthorData);
       } else {
         console.log("You can edit this page!");
       }
@@ -278,13 +292,25 @@ const LocationBookGenerator = () => {
             "locationbook",
             `private/${location_book_id}/locations/${location.id}`
           );
+
+          // Delete all the comments associate with this location
+          const { error } = await supabase
+            .from("comments")
+            .delete()
+            .eq("book_id", location_book_id)
+            .eq("section_id", location.id);
+
+          if (error) {
+            console.log(error);
+            return;
+          }
         });
       }
     }
 
     // We need to process all the locations
     await Promise.all(
-      locations.map(async (location) => {
+      locations.map(async (location, index) => {
         // Check if there are locations to be processed
         if (location.images.length > 0) {
           console.log("There are location images to be saved");
@@ -367,6 +393,9 @@ const LocationBookGenerator = () => {
             }
           }
         }
+
+        // Set the newly created locations to false
+        location_book_data.locations[index].newly_created = false;
       })
     );
 
@@ -396,6 +425,9 @@ const LocationBookGenerator = () => {
 
     // Get the location book data
     get_location_book_data();
+
+    // Get the current user
+    get_user(String(localStorage.getItem("PlayletUserID")), setCurrentUser);
   }, []);
 
   return (
@@ -594,7 +626,6 @@ const LocationBookGenerator = () => {
                 onValueChange={(id) => {
                   jump_to_location(id);
                 }}
-                disabled={!canEdit}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Location ID" />
@@ -622,6 +653,8 @@ const LocationBookGenerator = () => {
                 updateLocations={setLocations}
                 currentEmpty={currentEmpty}
                 setCurrentEmpty={setCurrentEmpty}
+                currentUser={currentUser}
+                locationbook_id={String(location_book_id)}
               />
             ))}
           </div>

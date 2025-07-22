@@ -1,6 +1,6 @@
 // Import dependencies
 import { pdf } from "@react-pdf/renderer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useParams } from "react-router-dom";
 import {
   dataURLtoFile,
@@ -56,6 +56,7 @@ const LookBookGenerator = () => {
   // States for page start up
   const [canEdit, setCanEdit] = useState<boolean>(true);
   const [authorData, setAuthorData] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [exists, setExists] = useState<boolean>(false);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -69,6 +70,7 @@ const LookBookGenerator = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [currentError, setCurrentError] = useState<string>("");
 
+  // States for error
   const [currentEmpty, setCurrentEmpty] = useState<number>(0);
 
   // Create an initial role
@@ -80,6 +82,7 @@ const LookBookGenerator = () => {
     additionalNotes: null,
     stylingSuggestions: [],
     accessories: [],
+    newly_created: true,
   };
   const [roles, setRoles] = useState<Role[]>([inital_role]);
 
@@ -103,6 +106,7 @@ const LookBookGenerator = () => {
       additionalNotes: null,
       stylingSuggestions: [],
       accessories: [],
+      newly_created: true,
     };
 
     setRoles((roles) => [...roles, new_role]);
@@ -186,6 +190,11 @@ const LookBookGenerator = () => {
 
   // Function to open the generated pdf
   const openPDFInNewTab = async () => {
+    // Set loading toast
+    toast.info("Generating Lookbook...", {
+      id: "loading-message",
+    });
+
     // We need to convert all our images into a temporary roles img links
     let pdf_roles: Role[] = roles;
 
@@ -224,6 +233,9 @@ const LookBookGenerator = () => {
     ).toBlob();
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
+
+    // Dismiss the loading toast
+    toast.dismiss("loading-message");
   };
 
   // Helper functions for saving the images
@@ -312,6 +324,18 @@ const LookBookGenerator = () => {
             "lookbook",
             `private/${look_book_id}/styling/${role.id}`
           );
+
+          // Delete all the comments associated with that role
+          const { error } = await supabase
+            .from("comments")
+            .delete()
+            .eq("book_id", look_book_id)
+            .eq("section_id", role.id);
+
+          if (error) {
+            console.log(error);
+            return;
+          }
         });
       }
     }
@@ -595,6 +619,8 @@ const LookBookGenerator = () => {
             }
           }
         }
+
+        lookbook_data.roles[index].newly_created = false;
       })
     );
 
@@ -620,15 +646,18 @@ const LookBookGenerator = () => {
   }
 
   // Helper function to get the author data
-  async function get_user(author_id: string) {
+  async function get_user(
+    id: string,
+    setState: Dispatch<SetStateAction<User | null>>
+  ) {
     // Get the user data from the database
     let { data: user_data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("user_id", author_id);
+      .eq("user_id", id);
 
     if (!error && user_data && user_data.length > 0) {
-      setAuthorData(user_data[0]);
+      setState(user_data[0]);
     } else if (error) {
       console.log(error);
     }
@@ -647,7 +676,7 @@ const LookBookGenerator = () => {
       // That means this look book exists
       if (localStorage.getItem("PlayletUserID") != data[0].author_id) {
         setCanEdit(false);
-        get_user(data[0].author_id);
+        get_user(data[0].author_id, setAuthorData);
       } else {
         console.log("You can edit this page!");
       }
@@ -676,6 +705,9 @@ const LookBookGenerator = () => {
     document.title = "Lookbook Editor";
 
     get_lookbook_data();
+
+    // Get the current User
+    get_user(String(localStorage.getItem("PlayletUserID")), setCurrentUser);
   }, []);
 
   return (
@@ -912,12 +944,14 @@ const LookBookGenerator = () => {
                 currentEmpty={Number(currentEmpty)}
                 setCurrentEmpty={setCurrentEmpty}
                 canEdit={canEdit}
+                currentUser={currentUser}
+                lookbook_id={String(look_book_id)}
               />
             ))}
           </div>
 
           {/* Add Roles Button */}
-          <div id="step-4" className={`flex items-center justify-center `}>
+          <div className={`flex items-center justify-center `}>
             <div className="w-1/2">
               <Button
                 className="w-full hover:cursor-pointer"

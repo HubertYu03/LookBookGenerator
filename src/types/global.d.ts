@@ -24,6 +24,7 @@ export type Role = {
   additionalNotes: string | null;
   stylingSuggestions: Img[];
   accessories: Img[];
+  newly_created: boolean;
 };
 
 // Location Book Types
@@ -34,6 +35,7 @@ export type Location = {
   location_type: "Indoor" | "Outdoor" | null;
   location_name: string | null;
   images: Img[];
+  newly_created: boolean;
 };
 
 export type LocationBook = {
@@ -48,10 +50,22 @@ export type LocationBook = {
   locations: Location[];
 };
 
+// Auth type
 export type User = {
   user_id: string;
   created_at: Date;
   first_name: string;
   last_name: string;
   avatar: string;
+};
+
+// Comment Type
+export type Comment = {
+  comment_id: string;
+  created_at: Date;
+  author_name: string;
+  author_avatar: string;
+  text: string;
+  book_id: string;
+  section_id: number;
 };
