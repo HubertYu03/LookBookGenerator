@@ -22,7 +22,8 @@ import type { Comment, User } from "@/types/global";
 
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
-import { data } from "react-router-dom";
+
+// Importing customer components
 import CommentCard from "./CommentCard";
 
 type CommentSheetProps = {
