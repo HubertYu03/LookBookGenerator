@@ -164,6 +164,17 @@ export async function delete_book(
         console.log(del_error);
         return;
       }
+
+      // Also delete all the comments associated with the book
+
+      const { error } = await supabase
+        .from("comments")
+        .delete()
+        .eq("book_id", id);
+
+      if (error) {
+        console.log(error);
+      }
     }
   }
 }

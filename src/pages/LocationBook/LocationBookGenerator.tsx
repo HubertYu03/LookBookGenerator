@@ -46,6 +46,7 @@ import AuthorCard from "@/components/AuthorCard";
 
 // Importing supabase
 import { supabase } from "@/lib/supabaseClient";
+import HowToSheet from "@/components/Documentation/HowToSheet";
 
 const LocationBookGenerator = () => {
   // Get the location book ID
@@ -84,6 +85,9 @@ const LocationBookGenerator = () => {
   };
 
   const [locations, setLocations] = useState<Location[]>([initial_location]);
+
+  // State for opening the how to page
+  const [openHowTo, setOpenHowTo] = useState<boolean>(false);
 
   // Helper function to create a random role id for state tracking
   function randomFiveDigit(): number {
@@ -462,6 +466,7 @@ const LocationBookGenerator = () => {
               className="hover:cursor-pointer"
               variant="outline"
               disabled={loading}
+              onClick={() => setOpenHowTo(true)}
             >
               How To Use
               <CircleQuestionMark />
@@ -674,6 +679,13 @@ const LocationBookGenerator = () => {
           </div>
         </>
       )}
+
+      {/* How To Sheet */}
+      <HowToSheet
+        open={openHowTo}
+        setOpenChange={setOpenHowTo}
+        initial="locationbook"
+      />
     </div>
   );
 };

@@ -95,7 +95,7 @@ const LookBookMenuButton = ({
       navigate(path);
     } else {
       // If the book does not exist, you cannot delete it
-      toast.warning("You must save progress before sharing link!");
+      toast.warning(`You must save progress before deleting ${book_type}`);
     }
   }
 
@@ -124,7 +124,7 @@ const LookBookMenuButton = ({
           <Menu />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="flex flex-col w-50 gap-3">
+      <PopoverContent className="flex flex-col w-50 gap-3 mr-6 mt-2">
         {/* Sharing Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
           <Button

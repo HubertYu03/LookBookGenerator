@@ -48,6 +48,7 @@ import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
 // Import Global Types
 import type { Img, Role, User } from "@/types/global";
 import AuthorCard from "@/components/AuthorCard";
+import HowToSheet from "@/components/Documentation/HowToSheet";
 
 const LookBookGenerator = () => {
   // Get the LookBook ID
@@ -72,6 +73,9 @@ const LookBookGenerator = () => {
 
   // States for error
   const [currentEmpty, setCurrentEmpty] = useState<number>(0);
+
+  // State for opening the how to page
+  const [openHowTo, setOpenHowTo] = useState<boolean>(false);
 
   // Create an initial role
   let inital_role: Role = {
@@ -741,6 +745,7 @@ const LookBookGenerator = () => {
               className="hover:cursor-pointer"
               variant="outline"
               disabled={loading}
+              onClick={() => setOpenHowTo(true)}
             >
               How To Use
               <CircleQuestionMark />
@@ -965,6 +970,13 @@ const LookBookGenerator = () => {
           </div>
         </>
       )}
+
+      {/* How to sheet */}
+      <HowToSheet
+        open={openHowTo}
+        setOpenChange={setOpenHowTo}
+        initial="lookbook"
+      />
     </div>
   );
 };
