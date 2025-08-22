@@ -26,6 +26,7 @@ import {
   House,
   Map,
   MapPlus,
+  CalendarDays,
 } from "lucide-react";
 import logo from "/PlayletLogo.png";
 
@@ -48,6 +49,7 @@ import SidebarProfileFooter from "./components/SidebarProfileFooter";
 
 import type { User } from "./types/global";
 import LoginCard from "./components/LoginCard";
+import Calendar from "./pages/Calendar";
 
 window.Buffer = Buffer;
 
@@ -220,6 +222,16 @@ function App() {
                         icon={MapPlus}
                       />
                     </SidebarMenu>
+
+                    <SidebarGroupLabel>Calendar</SidebarGroupLabel>
+                    <SidebarMenu>
+                      {/* View Your Location Books */}
+                      <SidebarLinks
+                        title="Calendar"
+                        path="/calendar"
+                        icon={CalendarDays}
+                      />
+                    </SidebarMenu>
                   </SidebarContent>
 
                   {/* Sideber Footer */}
@@ -265,6 +277,7 @@ function App() {
                         path="/locationbookgenerator/:location_book_id"
                         element={<LocationBookGenerator />}
                       />
+                      <Route path="/calendar" element={<Calendar />} />
                     </Routes>
                   </div>
                 </main>
