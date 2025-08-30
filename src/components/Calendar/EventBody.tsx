@@ -1,3 +1,6 @@
+// This is the main body of all the events for the week
+
+// Importing custom UI components
 import EventColumn from "./EventColumn";
 
 type EventBodyProps = {

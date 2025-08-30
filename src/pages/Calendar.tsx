@@ -129,6 +129,7 @@ const Calendar = () => {
         <EventBody dates={currentWeek} />
       </div>
 
+      {/* Modal to create an event */}
       <EventCreationModal
         open={openEventCreation}
         setOpen={setOpenEventCreation}

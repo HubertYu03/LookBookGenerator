@@ -1,8 +1,14 @@
+// This is the whole column per date
+
+// Importing global types
 import type { Event } from "@/types/global";
+
+// Importing dependencies
 import { useEffect, useState } from "react";
 
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
+import EventColumnPreview from "./EventColumnPreview";
 
 type EventColumnProps = {
   date: Date;
@@ -36,7 +42,9 @@ const EventColumn = ({ date, dates }: EventColumnProps) => {
   return (
     <div className="w-full p-0.5">
       {events?.map((event, index) => (
-        <div key={index}>{event.event_title}</div>
+        <div key={index}>
+          <EventColumnPreview event={event} />
+        </div>
       ))}
     </div>
   );
