@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
+import { SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
 
 import { type LucideIcon } from "lucide-react";
 

@@ -2,7 +2,7 @@
 import logo from "/PlayletLogo.png";
 
 // Importing custom components
-import LoginCard from "../../components/LoginCard";
+import LoginCard from "../../components/Auth/LoginCard";
 
 const Login = () => {
   return (

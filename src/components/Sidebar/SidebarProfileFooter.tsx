@@ -1,5 +1,5 @@
 // Importing UI components
-import { SidebarMenu, SidebarMenuItem } from "./ui/sidebar";
+import { SidebarMenu, SidebarMenuItem } from "../ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type SidebarFooterProps = {

@@ -69,3 +69,16 @@ export type Comment = {
   book_id: string;
   section_id: number;
 };
+
+// Calendar Types
+export type Event = {
+  event_id: string;
+  created_at: Date;
+  event_date: string;
+  event_desc: string;
+  event_title: string;
+  event_author: string;
+  event_color: string;
+  event_start: string;
+  event_end: string;
+};

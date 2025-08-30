@@ -43,12 +43,12 @@ import { supabase } from "./lib/supabaseClient";
 import MyLocationBooks from "./pages/LocationBook/MyLocationBooks";
 import LocationBookGenerator from "./pages/LocationBook/LocationBookGenerator";
 import Register from "./pages/auth/Register";
-import AuthCallback from "./components/AuthCallback";
-import SidebarLinks from "./components/SidebarLinks";
-import SidebarProfileFooter from "./components/SidebarProfileFooter";
+import AuthCallback from "./components/Auth/AuthCallback";
+import SidebarLinks from "./components/Sidebar/SidebarLinks";
+import SidebarProfileFooter from "./components/Sidebar/SidebarProfileFooter";
 
 import type { User } from "./types/global";
-import LoginCard from "./components/LoginCard";
+import LoginCard from "./components/Auth/LoginCard";
 import Calendar from "./pages/Calendar";
 
 window.Buffer = Buffer;
