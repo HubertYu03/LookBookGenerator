@@ -126,7 +126,7 @@ const Calendar = () => {
 
       {/* Event body */}
       <div>
-        <EventBody dates={currentWeek} />
+        <EventBody dates={currentWeek} getWeek={get_current_week} />
       </div>
 
       {/* Modal to create an event */}

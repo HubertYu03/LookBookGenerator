@@ -20,7 +20,7 @@ import { Textarea } from "../ui/textarea";
 import { ChevronDownIcon, Plus } from "lucide-react";
 
 // Importing global types
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { Event } from "@/types/global";
 
 // Importing custom components
@@ -36,12 +36,14 @@ type EventCreationModalProps = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   getWeek: () => void;
+  presetDate?: Date;
 };
 
 const EventCreationModal = ({
   open,
   setOpen,
   getWeek,
+  presetDate,
 }: EventCreationModalProps) => {
   // Event States
   const [eventTitle, setEventTitle] = useState<string>();
@@ -87,11 +89,20 @@ const EventCreationModal = ({
       return;
     }
 
+    // Check if the times are correct
+    const start: number = Number(startTime.split(":")[0]);
+    const end: number = Number(endTime.split(":")[0]);
+
+    if (start > end) {
+      toast.warning("Invalid start and end times!");
+      return;
+    }
+
     // Create an new event type and add it to the database
     let new_event: Event = {
       event_id: v4(),
       created_at: new Date(),
-      event_date: date.toISOString().split("T")[0],
+      event_date: date,
       event_title: eventTitle,
       event_desc: eventDesc,
       event_author: localStorage.getItem("PlayletUserID") as string,
@@ -113,6 +124,13 @@ const EventCreationModal = ({
       getWeek();
     }
   }
+
+  useEffect(() => {
+    // If there is a preset date that exists
+    if (presetDate) {
+      setDate(presetDate);
+    }
+  }, [presetDate]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -228,10 +246,7 @@ const EventCreationModal = ({
 
           <div className="flex flex-row gap-2">
             <Label>Selected Color:</Label>
-            <div
-              className="w-5 h-5"
-              style={{ backgroundColor: eventColor }}
-            ></div>
+            <div className="w-5 h-5" style={{ backgroundColor: eventColor }} />
           </div>
         </div>
 

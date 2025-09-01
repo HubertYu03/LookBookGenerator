@@ -74,7 +74,7 @@ export type Comment = {
 export type Event = {
   event_id: string;
   created_at: Date;
-  event_date: string;
+  event_date: Date;
   event_desc: string;
   event_title: string;
   event_author: string;
