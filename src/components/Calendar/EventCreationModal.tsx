@@ -102,7 +102,7 @@ const EventCreationModal = ({
     let new_event: Event = {
       event_id: v4(),
       created_at: new Date(),
-      event_date: date,
+      event_date: date.toISOString().split("T")[0],
       event_title: eventTitle,
       event_desc: eventDesc,
       event_author: localStorage.getItem("PlayletUserID") as string,

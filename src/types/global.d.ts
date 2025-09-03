@@ -57,6 +57,7 @@ export type User = {
   first_name: string;
   last_name: string;
   avatar: string;
+  pinned_events: string[];
 };
 
 // Comment Type
@@ -74,7 +75,7 @@ export type Comment = {
 export type Event = {
   event_id: string;
   created_at: Date;
-  event_date: Date;
+  event_date: string;
   event_desc: string;
   event_title: string;
   event_author: string;

@@ -10,12 +10,19 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+// Importing global types
+import type { User } from "@/types/global";
+
 // Importing Icons
 import { ChevronDownIcon, Plus } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
-const Calendar = () => {
+type CalendarProps = {
+  user: User | undefined;
+};
+
+const Calendar = ({ user }: CalendarProps) => {
   // Date States
   const [datePickerOpen, setDatePickerOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -126,7 +133,7 @@ const Calendar = () => {
 
       {/* Event body */}
       <div>
-        <EventBody dates={currentWeek} getWeek={get_current_week} />
+        <EventBody dates={currentWeek} getWeek={get_current_week} user={user} />
       </div>
 
       {/* Modal to create an event */}

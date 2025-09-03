@@ -2,13 +2,16 @@
 
 // Importing global types
 import type { Event, User } from "@/types/global";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
 
 type EventColumnPreviewProps = {
   event: Event;
+  setPreviewOpen: Dispatch<SetStateAction<boolean>>;
+  setPreviewEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
+  setPreviewAuthor: React.Dispatch<React.SetStateAction<User | undefined>>;
 };
 
 // Helper functions for time formatting
@@ -35,12 +38,26 @@ function military_to_normal(value: string): string {
   return Number(time_split[0]) + ":" + time_split[1];
 }
 
-const EventColumnPreview = ({ event }: EventColumnPreviewProps) => {
+const EventColumnPreview = ({
+  event,
+  setPreviewOpen,
+  setPreviewEvent,
+  setPreviewAuthor,
+}: EventColumnPreviewProps) => {
   // Loading state
   const [loading, setLoading] = useState<boolean>(true);
 
   // Getting the user of the event
   const [author, setAuthor] = useState<User>();
+
+  // Helper function for title formatting
+  function title_length_format(title: string): string {
+    if (title.length >= 14) {
+      return title.substring(0, 14) + "...";
+    } else {
+      return title;
+    }
+  }
 
   // Helper function to get the author of the event
   async function get_author() {
@@ -66,12 +83,19 @@ const EventColumnPreview = ({ event }: EventColumnPreviewProps) => {
     <div
       className="p-2 rounded-sm text-white hover:cursor-pointer hover:opacity-95"
       style={{ backgroundColor: event.event_color }}
+      onClick={() => {
+        setPreviewOpen(true);
+        setPreviewEvent(event);
+        setPreviewAuthor(author);
+      }}
     >
       {loading ? (
         <div className="text-sm">Loading...</div>
       ) : (
         <>
-          <div className="text-sm font-bold">{event.event_title}</div>
+          <div className="text-sm font-bold">
+            {title_length_format(event.event_title)}
+          </div>
           <div className="text-xs mb-2">
             {military_to_normal(event.event_start)}
             {am_pm(event.event_start)} - {military_to_normal(event.event_end)}

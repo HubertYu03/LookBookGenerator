@@ -277,7 +277,10 @@ function App() {
                         path="/locationbookgenerator/:location_book_id"
                         element={<LocationBookGenerator />}
                       />
-                      <Route path="/calendar" element={<Calendar />} />
+                      <Route
+                        path="/calendar"
+                        element={<Calendar user={userData} />}
+                      />
                     </Routes>
                   </div>
                 </main>
