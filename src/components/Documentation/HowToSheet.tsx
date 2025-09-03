@@ -23,7 +23,7 @@ type HowToSheetProps = {
 const HowToSheet = ({ open, setOpenChange, initial }: HowToSheetProps) => {
   return (
     <Sheet open={open} onOpenChange={setOpenChange}>
-      <SheetContent className="flex flex-col h-screen duration-150 xl:w-[900px] xl:max-w-none sm:w-[400px] sm:max-w-[540px]">
+      <SheetContent className="flex flex-col h-screen duration-150 w-[85vw] max-w-[85vw] sm:w-[400px] sm:max-w-[540px]">
         <SheetHeader>
           <SheetTitle>Book Editor Documentation</SheetTitle>
           <SheetDescription>

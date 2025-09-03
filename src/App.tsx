@@ -313,22 +313,34 @@ function App() {
 
         {/* Mobile Device */}
         {isMobile && (
-          <>
-            <Route path="/" element={<Home />} />
-            <Route path="mylookbooks" element={<MyLookBooks />} />
-            <Route
-              path="lookbookgenerator/:look_book_id"
-              element={<LookBookGenerator />}
-            />
-            <Route path="/mylocationbooks" element={<MyLocationBooks />} />
-            <Route
-              path="/locationbookgenerator/:location_book_id"
-              element={<LocationBookGenerator />}
-            />
-            <Route path="/calendar" element={<Calendar user={userData} />} />
-          </>
+          <Route
+            path="/*"
+            element={
+              <>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="mylookbooks" element={<MyLookBooks />} />
+                  <Route
+                    path="lookbookgenerator/:look_book_id"
+                    element={<LookBookGenerator />}
+                  />
+                  <Route
+                    path="/mylocationbooks"
+                    element={<MyLocationBooks />}
+                  />
+                  <Route
+                    path="/locationbookgenerator/:location_book_id"
+                    element={<LocationBookGenerator />}
+                  />
+                  <Route
+                    path="/calendar"
+                    element={<Calendar user={userData} />}
+                  />
+                </Routes>
+              </>
+            }
+          />
         )}
-
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
