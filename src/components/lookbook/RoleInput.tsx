@@ -8,6 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useMediaQuery } from "react-responsive";
 
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
@@ -49,6 +50,8 @@ const RoleInput = ({
   currentUser,
   lookbook_id,
 }: RoleInputProps) => {
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // States for fields
   const [roleName, setRoleName] = useState<string | null>(null);
   const [wardrobeStyle, setWardrobeStyle] = useState<string | null>(null);
@@ -336,35 +339,38 @@ const RoleInput = ({
                 disabled={!canEdit}
               />
             </div>
-            <div className="flex gap-3">
-              {!newlyCreated && (
-                <Button
-                  className="hover:cursor-pointer"
-                  onClick={() => setCommentOpen(true)}
-                >
-                  Comments <MessageSquareText />
-                </Button>
-              )}
+            {/* Desktop View */}
+            {!isMobile && (
+              <div className="flex gap-3">
+                {!newlyCreated && (
+                  <Button
+                    className="hover:cursor-pointer"
+                    onClick={() => setCommentOpen(true)}
+                  >
+                    Comments <MessageSquareText />
+                  </Button>
+                )}
 
-              <Button
-                variant="outline"
-                className="hover:cursor-pointer"
-                onClick={clear_fields}
-                disabled={!canEdit}
-              >
-                Clear Fields
-                <BrushCleaning />
-              </Button>
-              <Button
-                variant="destructive"
-                className="hover:cursor-pointer"
-                onClick={remove_role}
-                disabled={!canEdit}
-              >
-                Remove Role
-                <Trash />
-              </Button>
-            </div>
+                <Button
+                  variant="outline"
+                  className="hover:cursor-pointer"
+                  onClick={clear_fields}
+                  disabled={!canEdit}
+                >
+                  Clear Fields
+                  <BrushCleaning />
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="hover:cursor-pointer"
+                  onClick={remove_role}
+                  disabled={!canEdit}
+                >
+                  Remove Role
+                  <Trash />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Text Area Inputs */}

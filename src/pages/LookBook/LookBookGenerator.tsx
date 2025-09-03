@@ -7,6 +7,7 @@ import {
   deleteAllFilesInBucket,
   list_all_files,
 } from "@/lib/utils";
+import { useMediaQuery } from "react-responsive";
 
 // Import Supabase
 import { supabase } from "@/lib/supabaseClient";
@@ -19,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -38,19 +47,24 @@ import {
   CircleQuestionMark,
   ChevronDownIcon,
   Save,
+  Ellipsis,
 } from "lucide-react";
 
 // Import Custom Components
 import LookBook from "@/pdf/LookBook";
 import RoleInput from "@/components/lookbook/RoleInput";
 import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
+import AuthorCard from "@/components/AuthorCard";
+import HowToSheet from "@/components/Documentation/HowToSheet";
+import MobileShare from "@/components/lookbook/MobileShare";
 
 // Import Global Types
 import type { Img, Role, User } from "@/types/global";
-import AuthorCard from "@/components/AuthorCard";
-import HowToSheet from "@/components/Documentation/HowToSheet";
 
 const LookBookGenerator = () => {
+  // Check to see the size of the viewport and what device it is
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // Get the LookBook ID
   const { look_book_id } = useParams();
 
@@ -734,67 +748,134 @@ const LookBookGenerator = () => {
       </div>
 
       {/* Beginning of the page */}
-      <div className="flex flex-row justify-between items-start">
-        <div className="flex flex-row items-center gap-3">
-          <div className="text-5xl font-semibold">Lookbook Editor</div>
-        </div>
 
-        {canEdit ? (
-          <div className="flex gap-3">
+      {/* Desktop View */}
+      {!isMobile && (
+        <div className="flex flex-row justify-between items-start">
+          <div className="flex flex-row items-center gap-3">
+            <div className="text-3xl sm:text-5xl font-semibold">
+              Lookbook Editor
+            </div>
+          </div>
+
+          {canEdit ? (
+            <div className="flex gap-3">
+              <Button
+                className="hover:cursor-pointer"
+                variant="outline"
+                disabled={loading}
+                onClick={() => setOpenHowTo(true)}
+              >
+                How To Use
+                <CircleQuestionMark />
+              </Button>
+
+              <Button
+                className="hover:cursor-pointer"
+                onClick={save_progress}
+                disabled={loading || !canEdit}
+              >
+                Save <Save />
+              </Button>
+
+              <Button
+                className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+                onClick={generate_look_book}
+                disabled={loading || !canEdit}
+              >
+                Generate Lookbook
+                <FileText />
+              </Button>
+
+              <LookBookMenuButton
+                book_type="Look Book"
+                bucket="lookbook"
+                column_name="roles"
+                id={look_book_id ?? ""}
+                id_column_name="lookbook_id"
+                table_name="lookbooks"
+                path="/mylookbooks"
+                disabled={loading || !canEdit}
+                exists={exists}
+              />
+            </div>
+          ) : (
+            <div className="absolute right-6 flex flex-row gap-4">
+              <Button
+                className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+                onClick={generate_look_book}
+                disabled={loading}
+              >
+                Generate Lookbook
+                <FileText />
+              </Button>
+
+              <AuthorCard author={authorData} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {isMobile && (
+        <div className="flex flex-row justify-between items-start">
+          <div className="text-3xl sm:text-5xl font-semibold">
+            Lookbook Editor
+          </div>
+
+          <div className="flex flex-row gap-2">
             <Button
-              className="hover:cursor-pointer"
               variant="outline"
               disabled={loading}
               onClick={() => setOpenHowTo(true)}
             >
-              How To Use
               <CircleQuestionMark />
             </Button>
 
-            <Button
-              className="hover:cursor-pointer"
-              onClick={save_progress}
-              disabled={loading || !canEdit}
-            >
-              Save <Save />
-            </Button>
+            {/* Mobile View Sheet Content */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" disabled={loading}>
+                  <Ellipsis />
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-full overflow-x-auto break-words">
+                {/* Lookbook actions header */}
+                <SheetHeader>
+                  <SheetTitle className="text-2xl">Lookbook Actions</SheetTitle>
+                  <SheetDescription>
+                    Lookbook editing actions that allows you to save, share, and
+                    see your work.
+                  </SheetDescription>
+                </SheetHeader>
 
-            <Button
-              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              onClick={generate_look_book}
-              disabled={loading || !canEdit}
-            >
-              Generate Lookbook
-              <FileText />
-            </Button>
+                {/* Action Divs */}
+                <div className="ml-5 flex flex-col gap-5">
+                  {/* Save Button */}
+                  <div
+                    className="flex flex-row gap-2 active:opacity-50"
+                    onClick={save_progress}
+                  >
+                    <Save />
+                    <div>Save</div>
+                  </div>
 
-            <LookBookMenuButton
-              book_type="Look Book"
-              bucket="lookbook"
-              column_name="roles"
-              id={look_book_id ?? ""}
-              id_column_name="lookbook_id"
-              table_name="lookbooks"
-              path="/mylookbooks"
-              disabled={loading || !canEdit}
-              exists={exists}
-            />
+                  {/* Generate LookBook Button */}
+                  <div
+                    className="flex flex-row gap-2 active:opacity-50"
+                    onClick={generate_look_book}
+                  >
+                    <FileText />
+                    <div>Generate Lookbook</div>
+                  </div>
+
+                  {/* Share Lookbook Button */}
+                  <MobileShare exists={exists} />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
-        ) : (
-          <div className="absolute right-6 flex flex-row gap-4">
-            <Button
-              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              onClick={generate_look_book}
-              disabled={loading}
-            >
-              Generate Lookbook
-              <FileText />
-            </Button>
-
-            <AuthorCard author={authorData} />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center min-h-screen pb-32 text-2xl">
@@ -804,14 +885,14 @@ const LookBookGenerator = () => {
         <>
           {/* Project Name input */}
           <div className="flex flex-col items-start gap-3">
-            <Label className="text-2xl">
+            <Label className="text-xl sm:text-2xl">
               Enter Project Name
               <span className={projectName ? "invisible" : "text-red-500"}>
                 *
               </span>
             </Label>
             <Input
-              className={`w-1/3 ${
+              className={`w-1/3 text-sm sm:text-xl ${
                 currentError == "project_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Project Name..."
@@ -823,12 +904,12 @@ const LookBookGenerator = () => {
 
           {/* Crew Name Input */}
           <div className="grid w-full items-center gap-3">
-            <Label className="text-2xl">
+            <Label className="text-xl sm:text-2xl">
               Enter Crew Name
               <span className={crewName ? "invisible" : "text-red-500"}>*</span>
             </Label>
             <Input
-              className={`w-1/3 ${
+              className={`w-1/3 text-sm sm:text-xl ${
                 currentError == "crew_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Crew Name..."
@@ -840,14 +921,14 @@ const LookBookGenerator = () => {
 
           {/* Director Name Input */}
           <div className="grid w-full items-center gap-3">
-            <Label className="text-2xl">
+            <Label className="text-xl sm:text-2xl">
               Enter Director Name
               <span className={directorName ? "invisible" : "text-red-500"}>
                 *
               </span>
             </Label>
             <Input
-              className={`w-1/3 ${
+              className={`w-1/3 text-sm sm:text-xl ${
                 currentError == "director_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Director Name..."
@@ -859,7 +940,7 @@ const LookBookGenerator = () => {
 
           {/* Date Input */}
           <div className="flex flex-col gap-3">
-            <Label htmlFor="date" className="text-2xl">
+            <Label htmlFor="date" className="text-xl sm:text-2xl">
               Project Date
               <span className={date ? "invisible" : "text-red-500"}>*</span>
             </Label>
@@ -873,7 +954,7 @@ const LookBookGenerator = () => {
                 <Button
                   variant="outline"
                   id="date"
-                  className="w-48 justify-between font-normal"
+                  className="w-48 justify-between font-normal text-sm sm:text-xl"
                   disabled={!canEdit}
                 >
                   {date ? date.toLocaleDateString() : "Select date"}
