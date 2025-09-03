@@ -56,10 +56,11 @@ import RoleInput from "@/components/lookbook/RoleInput";
 import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
 import AuthorCard from "@/components/AuthorCard";
 import HowToSheet from "@/components/Documentation/HowToSheet";
-import MobileShare from "@/components/lookbook/MobileShare";
+import MobileShare from "@/components/Mobile/MobileShare";
 
 // Import Global Types
 import type { Img, Role, User } from "@/types/global";
+import MobileDelete from "@/components/Mobile/MobileDelete";
 
 const LookBookGenerator = () => {
   // Check to see the size of the viewport and what device it is
@@ -742,7 +743,7 @@ const LookBookGenerator = () => {
             target?.scrollIntoView({ behavior: "smooth" });
           }}
         >
-          Back to Top
+          {!isMobile && "Back to Top"}
           <ChevronUp />
         </Button>
       </div>
@@ -870,6 +871,18 @@ const LookBookGenerator = () => {
 
                   {/* Share Lookbook Button */}
                   <MobileShare exists={exists} />
+
+                  {/* Delete Lookbook Button */}
+                  <MobileDelete
+                    book_type="Look Book"
+                    bucket="lookbook"
+                    column_name="roles"
+                    id={look_book_id ?? ""}
+                    id_column_name="lookbook_id"
+                    table_name="lookbooks"
+                    path="/mylookbooks"
+                    exists={exists}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -986,25 +999,27 @@ const LookBookGenerator = () => {
 
           {/* Adding Roles */}
           <div
-            className="flex flex-row justify-between items-center mt-10"
+            className="flex flex-row justify-between items-center mt-6 sm:mt-10"
             id="step-3"
           >
             <Button
               className="hover:cursor-pointer"
-              size="lg"
+              size={isMobile ? "sm" : "lg"}
               onClick={create_new_role}
               disabled={!canEdit}
             >
               Add Role <Plus />
             </Button>
             <div className="flex flex-row justify-between items-center gap-2">
-              <Label className="text-lg font-light">Jump to Role:</Label>
+              <Label className="text-sm sm:text-lg font-light">
+                Jump to Role:
+              </Label>
               <Select
                 onValueChange={(id) => {
                   jump_to_role(id);
                 }}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger>
                   <SelectValue placeholder="Role ID" />
                 </SelectTrigger>
                 <SelectContent>

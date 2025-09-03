@@ -325,7 +325,7 @@ const RoleInput = ({
       >
         <CardContent className="flex flex-col gap-5">
           <div className="flex flex-row justify-between items-start">
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>
                 Role Name
                 <span className={roleName ? "invisible" : "text-red-500"}>
@@ -374,9 +374,9 @@ const RoleInput = ({
           </div>
 
           {/* Text Area Inputs */}
-          <div className="flex flex-wrap gap-12">
+          <div className="flex flex-col sm:flex-row gap-12">
             {/* Wardrobe style input */}
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>
                 Wardrobe Style
                 <span className={wardrobeStyle ? "invisible" : "text-red-500"}>
@@ -393,7 +393,7 @@ const RoleInput = ({
             </div>
 
             {/* Addtional Comments Input */}
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>Addition Notes {"(optional)"}</Label>
               <Textarea
                 className="h-32 resize-none"
@@ -407,7 +407,7 @@ const RoleInput = ({
 
           {/* Color Palette Input */}
           <div className="flex flex-col gap-5">
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>Upload Color Palette {"(optional)"}</Label>
               <Input
                 ref={colorPaletteInputRef}
@@ -446,7 +446,7 @@ const RoleInput = ({
 
           {/* Styling Suggestions Picker */}
           <div className="flex flex-col gap-5">
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>
                 Upload Styling Suggestions
                 <span
@@ -479,7 +479,7 @@ const RoleInput = ({
             )}
           </div>
 
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
+          <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
             <Label>Upload Accessories {"(optional)"}</Label>
             <Input
               type="file"
