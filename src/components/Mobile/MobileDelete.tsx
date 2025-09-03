@@ -14,10 +14,9 @@ import {
 import { useNavigate } from "react-router-dom";
 
 // Importing Icons
-import { AlertTriangle, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { toast } from "sonner";
 import { delete_book } from "@/lib/utils";
-import { useState } from "react";
 import { AlertDialogTrigger } from "@radix-ui/react-alert-dialog";
 
 type MobileDeleteProps = {
