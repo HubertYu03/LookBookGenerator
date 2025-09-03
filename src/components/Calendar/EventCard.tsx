@@ -41,6 +41,9 @@ import {
 import { Input } from "../ui/input";
 import { Calendar } from "../ui/calendar";
 import { Textarea } from "../ui/textarea";
+import EventCardDeletionModal from "./EventCardDeletionModal";
+import EventColorPicker from "./EventColorPicker";
+import { Label } from "../ui/label";
 
 // Custom components for button
 type EventCardButtonProps = {
@@ -81,11 +84,20 @@ type EventCardProps = {
   event: Event | undefined;
   author: User | undefined;
   user: User | undefined;
+  getWeek: () => void;
 };
 
-const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
+const EventCard = ({
+  open,
+  setOpen,
+  event,
+  author,
+  user,
+  getWeek,
+}: EventCardProps) => {
   // State for pin button
   const [pinned, setPinned] = useState<boolean>(false);
+  const [eventAuthor, setEventAuthor] = useState<string>("");
 
   // Editing states
   const [editing, setEditing] = useState<boolean>(false);
@@ -95,6 +107,10 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
   const [newEventEnd, setNewEventEnd] = useState<string>("");
   const [openDate, setOpenDate] = useState<boolean>(false);
   const [newEventDate, setNewEventDate] = useState<Date>();
+  const [newEventColor, setNewEventColor] = useState<string>();
+
+  // State for deletion modal
+  const [openDelete, setOpenDelete] = useState<boolean>(false);
 
   // Helper functions for time formatting
   function am_pm(value: string | undefined): string {
@@ -231,7 +247,8 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
       newEventStart == event.event_start &&
       newEventEnd == event.event_end &&
       newEventDesc == event.event_desc &&
-      newEventDate.toISOString().split("T")[0] == event.event_date
+      newEventDate.toISOString().split("T")[0] == event.event_date &&
+      newEventColor == event.event_color
     ) {
       toast.warning("No changes have been made!");
       return;
@@ -245,7 +262,7 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
       event_title: newEventTitle,
       event_desc: newEventDesc,
       event_author: localStorage.getItem("PlayletUserID") as string,
-      event_color: event?.event_color as string,
+      event_color: newEventColor as string,
       event_start: newEventStart,
       event_end: newEventEnd,
     };
@@ -263,6 +280,7 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
     toast.success("Event updated successfully!");
     setEditing(false);
     setOpen(false);
+    getWeek();
   }
 
   // When the page is mounted
@@ -276,6 +294,9 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
   // Rendering the editing states
   useEffect(() => {
     if (editing && event?.event_title) {
+      // Set the author
+      setEventAuthor(event.event_author);
+
       setNewEventTitle(event.event_title);
       setNewEventDesc(event.event_desc);
       setNewEventStart(event.event_start);
@@ -415,6 +436,19 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
           )}
         </div>
 
+        {editing && (
+          <>
+            <EventColorPicker setColor={setNewEventColor} />
+            <div className="flex flex-row gap-2">
+              <Label>Selected Color:</Label>
+              <div
+                className="w-5 h-5"
+                style={{ backgroundColor: newEventColor }}
+              />
+            </div>
+          </>
+        )}
+
         <DialogFooter>
           <div className="flex flex-col gap-3">
             <div className="text-sm text-gray-500">
@@ -428,16 +462,21 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
                   buttonFunction={pin_event}
                   tooltip={pinned ? "Unpin" : "Pin"}
                 />
-                <EventCardButton
-                  ButtonIcon={Pencil}
-                  buttonFunction={() => setEditing(!editing)}
-                  tooltip="Edit"
-                />
-                <EventCardButton
-                  ButtonIcon={Trash}
-                  buttonFunction={() => {}}
-                  tooltip="Delete"
-                />
+                {event?.event_author ==
+                  localStorage.getItem("PlayletUserID") && (
+                  <>
+                    <EventCardButton
+                      ButtonIcon={Pencil}
+                      buttonFunction={() => setEditing(!editing)}
+                      tooltip="Edit"
+                    />
+                    <EventCardButton
+                      ButtonIcon={Trash}
+                      buttonFunction={() => setOpenDelete(true)}
+                      tooltip="Delete"
+                    />
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-row justify-end gap-2">
@@ -461,6 +500,14 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <EventCardDeletionModal
+        event_id={event?.event_id as string}
+        open={openDelete}
+        setOpen={setOpenDelete}
+        setEventPreviewOpen={setOpen}
+        getWeek={getWeek}
+      />
     </Dialog>
   );
 };

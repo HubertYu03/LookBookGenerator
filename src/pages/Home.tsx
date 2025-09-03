@@ -7,9 +7,6 @@ import { get_user, sign_out } from "@/lib/authUtils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-// Importing global types
-import type { Event, User } from "@/types/global";
-
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
 

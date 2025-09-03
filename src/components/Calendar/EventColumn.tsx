@@ -101,6 +101,7 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
         event={previewEvent}
         author={previewAuthor}
         user={user}
+        getWeek={getWeek}
       />
     </div>
   );
