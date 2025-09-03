@@ -313,7 +313,7 @@ const EventCard = ({
     >
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="flex flex-row items-center gap-2">
+          <DialogTitle className="flex flex-row items-center gap-2 p-1">
             {editing ? (
               <>
                 {/* Editing State */}
@@ -339,7 +339,9 @@ const EventCard = ({
                     backgroundColor: event?.event_color,
                   }}
                 />
-                <div className="text-3xl ">{event?.event_title}</div>
+                <div className="text-2xl sm:text-3xl text-left">
+                  {event?.event_title}
+                </div>
               </>
             )}
           </DialogTitle>

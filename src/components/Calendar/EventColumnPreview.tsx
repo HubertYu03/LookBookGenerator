@@ -52,8 +52,8 @@ const EventColumnPreview = ({
 
   // Helper function for title formatting
   function title_length_format(title: string): string {
-    if (title.length >= 14) {
-      return title.substring(0, 14) + "...";
+    if (title.length >= 16) {
+      return title.substring(0, 10) + "...";
     } else {
       return title;
     }
@@ -93,15 +93,15 @@ const EventColumnPreview = ({
         <div className="text-sm">Loading...</div>
       ) : (
         <>
-          <div className="text-sm font-bold">
+          <div className="text-xs sm:text-sm font-bold">
             {title_length_format(event.event_title)}
           </div>
-          <div className="text-xs mb-2">
+          <div className="text-[0.5rem] sm:text-xs mb-2">
             {military_to_normal(event.event_start)}
             {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
             {am_pm(event.event_end)}
           </div>
-          <div className="text-xs">
+          <div className="text-[0.5rem] sm:text-xs">
             {author?.first_name} {author?.last_name}
           </div>
         </>
