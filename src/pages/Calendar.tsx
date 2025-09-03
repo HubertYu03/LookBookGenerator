@@ -55,6 +55,9 @@ const Calendar = ({ user }: CalendarProps) => {
   useEffect(() => {
     // Get the current week on page load up
     get_current_week();
+
+    // Change the tab title
+    document.title = "Playet Tools | Calendar";
   }, []);
 
   // Update the current week if the selected date is changed

@@ -10,6 +10,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 
@@ -31,7 +36,11 @@ import {
   Pencil,
   PinOff,
   type LucideIcon,
+  ChevronDownIcon,
 } from "lucide-react";
+import { Input } from "../ui/input";
+import { Calendar } from "../ui/calendar";
+import { Textarea } from "../ui/textarea";
 
 // Custom components for button
 type EventCardButtonProps = {
@@ -77,6 +86,15 @@ type EventCardProps = {
 const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
   // State for pin button
   const [pinned, setPinned] = useState<boolean>(false);
+
+  // Editing states
+  const [editing, setEditing] = useState<boolean>(false);
+  const [newEventTitle, setNewEventTitle] = useState<string>("");
+  const [newEventDesc, setNewEventDesc] = useState<string>("");
+  const [newEventStart, setNewEventStart] = useState<string>("");
+  const [newEventEnd, setNewEventEnd] = useState<string>("");
+  const [openDate, setOpenDate] = useState<boolean>(false);
+  const [newEventDate, setNewEventDate] = useState<Date>();
 
   // Helper functions for time formatting
   function am_pm(value: string | undefined): string {
@@ -176,6 +194,78 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
     );
   }
 
+  // Helper function to save the new edits
+  async function edit_event() {
+    // Clear all the toasts
+    toast.dismiss();
+
+    // Handle missing text errors
+    if (!newEventTitle) {
+      toast.warning("Please enter an event title!");
+      return;
+    }
+
+    if (!newEventStart) {
+      toast.warning("Please enter an start date!");
+      return;
+    }
+
+    if (!newEventEnd) {
+      toast.warning("Please enter an end date!");
+      return;
+    }
+
+    if (!newEventDesc) {
+      toast.warning("Please enter an event description!");
+      return;
+    }
+
+    if (!newEventDate) {
+      toast.warning("Please enter an event date!");
+      return;
+    }
+
+    // Check if there actually were any changes made
+    if (
+      newEventTitle == event?.event_title &&
+      newEventStart == event.event_start &&
+      newEventEnd == event.event_end &&
+      newEventDesc == event.event_desc &&
+      newEventDate.toISOString().split("T")[0] == event.event_date
+    ) {
+      toast.warning("No changes have been made!");
+      return;
+    }
+
+    // If the code has made it to this point, update the event
+    const updated_event: Event = {
+      event_id: event?.event_id as string,
+      created_at: event?.created_at as Date,
+      event_date: newEventDate.toISOString().split("T")[0],
+      event_title: newEventTitle,
+      event_desc: newEventDesc,
+      event_author: localStorage.getItem("PlayletUserID") as string,
+      event_color: event?.event_color as string,
+      event_start: newEventStart,
+      event_end: newEventEnd,
+    };
+
+    const { error } = await supabase
+      .from("events")
+      .update(updated_event)
+      .eq("event_id", event?.event_id as string)
+      .select();
+
+    if (error) {
+      console.log(error);
+    }
+
+    toast.success("Event updated successfully!");
+    setEditing(false);
+    setOpen(false);
+  }
+
+  // When the page is mounted
   useEffect(() => {
     // Check the pinned state
     if (open && event && user) {
@@ -183,18 +273,58 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
     }
   }, [open, event, user]);
 
+  // Rendering the editing states
+  useEffect(() => {
+    if (editing && event?.event_title) {
+      setNewEventTitle(event.event_title);
+      setNewEventDesc(event.event_desc);
+      setNewEventStart(event.event_start);
+      setNewEventEnd(event.event_end);
+
+      const [year, month, day] = event.event_date.split("-").map(Number);
+      setNewEventDate(new Date(year, month - 1, day));
+    }
+  }, [editing, event]);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        setOpen(false);
+        setEditing(false);
+      }}
+    >
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex flex-row items-center gap-2">
-            <div
-              className="rounded-full h-5 w-5"
-              style={{
-                backgroundColor: event?.event_color,
-              }}
-            />
-            <div className="text-3xl ">{event?.event_title}</div>
+            {editing ? (
+              <>
+                {/* Editing State */}
+                <div
+                  className="rounded-full h-5 w-5"
+                  style={{
+                    backgroundColor: event?.event_color,
+                  }}
+                />
+                <Input
+                  type="text"
+                  className="w-10/12"
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                />
+              </>
+            ) : (
+              <>
+                {/* Normal State */}
+                <div
+                  className="rounded-full h-5 w-5"
+                  style={{
+                    backgroundColor: event?.event_color,
+                  }}
+                />
+                <div className="text-3xl ">{event?.event_title}</div>
+              </>
+            )}
           </DialogTitle>
 
           {/* Date and Time */}
@@ -202,23 +332,72 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
             {/* Time */}
             <div className="flex flex-row items-center gap-2">
               <Clock />
-              <div className="flex flex-row gap-1">
-                <div>
-                  {military_to_normal(event?.event_start)}{" "}
-                  {am_pm(event?.event_start)}
+              {editing ? (
+                <>
+                  {/* Editing State */}
+                  <div className="flex flex-row gap-1">
+                    <Input
+                      type="time"
+                      value={newEventStart}
+                      onChange={(e) => setNewEventStart(e.target.value)}
+                    />
+                    <Input
+                      type="time"
+                      value={newEventEnd}
+                      onChange={(e) => setNewEventEnd(e.target.value)}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-row gap-1">
+                  <div>
+                    {military_to_normal(event?.event_start)}{" "}
+                    {am_pm(event?.event_start)}
+                  </div>
+                  <div>-</div>
+                  <div>
+                    {military_to_normal(event?.event_end)}{" "}
+                    {am_pm(event?.event_end)}
+                  </div>
                 </div>
-                <div>-</div>
-                <div>
-                  {military_to_normal(event?.event_end)}{" "}
-                  {am_pm(event?.event_end)}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Date */}
             <div className="flex flex-row items-center gap-2">
               <CalendarDays />
-              {format_date(event?.event_date)}
+              {editing ? (
+                <Popover open={openDate} onOpenChange={setOpenDate}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      id="date"
+                      className="w-48 justify-between font-normal"
+                    >
+                      {newEventDate
+                        ? newEventDate.toLocaleDateString()
+                        : "Select date"}
+                      <ChevronDownIcon />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto overflow-hidden p-0"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={newEventDate}
+                      captionLayout="dropdown"
+                      onSelect={(new_date) => {
+                        setNewEventDate(new_date);
+                        setOpenDate(false);
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div>{format_date(event?.event_date)}</div>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -226,7 +405,14 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
         {/* Event Description */}
         <div>
           <div className="text-gray-500 text-sm">Event Description:</div>
-          <div>{event?.event_desc}</div>
+          {editing ? (
+            <Textarea
+              value={newEventDesc}
+              onChange={(e) => setNewEventDesc(e.target.value)}
+            />
+          ) : (
+            <div>{event?.event_desc}</div>
+          )}
         </div>
 
         <DialogFooter>
@@ -235,23 +421,43 @@ const EventCard = ({ open, setOpen, event, author, user }: EventCardProps) => {
               Event Created By: {author?.first_name} {author?.last_name}
             </div>
 
-            <div className="flex flex-row justify-end">
-              <EventCardButton
-                ButtonIcon={pinned ? PinOff : Pin}
-                buttonFunction={pin_event}
-                tooltip={pinned ? "Unpin" : "Pin"}
-              />
-              <EventCardButton
-                ButtonIcon={Pencil}
-                buttonFunction={() => {}}
-                tooltip="Edit"
-              />
-              <EventCardButton
-                ButtonIcon={Trash}
-                buttonFunction={() => {}}
-                tooltip="Delete"
-              />
-            </div>
+            {!editing ? (
+              <div className="flex flex-row justify-end">
+                <EventCardButton
+                  ButtonIcon={pinned ? PinOff : Pin}
+                  buttonFunction={pin_event}
+                  tooltip={pinned ? "Unpin" : "Pin"}
+                />
+                <EventCardButton
+                  ButtonIcon={Pencil}
+                  buttonFunction={() => setEditing(!editing)}
+                  tooltip="Edit"
+                />
+                <EventCardButton
+                  ButtonIcon={Trash}
+                  buttonFunction={() => {}}
+                  tooltip="Delete"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-row justify-end gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="hover:cursor-pointer"
+                  onClick={() => setEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="hover:cursor-pointer"
+                  onClick={edit_event}
+                >
+                  Save
+                </Button>
+              </div>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

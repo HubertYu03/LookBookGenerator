@@ -81,7 +81,6 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
         onMouseLeave={() => setCreationHover(false)}
         onClick={() => {
           setModalOpen(true);
-          console.log(date);
         }}
       >
         {creationHover && <Plus />}

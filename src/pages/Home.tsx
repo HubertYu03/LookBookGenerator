@@ -1,5 +1,5 @@
 // Importing dependencies
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { get_user, sign_out } from "@/lib/authUtils";
 
@@ -7,9 +7,42 @@ import { get_user, sign_out } from "@/lib/authUtils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+// Importing global types
+import type { Event, User } from "@/types/global";
+
+// Importing database
+import { supabase } from "@/lib/supabaseClient";
+
 const Home = () => {
   // Navigate state
   const navigate: NavigateFunction = useNavigate();
+
+  // State for the pinned events
+  const [pinnedEvents, setPinnedEvents] = useState<string[]>([]);
+
+  // Helper function to fetch all the pinned events
+  async function get_pinned_events() {
+    let { data: events, error } = await supabase
+      .from("users")
+      .select("pinned_events")
+      .eq("user_id", localStorage.getItem("PlayletUserID"));
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    // Save the events ids
+    let pinned_events: string[] = [];
+    if (events) {
+      events.map((id) => {
+        pinned_events.push(id.pinned_events);
+      });
+    }
+
+    // Save to the state
+    setPinnedEvents(pinned_events);
+  }
 
   useEffect(() => {
     // Dismiss all toasts
@@ -18,6 +51,9 @@ const Home = () => {
     document.title = "Playet Tools | Home";
 
     get_user();
+
+    // Get the pinned events
+    get_pinned_events();
   }, []);
 
   return (
@@ -37,6 +73,13 @@ const Home = () => {
       >
         View My Lookbooks
       </Button>
+
+      {/* Pinned Events */}
+      <div>
+        {pinnedEvents.map((event_id, index) => (
+          <div key={index}>{event_id}</div>
+        ))}
+      </div>
     </div>
   );
 };
