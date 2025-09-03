@@ -210,7 +210,7 @@ const EventCreationModal = ({
         </div>
 
         {/* Event Times */}
-        <div className="flex flex-row gap-5">
+        <div className="flex flex-row gap-1 sm:gap-5">
           <div className="grid w-1/3 sm:w-full items-center gap-3">
             <Label>
               Start Time

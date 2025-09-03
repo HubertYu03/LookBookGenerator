@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Buffer } from "buffer";
 import { v4 } from "uuid";
 import { get_avatar } from "./lib/utils";
-// import Images from "./assets/avatar/AvatarIndex";
+import { useMediaQuery } from "react-responsive";
 
 // Importing UI Components
 import { Toaster } from "sonner";
@@ -19,6 +19,7 @@ import {
   SidebarGroupLabel,
 } from "./components/ui/sidebar";
 
+// Importing Icons
 import {
   BookPlus,
   BookText,
@@ -27,6 +28,7 @@ import {
   Map,
   MapPlus,
   CalendarDays,
+  Menu,
 } from "lucide-react";
 import logo from "/PlayletLogo.png";
 
@@ -50,12 +52,14 @@ import SidebarProfileFooter from "./components/Sidebar/SidebarProfileFooter";
 import type { User } from "./types/global";
 import LoginCard from "./components/Auth/LoginCard";
 import Calendar from "./pages/Calendar";
+import MobileSidebar from "./components/Sidebar/MobileSidebar";
 
 window.Buffer = Buffer;
 
 function App() {
   // Sidebar States
   const [open, setOpen] = useState<boolean>(true);
+  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
 
   // User State
   const [userData, setUserData] = useState<User>();
@@ -64,6 +68,10 @@ function App() {
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
+
+  // Check to see the size of the viewport and what device it is
+  const isDesktop = useMediaQuery({ minWidth: 768 });
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   // Helper function to get the current user (if any)
   async function get_user() {
@@ -155,139 +163,172 @@ function App() {
       )}
 
       {/* Routes  */}
+
+      {/* Custom Nav bar for mobile devices */}
+      {isMobile && (
+        <div className="mt-5 ml-5">
+          <Menu onClick={() => setMobileOpen(true)} />
+          <MobileSidebar open={mobileOpen} setOpen={setMobileOpen} />
+        </div>
+      )}
+
       <Routes>
-        <Route
-          path="/*"
-          element={
-            <SidebarProvider open={open}>
-              <div className="relative flex flex-grow overflow-y-auto">
-                <Sidebar
-                  collapsible="icon"
-                  style={{
-                    transition: "width 0.3s ease",
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Siderbar Header */}
-                  <SidebarHeader className="flex-row items-center gap-2 text-nowrap">
-                    <img src={logo} alt="logo" className="w-12" />
-                    {open && <div className="font-semibold">Playlet Tools</div>}
-                  </SidebarHeader>
-
-                  {/* Sidebar Content */}
-                  <SidebarContent>
-                    {/* Home Button */}
-                    <SidebarMenu>
-                      <SidebarLinks title="Home" path="/" icon={House} />
-                    </SidebarMenu>
-
-                    {/* Divider */}
-                    {!open && <div className="mx-auto w-2/3 border" />}
-
-                    {/* Lookbook navigation links */}
-                    <SidebarGroupLabel>Lookbooks</SidebarGroupLabel>
-                    <SidebarMenu>
-                      {/* View all look books */}
-                      <SidebarLinks
-                        title="My Lookbooks"
-                        path="/mylookbooks"
-                        icon={BookText}
-                      />
-
-                      {/* create new look book */}
-                      <SidebarLinks
-                        title="Create New Lookbook"
-                        path={`/lookbookgenerator/${v4()}`}
-                        icon={BookPlus}
-                      />
-                    </SidebarMenu>
-
-                    {/* Divider */}
-                    {!open && <div className="mx-auto w-2/3 border" />}
-
-                    {/* Location Book navigation links */}
-                    <SidebarGroupLabel>Location Books</SidebarGroupLabel>
-                    <SidebarMenu>
-                      {/* View Your Location Books */}
-                      <SidebarLinks
-                        title="My Location Books"
-                        path="/mylocationbooks"
-                        icon={Map}
-                      />
-
-                      {/* Create New Location Book */}
-                      <SidebarLinks
-                        title="Create New Location Book"
-                        path={`/locationbookgenerator/${v4()}`}
-                        icon={MapPlus}
-                      />
-                    </SidebarMenu>
-
-                    <SidebarGroupLabel>Calendar</SidebarGroupLabel>
-                    <SidebarMenu>
-                      {/* View Your Location Books */}
-                      <SidebarLinks
-                        title="Calendar"
-                        path="/calendar"
-                        icon={CalendarDays}
-                      />
-                    </SidebarMenu>
-                  </SidebarContent>
-
-                  {/* Sideber Footer */}
-                  <SidebarFooter>
-                    <SidebarProfileFooter
-                      open={open}
-                      avatar={avatar ?? ""}
-                      email={userEmail ?? ""}
-                      first_name={userData?.first_name ?? ""}
-                      last_name={userData?.last_name ?? ""}
-                    />
-                  </SidebarFooter>
-                </Sidebar>
-
-                <main className="flex-grow overflow-y-auto">
-                  {/* Button to close the sidebar */}
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={() => set_sidebar_state(!open)}
-                    className="fixed mt-1 -ml-2 z-30 hover:cursor-pointer"
+        {/* Desktop device */}
+        {isDesktop && (
+          <Route
+            path="/*"
+            element={
+              <SidebarProvider open={open}>
+                <div className="relative flex flex-grow overflow-y-auto">
+                  <Sidebar
+                    collapsible="icon"
+                    style={{
+                      transition: "width 0.3s ease",
+                      overflow: "hidden",
+                    }}
                   >
-                    <ChevronRight
-                      className={`${
-                        open ? "rotate-180" : ""
-                      } transition-transform`}
-                    />
-                  </Button>
+                    {/* Siderbar Header */}
+                    <SidebarHeader className="flex-row items-center gap-2 text-nowrap">
+                      <img src={logo} alt="logo" className="w-12" />
+                      {open && (
+                        <div className="font-semibold">Playlet Tools</div>
+                      )}
+                    </SidebarHeader>
 
-                  <div className="mt-5">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="mylookbooks" element={<MyLookBooks />} />
-                      <Route
-                        path="lookbookgenerator/:look_book_id"
-                        element={<LookBookGenerator />}
+                    {/* Sidebar Content */}
+                    <SidebarContent>
+                      {/* Home Button */}
+                      <SidebarMenu>
+                        <SidebarLinks title="Home" path="/" icon={House} />
+                      </SidebarMenu>
+
+                      {/* Divider */}
+                      {!open && <div className="mx-auto w-2/3 border" />}
+
+                      {/* Lookbook navigation links */}
+                      <SidebarGroupLabel>Lookbooks</SidebarGroupLabel>
+                      <SidebarMenu>
+                        {/* View all look books */}
+                        <SidebarLinks
+                          title="My Lookbooks"
+                          path="/mylookbooks"
+                          icon={BookText}
+                        />
+
+                        {/* create new look book */}
+                        <SidebarLinks
+                          title="Create New Lookbook"
+                          path={`/lookbookgenerator/${v4()}`}
+                          icon={BookPlus}
+                        />
+                      </SidebarMenu>
+
+                      {/* Divider */}
+                      {!open && <div className="mx-auto w-2/3 border" />}
+
+                      {/* Location Book navigation links */}
+                      <SidebarGroupLabel>Location Books</SidebarGroupLabel>
+                      <SidebarMenu>
+                        {/* View Your Location Books */}
+                        <SidebarLinks
+                          title="My Location Books"
+                          path="/mylocationbooks"
+                          icon={Map}
+                        />
+
+                        {/* Create New Location Book */}
+                        <SidebarLinks
+                          title="Create New Location Book"
+                          path={`/locationbookgenerator/${v4()}`}
+                          icon={MapPlus}
+                        />
+                      </SidebarMenu>
+
+                      <SidebarGroupLabel>Calendar</SidebarGroupLabel>
+                      <SidebarMenu>
+                        {/* View Your Location Books */}
+                        <SidebarLinks
+                          title="Calendar"
+                          path="/calendar"
+                          icon={CalendarDays}
+                        />
+                      </SidebarMenu>
+                    </SidebarContent>
+
+                    {/* Sideber Footer */}
+                    <SidebarFooter>
+                      <SidebarProfileFooter
+                        open={open}
+                        avatar={avatar ?? ""}
+                        email={userEmail ?? ""}
+                        first_name={userData?.first_name ?? ""}
+                        last_name={userData?.last_name ?? ""}
                       />
-                      <Route
-                        path="/mylocationbooks"
-                        element={<MyLocationBooks />}
+                    </SidebarFooter>
+                  </Sidebar>
+
+                  <main className="flex-grow overflow-y-auto">
+                    {/* Button to close the sidebar */}
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => set_sidebar_state(!open)}
+                      className="fixed mt-1 -ml-2 z-30 hover:cursor-pointer"
+                    >
+                      <ChevronRight
+                        className={`${
+                          open ? "rotate-180" : ""
+                        } transition-transform`}
                       />
-                      <Route
-                        path="/locationbookgenerator/:location_book_id"
-                        element={<LocationBookGenerator />}
-                      />
-                      <Route
-                        path="/calendar"
-                        element={<Calendar user={userData} />}
-                      />
-                    </Routes>
-                  </div>
-                </main>
-              </div>
-            </SidebarProvider>
-          }
-        />
+                    </Button>
+
+                    <div className="mt-5">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="mylookbooks" element={<MyLookBooks />} />
+                        <Route
+                          path="lookbookgenerator/:look_book_id"
+                          element={<LookBookGenerator />}
+                        />
+                        <Route
+                          path="/mylocationbooks"
+                          element={<MyLocationBooks />}
+                        />
+                        <Route
+                          path="/locationbookgenerator/:location_book_id"
+                          element={<LocationBookGenerator />}
+                        />
+                        <Route
+                          path="/calendar"
+                          element={<Calendar user={userData} />}
+                        />
+                      </Routes>
+                    </div>
+                  </main>
+                </div>
+              </SidebarProvider>
+            }
+          />
+        )}
+
+        {/* Mobile Device */}
+        {isMobile && (
+          <>
+            <Route path="/" element={<Home />} />
+            <Route path="mylookbooks" element={<MyLookBooks />} />
+            <Route
+              path="lookbookgenerator/:look_book_id"
+              element={<LookBookGenerator />}
+            />
+            <Route path="/mylocationbooks" element={<MyLocationBooks />} />
+            <Route
+              path="/locationbookgenerator/:location_book_id"
+              element={<LocationBookGenerator />}
+            />
+            <Route path="/calendar" element={<Calendar user={userData} />} />
+          </>
+        )}
+
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
