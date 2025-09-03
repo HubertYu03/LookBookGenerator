@@ -97,7 +97,6 @@ const EventCard = ({
 }: EventCardProps) => {
   // State for pin button
   const [pinned, setPinned] = useState<boolean>(false);
-  const [eventAuthor, setEventAuthor] = useState<string>("");
 
   // Editing states
   const [editing, setEditing] = useState<boolean>(false);
@@ -294,9 +293,6 @@ const EventCard = ({
   // Rendering the editing states
   useEffect(() => {
     if (editing && event?.event_title) {
-      // Set the author
-      setEventAuthor(event.event_author);
-
       setNewEventTitle(event.event_title);
       setNewEventDesc(event.event_desc);
       setNewEventStart(event.event_start);
