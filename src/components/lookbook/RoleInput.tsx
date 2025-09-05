@@ -472,7 +472,7 @@ const RoleInput = ({
             {stylingSuggestions.length > 0 && (
               <ImagesPreview
                 images={stylingSuggestions}
-                sizeClasses="w-36 h-48"
+                sizeClasses="w-32 h-44 sm:w-36 sm:h-48"
                 removeImage={remove_image}
                 canEdit={canEdit}
               />
@@ -494,7 +494,7 @@ const RoleInput = ({
           {accessories.length != 0 && (
             <ImagesPreview
               images={accessories}
-              sizeClasses="w-32 h-32"
+              sizeClasses="h-28 w-28 sm:w-32 sm:h-32"
               removeImage={remove_image}
               canEdit={canEdit}
             />

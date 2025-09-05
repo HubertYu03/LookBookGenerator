@@ -40,6 +40,7 @@ const IconLabelLink = ({ Icon, label, path, setOpen }: IconLabelLinkProps) => {
       onClick={() => {
         navigate(path);
         setOpen(false);
+        window.location.reload();
       }}
     >
       <Icon />

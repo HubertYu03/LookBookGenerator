@@ -21,7 +21,10 @@ export default function SidebarLinks({
       <SidebarMenuButton
         tooltip={title}
         className="hover:cursor-pointer"
-        onClick={() => navigate(path)}
+        onClick={() => {
+          navigate(path);
+          window.location.reload();
+        }}
       >
         <div className="flex flex-row items-center gap-2">
           <Icon />

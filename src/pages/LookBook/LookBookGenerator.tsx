@@ -24,6 +24,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -48,6 +49,7 @@ import {
   ChevronDownIcon,
   Save,
   Ellipsis,
+  Info,
 } from "lucide-react";
 
 // Import Custom Components
@@ -884,6 +886,13 @@ const LookBookGenerator = () => {
                     exists={exists}
                   />
                 </div>
+                <SheetFooter className="flex flex-row items-center">
+                  <Info size={50} color="gray" />
+                  <div className="text-sm text-gray-500">
+                    On mobile devices: to generate the Lookbook tap on the{" "}
+                    <b>Generate Lookbook</b> button <b>twice</b>.
+                  </div>
+                </SheetFooter>
               </SheetContent>
             </Sheet>
           </div>
@@ -905,7 +914,7 @@ const LookBookGenerator = () => {
               </span>
             </Label>
             <Input
-              className={`w-1/3 text-sm sm:text-xl ${
+              className={`sm:w-1/3 text-sm sm:text-xl ${
                 currentError == "project_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Project Name..."
@@ -922,7 +931,7 @@ const LookBookGenerator = () => {
               <span className={crewName ? "invisible" : "text-red-500"}>*</span>
             </Label>
             <Input
-              className={`w-1/3 text-sm sm:text-xl ${
+              className={`sm:w-1/3 text-sm sm:text-xl ${
                 currentError == "crew_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Crew Name..."
@@ -941,7 +950,7 @@ const LookBookGenerator = () => {
               </span>
             </Label>
             <Input
-              className={`w-1/3 text-sm sm:text-xl ${
+              className={`sm:w-1/3 text-sm sm:text-xl ${
                 currentError == "director_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Director Name..."
