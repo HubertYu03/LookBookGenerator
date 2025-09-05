@@ -887,10 +887,12 @@ const LookBookGenerator = () => {
                   />
                 </div>
                 <SheetFooter className="flex flex-row items-center">
-                  <Info size={50} color="gray" />
-                  <div className="text-sm text-gray-500">
-                    On mobile devices: to generate the Lookbook tap on the{" "}
-                    <b>Generate Lookbook</b> button <b>twice</b>.
+                  <Info size={100} color="gray" />
+                  <div className="text-xs text-gray-500">
+                    On mobile devices: To generate the Lookbook tap on the{" "}
+                    <b>Generate Lookbook</b> button once and wait for the
+                    generation to finish. Then press on the button a second time
+                    to view the Lookbook.
                   </div>
                 </SheetFooter>
               </SheetContent>
