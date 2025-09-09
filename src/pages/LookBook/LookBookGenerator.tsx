@@ -978,7 +978,7 @@ const LookBookGenerator = () => {
                 <Button
                   variant="outline"
                   id="date"
-                  className="w-48 justify-between font-normal text-sm sm:text-xl"
+                  className="w-48 justify-between font-normal text-sm"
                   disabled={!canEdit}
                 >
                   {date ? date.toLocaleDateString() : "Select date"}

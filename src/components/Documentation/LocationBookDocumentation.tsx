@@ -117,6 +117,9 @@ const LocationBookDocumentation = () => {
         button on the Location card. Everyone who has the link to the lookbook
         will be able to comment on the Location.
       </div>
+
+      {/* Adding margins */}
+      <div className="mt-20" />
     </ScrollArea>
   );
 };

@@ -107,6 +107,9 @@ const LookBookDocumentaiton = () => {
         button on the Role card. Everyone who has the link to the lookbook will
         be able to comment on the Role.
       </div>
+
+      {/* Adding margins */}
+      <div className="mt-20" />
     </ScrollArea>
   );
 };

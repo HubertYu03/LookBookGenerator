@@ -324,6 +324,36 @@ const RoleInput = ({
         id={`role-${loaded_role.id}`}
       >
         <CardContent className="flex flex-col gap-5">
+          {isMobile && (
+            <div className="flex flex-row gap-3">
+              {!newlyCreated && (
+                <Button
+                  className="hover:cursor-pointer"
+                  onClick={() => setCommentOpen(true)}
+                >
+                  <MessageSquareText />
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={clear_fields}
+                disabled={!canEdit}
+              >
+                <BrushCleaning />
+              </Button>
+              <Button
+                variant="destructive"
+                className="hover:cursor-pointer"
+                onClick={remove_role}
+                disabled={!canEdit}
+              >
+                <Trash />
+              </Button>
+            </div>
+          )}
+
           <div className="flex flex-row justify-between items-start">
             <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>
@@ -339,6 +369,7 @@ const RoleInput = ({
                 disabled={!canEdit}
               />
             </div>
+
             {/* Desktop View */}
             {!isMobile && (
               <div className="flex gap-3">
