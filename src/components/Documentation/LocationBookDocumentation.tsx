@@ -11,7 +11,7 @@ const LocationBookDocumentation = () => {
       </div>
 
       {/* Main Functionality Explanation */}
-      <div className="text-3xl font-semibold mt-5">Location Book Actions:</div>
+      <div className="text-2xl font-semibold mt-5">Location Book Actions:</div>
       <div className="mt-3">
         There are multiple actions you can perform on the overall{" "}
         <b>Location Book</b>. Here is a guide on how each of them work.
@@ -119,7 +119,7 @@ const LocationBookDocumentation = () => {
       </div>
 
       {/* Adding margins */}
-      <div className="mt-20" />
+      <div className="mt-28 sm:mt-10" />
     </ScrollArea>
   );
 };

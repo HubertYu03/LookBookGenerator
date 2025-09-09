@@ -59,7 +59,7 @@ const MobileDelete = ({
       <AlertDialogTrigger asChild>
         <div className="flex flex-row gap-2 active:opacity-50">
           <Trash />
-          <div>Delete Lookbook</div>
+          <div>Delete {book_type}</div>
         </div>
       </AlertDialogTrigger>
       <AlertDialogContent>

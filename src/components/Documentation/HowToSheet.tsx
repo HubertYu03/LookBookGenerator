@@ -36,7 +36,7 @@ const HowToSheet = ({ open, setOpenChange, initial }: HowToSheetProps) => {
           <Tabs defaultValue={initial} className="mt-5">
             <TabsList>
               <TabsTrigger value="lookbook" className="hover:cursor-pointer">
-                Look Book
+                Lookbook
               </TabsTrigger>
               <TabsTrigger
                 value="locationbook"

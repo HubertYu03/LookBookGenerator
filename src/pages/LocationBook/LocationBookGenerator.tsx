@@ -590,10 +590,10 @@ const LocationBookGenerator = () => {
                     <div>Generate Location Book</div>
                   </div>
 
-                  {/* Share Lookbook Button */}
+                  {/* Share Location Book Button */}
                   <MobileShare exists={exists} />
 
-                  {/* Delete Lookbook Button */}
+                  {/* Delete Location Book Button */}
                   <MobileDelete
                     book_type="Location Book"
                     bucket="locationbook"

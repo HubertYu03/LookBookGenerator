@@ -109,7 +109,7 @@ const LookBookDocumentaiton = () => {
       </div>
 
       {/* Adding margins */}
-      <div className="mt-20" />
+      <div className="mt-28 sm:mt-10" />
     </ScrollArea>
   );
 };
