@@ -11,6 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 
@@ -19,7 +28,9 @@ import {
   ChevronDownIcon,
   ChevronUp,
   CircleQuestionMark,
+  Ellipsis,
   FileText,
+  Info,
   Plus,
   Save,
 } from "lucide-react";
@@ -28,6 +39,7 @@ import {
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { pdf } from "@react-pdf/renderer";
 import { useParams } from "react-router-dom";
+import { useMediaQuery } from "react-responsive";
 import _ from "lodash";
 
 // Importing global types
@@ -43,12 +55,17 @@ import LocationInput from "@/components/locationbook/LocationInput";
 import LocationBook from "@/pdf/LocationBook";
 import LookBookMenuButton from "@/components/lookbook/LookBookMenuButton";
 import AuthorCard from "@/components/AuthorCard";
+import HowToSheet from "@/components/Documentation/HowToSheet";
+import MobileShare from "@/components/Mobile/MobileShare";
+import MobileDelete from "@/components/Mobile/MobileDelete";
 
 // Importing supabase
 import { supabase } from "@/lib/supabaseClient";
-import HowToSheet from "@/components/Documentation/HowToSheet";
 
 const LocationBookGenerator = () => {
+  // Check to see the size of the viewport and what device it is
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // Get the location book ID
   const { location_book_id } = useParams();
 
@@ -448,74 +465,160 @@ const LocationBookGenerator = () => {
             target?.scrollIntoView({ behavior: "smooth" });
           }}
         >
-          Back to Top
+          {!isMobile && "Back to Top"}
           <ChevronUp />
         </Button>
       </div>
 
       {/* Top of the page */}
-      <div className="flex flex-row justify-between items-start">
-        <div className="flex flex-row items-center gap-3">
-          <div className="text-5xl font-semibold">Location Book Editor</div>
-        </div>
 
-        {/* Top of the page buttons */}
-        {canEdit ? (
-          <div className="flex gap-3">
+      {/* Desktop View */}
+      {!isMobile && (
+        <div className="flex flex-row justify-between items-start">
+          <div className="flex flex-row items-center gap-3">
+            <div className="text-5xl font-semibold">Location Book Editor</div>
+          </div>
+
+          {/* Top of the page buttons */}
+          {canEdit ? (
+            <div className="flex gap-3">
+              <Button
+                className="hover:cursor-pointer"
+                variant="outline"
+                disabled={loading}
+                onClick={() => setOpenHowTo(true)}
+              >
+                How To Use
+                <CircleQuestionMark />
+              </Button>
+
+              <Button
+                className="hover:cursor-pointer"
+                onClick={save_progress}
+                disabled={loading || !canEdit}
+              >
+                Save <Save />
+              </Button>
+
+              <Button
+                className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+                onClick={generate_location_book}
+                disabled={loading || !canEdit}
+              >
+                Generate Location Book
+                <FileText />
+              </Button>
+
+              <LookBookMenuButton
+                book_type="Location Book"
+                bucket="locationbook"
+                column_name="locations"
+                id={location_book_id ?? ""}
+                id_column_name="locationbook_id"
+                table_name="locationbook"
+                path="/mylocationbooks"
+                disabled={loading || !canEdit}
+                exists={exists}
+              />
+            </div>
+          ) : (
+            <div className="absolute right-6 flex flex-row gap-4">
+              <Button
+                className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
+                onClick={generate_location_book}
+                disabled={loading}
+              >
+                Generate Lookbook
+                <FileText />
+              </Button>
+
+              <AuthorCard author={authorData} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {isMobile && (
+        <div className="flex flex-row justify-between items-start">
+          <div className="text-3xl font-semibold">Location Book Editor</div>
+
+          <div className="flex flex-row gap-2">
             <Button
-              className="hover:cursor-pointer"
               variant="outline"
               disabled={loading}
               onClick={() => setOpenHowTo(true)}
             >
-              How To Use
               <CircleQuestionMark />
             </Button>
 
-            <Button
-              className="hover:cursor-pointer"
-              onClick={save_progress}
-              disabled={loading || !canEdit}
-            >
-              Save <Save />
-            </Button>
+            {/* Mobile View Sheet Content */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" disabled={loading}>
+                  <Ellipsis />
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-full overflow-x-auto break-words">
+                {/* Lookbook actions header */}
+                <SheetHeader>
+                  <SheetTitle className="text-xl">
+                    Location Book Actions
+                  </SheetTitle>
+                  <SheetDescription>
+                    Location Book editing actions that allows you to save,
+                    share, and see your work.
+                  </SheetDescription>
+                </SheetHeader>
 
-            <Button
-              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              onClick={generate_location_book}
-              disabled={loading || !canEdit}
-            >
-              Generate Location Book
-              <FileText />
-            </Button>
+                {/* Action Divs */}
+                <div className="ml-5 flex flex-col gap-5">
+                  {/* Save Button */}
+                  <div
+                    className="flex flex-row gap-2 active:opacity-50"
+                    onClick={save_progress}
+                  >
+                    <Save />
+                    <div>Save</div>
+                  </div>
 
-            <LookBookMenuButton
-              book_type="Location Book"
-              bucket="locationbook"
-              column_name="locations"
-              id={location_book_id ?? ""}
-              id_column_name="locationbook_id"
-              table_name="locationbook"
-              path="/mylocationbooks"
-              disabled={loading || !canEdit}
-              exists={exists}
-            />
+                  {/* Generate LookBook Button */}
+                  <div
+                    className="flex flex-row gap-2 active:opacity-50"
+                    onClick={generate_location_book}
+                  >
+                    <FileText />
+                    <div>Generate Location Book</div>
+                  </div>
+
+                  {/* Share Lookbook Button */}
+                  <MobileShare exists={exists} />
+
+                  {/* Delete Lookbook Button */}
+                  <MobileDelete
+                    book_type="Location Book"
+                    bucket="locationbook"
+                    column_name="locations"
+                    id={location_book_id ?? ""}
+                    id_column_name="locationbook_id"
+                    table_name="locationbook"
+                    path="/mylocationbooks"
+                    exists={exists}
+                  />
+                </div>
+                <SheetFooter className="flex flex-row text-justify items-center">
+                  <Info size={100} color="gray" />
+                  <div className="text-xs text-gray-500">
+                    On mobile devices: To generate the Location Book tap on the{" "}
+                    <b>Generate Location Book</b> button once and wait for the
+                    generation to finish. Then press on the button a second time
+                    to view the Location Book.
+                  </div>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
           </div>
-        ) : (
-          <div className="absolute right-6 flex flex-row gap-4">
-            <Button
-              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
-              onClick={generate_location_book}
-              disabled={loading}
-            >
-              Generate Lookbook
-              <FileText />
-            </Button>
-
-            <AuthorCard author={authorData} />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Field inputs */}
 
@@ -527,9 +630,9 @@ const LocationBookGenerator = () => {
         <>
           {/* Project name inputs */}
           <div className="flex flex-col items-start gap-3">
-            <Label className="text-2xl">Enter Project Name</Label>
+            <Label className="text-xl sm:text-2xl">Enter Project Name</Label>
             <Input
-              className={`w-1/3 ${
+              className={`sm:w-1/3 text-sm sm:text-xl ${
                 currentError == "project_name" ? "border-red-500" : ""
               }`}
               placeholder="Enter Project Name..."
@@ -543,9 +646,9 @@ const LocationBookGenerator = () => {
 
           {/* Crew Name Input */}
           <div className="grid w-full items-center gap-3">
-            <Label className="text-2xl">Enter Crew Name</Label>
+            <Label className="text-xl sm:text-2xl">Enter Crew Name</Label>
             <Input
-              className={`w-1/3 `}
+              className={`sm:w-1/3 text-sm sm:text-xl`}
               placeholder="Enter Crew Name..."
               onChange={(e) => {
                 setCrewName(e.target.value);
@@ -557,9 +660,9 @@ const LocationBookGenerator = () => {
 
           {/* Director Name Input */}
           <div className="grid w-full items-center gap-3">
-            <Label className="text-2xl">Enter Director Name</Label>
+            <Label className="text-xl sm:text-2xl">Enter Director Name</Label>
             <Input
-              className={`w-1/3`}
+              className={`sm:w-1/3 text-sm sm:text-xl`}
               placeholder="Enter Director Name..."
               onChange={(e) => {
                 setDirectorName(e.target.value);
@@ -571,7 +674,7 @@ const LocationBookGenerator = () => {
 
           {/* Date Input */}
           <div className="flex flex-col gap-3">
-            <Label htmlFor="date" className="text-2xl">
+            <Label htmlFor="date" className="text-xl sm:text-2xl">
               Project Date
             </Label>
             <Popover open={open} onOpenChange={setOpen}>
@@ -610,14 +713,11 @@ const LocationBookGenerator = () => {
           </div>
 
           {/* Adding roles */}
-          <div
-            className="flex flex-row justify-between items-center mt-10"
-            id="step-3"
-          >
+          <div className="flex flex-row justify-between items-center mt-6 sm:mt-10">
             {/* Button to add new role */}
             <Button
               className="hover:cursor-pointer"
-              size="lg"
+              size={isMobile ? "sm" : "lg"}
               onClick={create_new_location}
               disabled={!canEdit}
             >
@@ -626,13 +726,13 @@ const LocationBookGenerator = () => {
 
             {/* Select trigger to jump to the different locations */}
             <div className="flex flex-row justify-between items-center gap-2">
-              <Label className="text-lg font-light">Jump to Location:</Label>
+              <Label className="text-sm sm:text-lg font-light">Jump to:</Label>
               <Select
                 onValueChange={(id) => {
                   jump_to_location(id);
                 }}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger>
                   <SelectValue placeholder="Location ID" />
                 </SelectTrigger>
                 <SelectContent>

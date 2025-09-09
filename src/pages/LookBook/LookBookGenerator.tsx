@@ -886,7 +886,7 @@ const LookBookGenerator = () => {
                     exists={exists}
                   />
                 </div>
-                <SheetFooter className="flex flex-row items-center">
+                <SheetFooter className="flex flex-row text-justify w-11/12 items-center">
                   <Info size={100} color="gray" />
                   <div className="text-xs text-gray-500">
                     On mobile devices: To generate the Lookbook tap on the{" "}

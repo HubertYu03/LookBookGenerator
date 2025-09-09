@@ -12,11 +12,14 @@ import { v4 as uuidv4 } from "uuid";
 
 // Import UI Components
 import { toast } from "sonner";
-import LookBookPreview from "@/components/lookbook/LookBookPreview";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 
+// Importing Custom UI Components
+import LookBookPreview from "@/components/lookbook/LookBookPreview";
+
 const MyLookBooks = () => {
+  // Navigation hook
   const navigate = useNavigate();
 
   // State for lookbooks
@@ -72,7 +75,7 @@ const MyLookBooks = () => {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="text-5xl font-semibold">My Lookbooks</div>
+      <div className="text-3xl sm:text-5xl font-semibold">My Lookbooks</div>
 
       {/* Search bar and filter button */}
       <Input
@@ -99,7 +102,7 @@ const MyLookBooks = () => {
 
       <div className="flex justify-center items-center">
         <Button
-          className="w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
+          className="sm:w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
           onClick={() => {
             navigate(`/lookbookgenerator/${uuidv4()}`);
           }}

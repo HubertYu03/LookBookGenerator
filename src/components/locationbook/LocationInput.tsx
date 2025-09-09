@@ -6,7 +6,7 @@ import { Label } from "../ui/label";
 import { toast } from "sonner";
 
 // Importing Icons
-import { MessageSquareText } from "lucide-react";
+import { BrushCleaning, MessageSquareText, Trash } from "lucide-react";
 
 // Importing custom components
 import CommentSheet from "../Comments/CommentSheet";
@@ -14,6 +14,7 @@ import ImagesPreview from "../ImagesPreview";
 
 // Importing dependencies
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useMediaQuery } from "react-responsive";
 
 // Import global types
 import type { Img, Location, User } from "@/types/global";
@@ -49,6 +50,9 @@ const LocationInput = ({
   currentUser,
   locationbook_id,
 }: LocationInputProps) => {
+  // Checking to see if the viewport is mobile
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // States for inputs
   const [scene, setScene] = useState<string | null>(null);
   const [timeOfDay, setTimeOfDay] = useState<"Day" | "Night" | null>(null);
@@ -225,9 +229,40 @@ const LocationInput = ({
         className={loaded_location.id == currentEmpty ? "border-red-500" : ""}
       >
         <CardContent className="flex flex-col gap-5">
+          {/* Header for button on mobile view */}
+          {isMobile && (
+            <div className="flex flex-row gap-3">
+              {!newlyCreated && (
+                <Button
+                  className="hover:cursor-pointer"
+                  onClick={() => setCommentOpen(true)}
+                >
+                  <MessageSquareText />
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={clear_fields}
+                disabled={!canEdit}
+              >
+                <BrushCleaning />
+              </Button>
+              <Button
+                variant="destructive"
+                className="hover:cursor-pointer"
+                onClick={remove_location}
+                disabled={!canEdit}
+              >
+                <Trash />
+              </Button>
+            </div>
+          )}
+
           {/* Scene Name Input */}
           <div className="flex flex-row justify-between items-start">
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>Scene:</Label>
               <Input
                 placeholder="Scene"
@@ -238,37 +273,41 @@ const LocationInput = ({
                 disabled={!canEdit}
               />
             </div>
-            <div className="flex gap-3">
-              {!newlyCreated && (
-                <Button
-                  className="hover:cursor-pointer"
-                  onClick={() => setCommentOpen(true)}
-                >
-                  Comments <MessageSquareText />
-                </Button>
-              )}
 
-              <Button
-                variant="outline"
-                className="hover:cursor-pointer"
-                onClick={clear_fields}
-                disabled={!canEdit}
-              >
-                Clear Fields
-              </Button>
-              <Button
-                variant="destructive"
-                className="hover:cursor-pointer"
-                onClick={remove_location}
-                disabled={!canEdit}
-              >
-                Remove Role
-              </Button>
-            </div>
+            {/* Desktop View */}
+            {!isMobile && (
+              <div className="flex gap-3">
+                {!newlyCreated && (
+                  <Button
+                    className="hover:cursor-pointer"
+                    onClick={() => setCommentOpen(true)}
+                  >
+                    <MessageSquareText />
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="hover:cursor-pointer"
+                  onClick={clear_fields}
+                  disabled={!canEdit}
+                >
+                  Clear Fields <BrushCleaning />
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="hover:cursor-pointer"
+                  onClick={remove_location}
+                  disabled={!canEdit}
+                >
+                  Remove Role <Trash />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Container for select inputs */}
-          <div className="flex flex-row w-1/3 gap-3">
+          <div className="flex flex-col sm:flex-row sm:w-1/3 max-w-sm gap-3">
             {/* Day/Night Selection */}
             <div className="grid max-w-sm items-center gap-3">
               <Label>Day/Night:</Label>
@@ -293,7 +332,7 @@ const LocationInput = ({
             </div>
 
             {/* Location Type Input */}
-            <div className="grid max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>Outdoor/Indoor:</Label>
               <Select
                 value={locationType ?? ""}
@@ -317,7 +356,7 @@ const LocationInput = ({
           </div>
 
           {/* Location Name Input */}
-          <div className="grid w-1/3 max-w-sm items-center gap-3">
+          <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
             <Label>Location Name:</Label>
             <Input
               value={locationName ?? ""}
@@ -330,7 +369,7 @@ const LocationInput = ({
           </div>
 
           <div className="flex flex-col gap-5">
-            <div className="grid w-1/3 max-w-sm items-center gap-3">
+            <div className="grid sm:w-1/3 max-w-sm items-center gap-3">
               <Label>Upload Location Images (3 Max)</Label>
               <Input
                 type="file"

@@ -73,7 +73,9 @@ const MyLocationBooks = () => {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="text-5xl font-semibold">My Location Books</div>
+      <div className="text-3xl sm:text-5xl font-semibold">
+        My Location Books
+      </div>
 
       {/* Search bar and filter button */}
       <Input
@@ -100,7 +102,7 @@ const MyLocationBooks = () => {
 
       <div className="flex justify-center items-center">
         <Button
-          className="w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
+          className="sm:w-1/2 bg-green-500 hover:cursor-pointer hover:bg-green-600"
           onClick={() => {
             navigate(`/locationbookgenerator/${uuidv4()}`);
           }}

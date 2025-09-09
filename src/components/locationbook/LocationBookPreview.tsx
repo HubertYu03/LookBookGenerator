@@ -59,7 +59,7 @@ const LocationBookPreview = ({
     <Card>
       <CardHeader>
         <div className="flex flex-row justify-between">
-          <div className="text-3xl font-semibold">
+          <div className="text-xl sm:text-3xl font-semibold">
             {location_book.project_name}
           </div>
           <div className="text-right text-gray-500">
