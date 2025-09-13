@@ -92,7 +92,7 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <Button>
+        <Button onClick={send_comment}>
           <Send />
         </Button>
       </div>
