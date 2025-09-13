@@ -17,11 +17,13 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { ChevronDownIcon, Plus } from "lucide-react";
 
 // Importing global types
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { Event } from "@/types/global";
+import type { DateRange } from "react-day-picker";
 
 // Importing custom components
 import EventColorPicker from "./EventColorPicker";
@@ -47,11 +49,24 @@ const EventCreationModal = ({
 }: EventCreationModalProps) => {
   // Event States
   const [eventTitle, setEventTitle] = useState<string>();
+
+  // Date states
+  // If the user wants to select a range of dates, you would have to choose between range or single
+  const [pickingRange, setPickingRange] = useState<boolean>(false);
   const [date, setDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: undefined,
+    to: undefined,
+  });
+
   const [dateOpen, setDateOpen] = useState<boolean>(false);
   const [eventDesc, setEventDesc] = useState<string>();
+
+  // Time states
+  const [allDay, setAllDay] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<string>();
   const [endTime, setEndTime] = useState<string>();
+
   const [eventColor, setEventColor] = useState<string | undefined>();
 
   // Helper function to create the event
@@ -64,9 +79,17 @@ const EventCreationModal = ({
       return;
     }
 
-    if (!date) {
-      toast.warning("Please select a date!");
-      return;
+    // Check to see if it was a date range input
+    if (pickingRange) {
+      if (!dateRange.from && !dateRange.to) {
+        toast.warning("Please select a date range!");
+        return;
+      }
+    } else {
+      if (!date) {
+        toast.warning("Please select a date!");
+        return;
+      }
     }
 
     if (!eventDesc) {
@@ -74,12 +97,12 @@ const EventCreationModal = ({
       return;
     }
 
-    if (!startTime) {
+    if (!startTime && !allDay) {
       toast.warning("Please select a start time!");
       return;
     }
 
-    if (!endTime) {
+    if (!endTime && !allDay) {
       toast.warning("Please select an end time!");
       return;
     }
@@ -90,40 +113,103 @@ const EventCreationModal = ({
     }
 
     // Check if the times are correct
-    const start: number = Number(startTime.split(":")[0]);
-    const end: number = Number(endTime.split(":")[0]);
+    if (!allDay) {
+      const start: number = Number(startTime?.split(":")[0]);
+      const end: number = Number(endTime?.split(":")[0]);
 
-    if (start > end) {
-      toast.warning("Invalid start and end times!");
-      return;
+      if (start > end) {
+        toast.warning("Invalid start and end times!");
+        return;
+      }
     }
 
     // Create an new event type and add it to the database
-    let new_event: Event = {
-      event_id: v4(),
-      created_at: new Date(),
-      event_date: `${date.getFullYear()}-${
-        date.getMonth() + 1
-      }-${date.getDate()}`,
-      event_title: eventTitle,
-      event_desc: eventDesc,
-      event_author: localStorage.getItem("PlayletUserID") as string,
-      event_color: eventColor,
-      event_start: startTime,
-      event_end: endTime,
-    };
+    // Check to see if it was multiple dates
+    if (pickingRange) {
+      // Insert multiple dates
+      if (dateRange.from && dateRange.to) {
+        let dates: Date[] = [];
 
-    // Insert the new event into the database
-    const { error } = await supabase.from("events").insert(new_event).select();
+        // Get all the dates in between the date range
+        const current: Date = new Date(dateRange.from as Date);
+        while (current <= dateRange?.to) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
 
-    if (error) {
-      console.log(error);
-      return;
+        // Once we get all the dates, we then create an event list
+
+        // Unique ID to group the events together
+        const group_id: string = v4();
+
+        let events: Event[] = [];
+        dates.map((date) => {
+          let new_event: Event = {
+            event_id: v4(),
+            created_at: new Date(),
+            event_date: `${date.getFullYear() ?? ""}-${
+              date.getMonth() !== undefined ? date.getMonth() + 1 : ""
+            }-${date.getDate() ?? ""}`,
+            event_title: eventTitle,
+            event_desc: eventDesc,
+            event_author: localStorage.getItem("PlayletUserID") as string,
+            event_color: eventColor,
+            event_start: allDay ? "00:00" : (startTime as string),
+            event_end: allDay ? "00:00" : (endTime as string),
+            whole_day: false,
+            group_id: group_id,
+          };
+
+          events.push(new_event);
+        });
+
+        // Insert the new event into the database
+        const { error } = await supabase.from("events").insert(events).select();
+
+        if (error) {
+          console.log(error);
+          return;
+        } else {
+          // Send a success message and refetch all the events
+          toast.success("Events created successfully!");
+          setOpen(false);
+          getWeek();
+        }
+      }
     } else {
-      // Send a success message and refetch all the events
-      toast.success("Event created successfully!");
-      setOpen(false);
-      getWeek();
+      // Inserting a single event into the database
+
+      let new_event: Event = {
+        event_id: v4(),
+        created_at: new Date(),
+        event_date: `${date?.getFullYear() ?? ""}-${
+          date?.getMonth() !== undefined ? date.getMonth() + 1 : ""
+        }-${date?.getDate() ?? ""}`,
+        event_title: eventTitle,
+        event_desc: eventDesc,
+        event_author: localStorage.getItem("PlayletUserID") as string,
+        event_color: eventColor,
+        event_start: allDay ? "00:00" : (startTime as string),
+        event_end: allDay ? "00:00" : (endTime as string),
+        whole_day: false,
+        group_id: null,
+      };
+
+      // Insert the new event into the database
+      const { error } = await supabase
+        .from("events")
+        .insert(new_event)
+        .select();
+
+      if (error) {
+        console.log(error);
+        return;
+      } else {
+        // Send a success message and refetch all the events
+        toast.success("Event created successfully!");
+        setOpen(false);
+        getWeek();
+      }
     }
   }
 
@@ -163,36 +249,89 @@ const EventCreationModal = ({
 
         {/* Event Date */}
         <div className="grid w-full items-center gap-3">
-          <Label>
-            Event Date
-            <span className="text-red-500">{date ? "" : "*"}</span>
-          </Label>
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                id="date"
-                className="font-normal w-1/2 hover:cursor-pointer"
-              >
-                {date ? date.toLocaleDateString() : "Select date"}
-                <ChevronDownIcon />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-auto overflow-hidden p-0"
-              align="start"
-            >
-              <CalendarUI
-                mode="single"
-                selected={date}
-                captionLayout="dropdown"
-                onSelect={(date) => {
-                  setDate(date);
-                  setDateOpen(false);
-                }}
+          <div className="flex flex-row justify-between">
+            <Label>
+              {pickingRange ? (
+                <div>
+                  Event Date Range{" "}
+                  <span className="text-red-500">
+                    {dateRange.from && dateRange.to ? "" : "*"}
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  Event Date{" "}
+                  <span className="text-red-500">{date ? "" : "*"}</span>
+                </div>
+              )}
+            </Label>
+
+            {/* Button to switch from single date to date range */}
+            <div className="flex flex-row gap-2">
+              <div className="text-xs">Date Range Selection</div>
+              <Switch
+                checked={pickingRange}
+                onCheckedChange={() => setPickingRange(!pickingRange)}
               />
-            </PopoverContent>
-          </Popover>
+            </div>
+          </div>
+          {pickingRange ? (
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  id="date"
+                  className="font-normal sm:w-1/2 hover:cursor-pointer"
+                >
+                  {dateRange?.from && dateRange?.to
+                    ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
+                    : "Select Dates"}
+                  <ChevronDownIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
+                <CalendarUI
+                  mode="range"
+                  captionLayout="dropdown"
+                  selected={dateRange}
+                  onSelect={(range) => {
+                    console.log(range);
+                    setDateRange(range ?? { from: undefined, to: undefined });
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  id="date"
+                  className="font-normal sm:w-1/2 hover:cursor-pointer"
+                >
+                  {date ? date.toLocaleDateString() : "Select date"}
+                  <ChevronDownIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
+                <CalendarUI
+                  mode="single"
+                  selected={date}
+                  captionLayout="dropdown"
+                  onSelect={(date) => {
+                    setDate(date);
+                    setDateOpen(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
 
         {/* Event Description */}
@@ -209,34 +348,42 @@ const EventCreationModal = ({
           />
         </div>
 
-        {/* Event Times */}
-        <div className="flex flex-row gap-1 sm:gap-5">
-          <div className="grid w-1/3 sm:w-full items-center gap-3">
-            <Label>
-              Start Time
-              <span className="text-red-500">{startTime ? "" : "*"}</span>
-            </Label>
-            <Input
-              type="time"
-              onChange={(e) => {
-                setStartTime(e.target.value);
-              }}
-            />
-          </div>
-
-          <div className="grid w-1/3 sm:w-full items-center gap-3">
-            <Label>
-              End Time
-              <span className="text-red-500">{endTime ? "" : "*"}</span>
-            </Label>
-            <Input
-              type="time"
-              onChange={(e) => {
-                setEndTime(e.target.value);
-              }}
-            />
-          </div>
+        {/* If the user wants to select all day */}
+        <div className="flex flex-row gap-2">
+          <Label>All Day</Label>
+          <Switch checked={allDay} onCheckedChange={() => setAllDay(!allDay)} />
         </div>
+
+        {/* Event Times */}
+        {!allDay && (
+          <div className="flex flex-row gap-1 sm:gap-5">
+            <div className="grid w-1/3 sm:w-full items-center gap-3">
+              <Label>
+                Start Time
+                <span className="text-red-500">{startTime ? "" : "*"}</span>
+              </Label>
+              <Input
+                type="time"
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className="grid w-1/3 sm:w-full items-center gap-3">
+              <Label>
+                End Time
+                <span className="text-red-500">{endTime ? "" : "*"}</span>
+              </Label>
+              <Input
+                type="time"
+                onChange={(e) => {
+                  setEndTime(e.target.value);
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Color Picker */}
         <div className="grid w-full items-center gap-3">

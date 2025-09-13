@@ -264,6 +264,8 @@ const EventCard = ({
       event_color: newEventColor as string,
       event_start: newEventStart,
       event_end: newEventEnd,
+      whole_day: event?.whole_day as boolean,
+      group_id: event?.group_id as string | null,
     };
 
     const { error } = await supabase
@@ -369,15 +371,22 @@ const EventCard = ({
                 </>
               ) : (
                 <div className="flex flex-row gap-1">
-                  <div>
-                    {military_to_normal(event?.event_start)}{" "}
-                    {am_pm(event?.event_start)}
-                  </div>
-                  <div>-</div>
-                  <div>
-                    {military_to_normal(event?.event_end)}{" "}
-                    {am_pm(event?.event_end)}
-                  </div>
+                  {event?.event_start == "00:00" &&
+                  event?.event_end == "00:00" ? (
+                    <div>All Day</div>
+                  ) : (
+                    <div className="flex flex-row gap-1">
+                      <div>
+                        {military_to_normal(event?.event_start)}{" "}
+                        {am_pm(event?.event_start)}
+                      </div>
+                      <div>-</div>
+                      <div>
+                        {military_to_normal(event?.event_end)}{" "}
+                        {am_pm(event?.event_end)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -501,6 +510,7 @@ const EventCard = ({
 
       <EventCardDeletionModal
         event_id={event?.event_id as string}
+        event_group_id={event?.group_id}
         open={openDelete}
         setOpen={setOpenDelete}
         setEventPreviewOpen={setOpen}

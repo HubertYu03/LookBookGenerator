@@ -96,11 +96,15 @@ const EventColumnPreview = ({
           <div className="text-xs sm:text-sm font-bold">
             {title_length_format(event.event_title)}
           </div>
-          <div className="text-[0.5rem] sm:text-xs mb-2">
-            {military_to_normal(event.event_start)}
-            {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
-            {am_pm(event.event_end)}
-          </div>
+          {event.event_start == "00:00" && event.event_end == "00:00" ? (
+            <div className="text-[0.5rem] sm:text-xs mb-2">All Day</div>
+          ) : (
+            <div className="text-[0.5rem] sm:text-xs mb-2">
+              {military_to_normal(event.event_start)}
+              {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
+              {am_pm(event.event_end)}
+            </div>
+          )}
           <div className="text-[0.5rem] sm:text-xs">
             {author?.first_name} {author?.last_name}
           </div>

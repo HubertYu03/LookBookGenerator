@@ -82,4 +82,6 @@ export type Event = {
   event_color: string;
   event_start: string;
   event_end: string;
+  whole_day: boolean;
+  group_id: string | null;
 };

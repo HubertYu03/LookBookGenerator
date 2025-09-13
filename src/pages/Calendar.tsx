@@ -14,7 +14,7 @@ import {
 import type { User } from "@/types/global";
 
 // Importing Icons
-import { ChevronDownIcon, Plus } from "lucide-react";
+import { ChevronDownIcon, CircleQuestionMark, Plus } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -67,9 +67,27 @@ const Calendar = ({ user }: CalendarProps) => {
 
   return (
     <div className="p-4">
+      <div className="fixed bottom-8 right-8">
+        {/* Button to create an event */}
+        <Button
+          size="lg"
+          className="hover:cursor-pointer"
+          onClick={() => {
+            setOpenEventCreation(true);
+          }}
+        >
+          Create Event <Plus />
+        </Button>
+      </div>
+
       {/* Top row buttons */}
       <div className="flex justify-end mb-6">
         <div className="flex gap-2">
+          <Button variant="outline" className="hover:cursor-pointer">
+            How to Use
+            <CircleQuestionMark />
+          </Button>
+
           {/* Select the current date */}
           <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
             <PopoverTrigger asChild>
@@ -105,22 +123,11 @@ const Calendar = ({ user }: CalendarProps) => {
           {/* Button that sets the day to today */}
           <Button
             className="hover:cursor-pointer"
-            variant="outline"
             onClick={() => {
               setSelectedDate(new Date());
             }}
           >
             Today
-          </Button>
-
-          {/* Button to create an event */}
-          <Button
-            className="hover:cursor-pointer"
-            onClick={() => {
-              setOpenEventCreation(true);
-            }}
-          >
-            Create Event <Plus />
           </Button>
         </div>
       </div>
