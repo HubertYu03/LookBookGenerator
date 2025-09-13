@@ -37,6 +37,7 @@ import {
   PinOff,
   type LucideIcon,
   ChevronDownIcon,
+  MessageSquare,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Calendar } from "../ui/calendar";
@@ -44,6 +45,7 @@ import { Textarea } from "../ui/textarea";
 import EventCardDeletionModal from "./EventCardDeletionModal";
 import EventColorPicker from "./EventColorPicker";
 import { Label } from "../ui/label";
+import EventCardComments from "./EventCardComments";
 
 // Custom components for button
 type EventCardButtonProps = {
@@ -110,6 +112,9 @@ const EventCard = ({
 
   // State for deletion modal
   const [openDelete, setOpenDelete] = useState<boolean>(false);
+
+  // State for opening comments
+  const [openComments, setOpenComments] = useState<boolean>(false);
 
   // Helper functions for time formatting
   function am_pm(value: string | undefined): string {
@@ -469,6 +474,11 @@ const EventCard = ({
                   buttonFunction={pin_event}
                   tooltip={pinned ? "Unpin" : "Pin"}
                 />
+                <EventCardButton
+                  ButtonIcon={MessageSquare}
+                  buttonFunction={() => setOpenComments(!openComments)}
+                  tooltip="Open Comments"
+                />
                 {event?.event_author ==
                   localStorage.getItem("PlayletUserID") && (
                   <>
@@ -506,6 +516,11 @@ const EventCard = ({
             )}
           </div>
         </DialogFooter>
+
+        {/* Event Comment Section */}
+        {openComments && (
+          <EventCardComments event_id={event?.event_id as string} />
+        )}
       </DialogContent>
 
       <EventCardDeletionModal

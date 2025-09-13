@@ -268,7 +268,7 @@ const EventCreationModal = ({
 
             {/* Button to switch from single date to date range */}
             <div className="flex flex-row gap-2">
-              <div className="text-xs">Date Range Selection</div>
+              <Label className="text-xs">Date Range Selection</Label>
               <Switch
                 checked={pickingRange}
                 onCheckedChange={() => setPickingRange(!pickingRange)}

@@ -85,3 +85,12 @@ export type Event = {
   whole_day: boolean;
   group_id: string | null;
 };
+
+// Calendar Comments
+export type EventComment = {
+  comment_id: string;
+  event_id: string;
+  created_at: Date;
+  text: string;
+  author_id: string;
+};
