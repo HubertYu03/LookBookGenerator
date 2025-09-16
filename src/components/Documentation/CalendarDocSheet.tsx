@@ -22,6 +22,9 @@ import {
 // Importing Custom Components
 import GifViewer from "./GifViewer";
 
+// Importing dependencies
+import { useMediaQuery } from "react-responsive";
+
 // Creating a custom component for content linking
 const DocLink = ({
   id,
@@ -60,6 +63,9 @@ type CalendarDocSheetProps = {
 };
 
 const CalendarDocSheet = ({ open, setOpenChange }: CalendarDocSheetProps) => {
+  // Check to see if it is mobile view
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // Variables for text styling
   const title: string = "text-3xl font-bold";
   const subtitle: string = "text-2xl font-semibold mt-2";
@@ -75,70 +81,72 @@ const CalendarDocSheet = ({ open, setOpenChange }: CalendarDocSheetProps) => {
             Playet Calendar Tool.
           </SheetDescription>
 
-          <div className="p-2 mt-5 flex flex-row h-[85vh]">
+          <div className="p-3 sm:p-2 mt-5 flex flex-row h-[80vh] sm:h-[85vh]">
             {/* Documentation Table of Contents */}
-            <div className="flex flex-col w-1/4 gap-1">
-              {/* Event Creation Section */}
-              <DocLink
-                id="create"
-                label="Creating an Event"
-                fontSize="md"
-                sublink={false}
-              />
-              <DocLink
-                id="event_modal_overview"
-                label="Overview"
-                fontSize="sm"
-                sublink
-              />
-              <DocLink
-                id="date_selection"
-                label="Date Selection"
-                fontSize="sm"
-                sublink
-              />
-              <DocLink
-                id="all_day_selection"
-                label="All Day Selection"
-                fontSize="sm"
-                sublink
-              />
+            {!isMobile && (
+              <div className="flex flex-col w-1/4 gap-1">
+                {/* Event Creation Section */}
+                <DocLink
+                  id="create"
+                  label="Creating an Event"
+                  fontSize="md"
+                  sublink={false}
+                />
+                <DocLink
+                  id="event_modal_overview"
+                  label="Overview"
+                  fontSize="sm"
+                  sublink
+                />
+                <DocLink
+                  id="date_selection"
+                  label="Date Selection"
+                  fontSize="sm"
+                  sublink
+                />
+                <DocLink
+                  id="all_day_selection"
+                  label="All Day Selection"
+                  fontSize="sm"
+                  sublink
+                />
 
-              {/* Event Actions Section */}
-              <DocLink
-                id="actions"
-                label="Event Actions"
-                fontSize="md"
-                sublink={false}
-              />
-              <DocLink
-                id="pinning_event"
-                label="Pinning an Event"
-                fontSize="sm"
-                sublink
-              />
-              <DocLink
-                id="commenting_event"
-                label="Commenting on Events"
-                fontSize="sm"
-                sublink
-              />
-              <DocLink
-                id="editing_event"
-                label="Editing an Event"
-                fontSize="sm"
-                sublink
-              />
-              <DocLink
-                id="deleting_event"
-                label="Deleting an Event"
-                fontSize="sm"
-                sublink
-              />
-            </div>
+                {/* Event Actions Section */}
+                <DocLink
+                  id="actions"
+                  label="Event Actions"
+                  fontSize="md"
+                  sublink={false}
+                />
+                <DocLink
+                  id="pinning_event"
+                  label="Pinning an Event"
+                  fontSize="sm"
+                  sublink
+                />
+                <DocLink
+                  id="commenting_event"
+                  label="Commenting on Events"
+                  fontSize="sm"
+                  sublink
+                />
+                <DocLink
+                  id="editing_event"
+                  label="Editing an Event"
+                  fontSize="sm"
+                  sublink
+                />
+                <DocLink
+                  id="deleting_event"
+                  label="Deleting an Event"
+                  fontSize="sm"
+                  sublink
+                />
+              </div>
+            )}
 
             {/* Documentation Body */}
-            <div className="flex-1 p-2 overflow-auto">
+            <div className="flex-1 p-1 sm:p-2 overflow-auto">
               {/* How to Create an event */}
               <div className={title} id="create">
                 Creating an Event
