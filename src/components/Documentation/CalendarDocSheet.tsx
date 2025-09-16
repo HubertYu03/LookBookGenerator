@@ -267,7 +267,7 @@ const CalendarDocSheet = ({ open, setOpenChange }: CalendarDocSheetProps) => {
                 you to make sure you absolutely want to delete the event.
               </div>
 
-              <div className="mt-10" />
+              <div className="mt-30 sm:mt-0" />
             </div>
           </div>
         </SheetHeader>
