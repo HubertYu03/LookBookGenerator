@@ -266,6 +266,8 @@ const CalendarDocSheet = ({ open, setOpenChange }: CalendarDocSheetProps) => {
                 the bottom of the event card. Clicking on the icon will prompt
                 you to make sure you absolutely want to delete the event.
               </div>
+
+              <div className="mt-10" />
             </div>
           </div>
         </SheetHeader>
