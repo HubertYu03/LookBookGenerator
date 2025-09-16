@@ -2,6 +2,7 @@
 import DayColumn from "@/components/Calendar/DayColumn";
 import EventBody from "@/components/Calendar/EventBody";
 import EventCreationModal from "@/components/Calendar/EventCreationModal";
+import CalendarDocSheet from "@/components/Documentation/CalendarDocSheet";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
@@ -20,9 +21,10 @@ import { useEffect, useState } from "react";
 
 type CalendarProps = {
   user: User | undefined;
+  isMobile: boolean;
 };
 
-const Calendar = ({ user }: CalendarProps) => {
+const Calendar = ({ user, isMobile }: CalendarProps) => {
   // Date States
   const [datePickerOpen, setDatePickerOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -30,6 +32,9 @@ const Calendar = ({ user }: CalendarProps) => {
 
   // States for creating an event
   const [openEventCreation, setOpenEventCreation] = useState<boolean>(false);
+
+  // States for Documentation
+  const [openDocs, setOpenDocs] = useState<boolean>(false);
 
   // Helper function to get the current week dates
   function get_current_week() {
@@ -83,8 +88,12 @@ const Calendar = ({ user }: CalendarProps) => {
       {/* Top row buttons */}
       <div className="flex justify-end mb-6">
         <div className="flex gap-2">
-          <Button variant="outline" className="hover:cursor-pointer">
-            How to Use
+          <Button
+            variant="outline"
+            className="hover:cursor-pointer"
+            onClick={() => setOpenDocs(true)}
+          >
+            {!isMobile && "How to Use"}
             <CircleQuestionMark />
           </Button>
 
@@ -152,6 +161,8 @@ const Calendar = ({ user }: CalendarProps) => {
         setOpen={setOpenEventCreation}
         getWeek={get_current_week}
       />
+
+      <CalendarDocSheet open={openDocs} setOpenChange={setOpenDocs} />
     </div>
   );
 };

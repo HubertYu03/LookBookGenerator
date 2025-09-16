@@ -304,6 +304,7 @@ const EventCard = ({
       setNewEventDesc(event.event_desc);
       setNewEventStart(event.event_start);
       setNewEventEnd(event.event_end);
+      setNewEventColor(event.event_color);
 
       const [year, month, day] = event.event_date.split("-").map(Number);
       setNewEventDate(new Date(year, month - 1, day));

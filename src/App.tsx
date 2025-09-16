@@ -300,7 +300,9 @@ function App() {
                         />
                         <Route
                           path="/calendar"
-                          element={<Calendar user={userData} />}
+                          element={
+                            <Calendar user={userData} isMobile={isMobile} />
+                          }
                         />
                       </Routes>
                     </div>
@@ -334,7 +336,7 @@ function App() {
                   />
                   <Route
                     path="/calendar"
-                    element={<Calendar user={userData} />}
+                    element={<Calendar user={userData} isMobile={isMobile} />}
                   />
                 </Routes>
               </>
