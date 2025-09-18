@@ -54,7 +54,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-6 touch-pan-y">
       <div>Home</div>
       <Button
         onClick={() => {

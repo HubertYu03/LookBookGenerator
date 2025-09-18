@@ -15,9 +15,17 @@ import {
 import type { User } from "@/types/global";
 
 // Importing Icons
-import { ChevronDownIcon, CircleQuestionMark, Plus } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CircleQuestionMark,
+  Plus,
+} from "lucide-react";
 
+// Importing Dependencies
 import { useEffect, useState } from "react";
+import { useSwipeable } from "react-swipeable";
 
 type CalendarProps = {
   user: User | undefined;
@@ -57,6 +65,20 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     setCurrentWeek(current_week);
   }
 
+  // Helper function to get the next week
+  function get_next_week() {
+    const nextWeek = new Date(selectedDate);
+    nextWeek.setDate(selectedDate.getDate() + 7);
+    setSelectedDate(nextWeek);
+  }
+
+  // Helper function to get the previous week
+  function get_previous_week() {
+    const nextWeek = new Date(selectedDate);
+    nextWeek.setDate(selectedDate.getDate() - 7);
+    setSelectedDate(nextWeek);
+  }
+
   useEffect(() => {
     // Get the current week on page load up
     get_current_week();
@@ -70,8 +92,25 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     get_current_week();
   }, [selectedDate]);
 
+  // Swipe handlers
+  const handlers = useSwipeable({
+    onSwiping: (event) => {
+      event.event.preventDefault();
+    },
+    onSwipedLeft: (event) => {
+      event.event.preventDefault(); // Prevent default horizontal scroll
+      get_next_week();
+    },
+    onSwipedRight: (event) => {
+      event.event.preventDefault();
+      get_previous_week();
+    },
+    trackTouch: true,
+    trackMouse: false,
+  });
+
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ touchAction: "pan-y" }} {...handlers}>
       <div className="fixed bottom-8 right-8">
         {/* Button to create an event */}
         <Button
@@ -144,7 +183,32 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
       {/* All the days */}
 
       {/* The header */}
-      <div className="flex">
+      <div className="flex relative">
+        {/* Week Navigation Button !DO NOT SHOW ON MOBILE! */}
+
+        {/* Previous week */}
+        {!isMobile && (
+          <>
+            <Button
+              className="absolute top-3.5 -left-2 hover:cursor-pointer"
+              variant="outline"
+              onClick={get_previous_week}
+            >
+              <ChevronLeftIcon />
+            </Button>
+
+            {/* Next Week */}
+            <Button
+              className="absolute top-3.5 -right-2 hover:cursor-pointer"
+              variant="outline"
+              onClick={get_next_week}
+            >
+              <ChevronRightIcon />
+            </Button>
+          </>
+        )}
+
+        {/* Week Day Headers */}
         {currentWeek.map((week_day, index) => (
           <DayColumn date={week_day} key={index} />
         ))}
