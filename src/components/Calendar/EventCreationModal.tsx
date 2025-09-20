@@ -127,9 +127,17 @@ const EventCreationModal = ({
       }
     }
 
-    // Create an new event type and add it to the database
-    // Check to see if it was multiple dates
+    // Check for color duplicates
+    const isColorUsed = await check_color_dupe();
+
+    if (isColorUsed) {
+      toast.warning("This color has already been chosen for this day!");
+      return;
+    }
+
     if (pickingRange) {
+      // Create an new event type and add it to the database
+      // Check to see if it was multiple dates
       // Insert multiple dates
       if (dateRange.from && dateRange.to) {
         let dates: Date[] = [];
@@ -223,6 +231,26 @@ const EventCreationModal = ({
         if (getMonthEvents) getMonthEvents();
       }
     }
+  }
+
+  // Helper function to check for duplicate colors
+  async function check_color_dupe(): Promise<boolean> {
+    const formattedDate: string = `${date?.getFullYear() ?? ""}-${
+      date?.getMonth() !== undefined ? date?.getMonth() + 1 : ""
+    }-${date?.getDate() ?? ""}`;
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("event_color")
+      .eq("event_date", formattedDate)
+      .eq("event_color", eventColor);
+
+    if (error) {
+      console.error("Error fetching used colors:", error);
+      return false;
+    }
+
+    return data.length > 0;
   }
 
   // Helper function to reset form

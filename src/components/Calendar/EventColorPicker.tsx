@@ -19,6 +19,7 @@ const available_colors: string[] = [
   "#6d597a",
   "#b56576",
   "#e56b6f",
+  "#E2E8CE",
 ];
 
 type EventColorPicker = {
@@ -36,7 +37,7 @@ const EventColorPicker = ({ setColor }: EventColorPicker) => {
           onClick={() => {
             setColor(color);
           }}
-        ></div>
+        />
       ))}
     </div>
   );

@@ -320,6 +320,7 @@ const EventCard = ({
       onOpenChange={() => {
         setOpen(false);
         setEditing(false);
+        setOpenComments(false);
       }}
     >
       <DialogContent aria-describedby={undefined}>
