@@ -4,6 +4,9 @@
 import type { Event } from "@/types/global";
 import { type Dispatch, type SetStateAction } from "react";
 
+// Importing dependencies
+import { useMediaQuery } from "react-responsive";
+
 type EventColumnPreviewProps = {
   event: Event;
   setPreviewOpen: Dispatch<SetStateAction<boolean>>;
@@ -39,8 +42,13 @@ const EventColumnPreview = ({
   setPreviewOpen,
   setPreviewEvent,
 }: EventColumnPreviewProps) => {
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+
   // Helper function for title formatting
   function title_length_format(title: string): string {
+    // Check for mobile view
+    if (isMobile) return title.substring(0, 4) + "...";
+
     if (title.length >= 16) {
       return title.substring(0, 10) + "...";
     } else {
@@ -50,7 +58,7 @@ const EventColumnPreview = ({
 
   return (
     <div
-      className="p-2 rounded-sm text-white hover:cursor-pointer hover:opacity-95"
+      className="p-1 sm:p-2 rounded-sm text-white hover:cursor-pointer hover:opacity-95"
       style={{ backgroundColor: event.event_color }}
       onClick={() => {
         setPreviewOpen(true);
@@ -60,18 +68,25 @@ const EventColumnPreview = ({
       <div className="text-xs sm:text-sm font-bold">
         {title_length_format(event.event_title)}
       </div>
-      {event.event_start == "00:00" && event.event_end == "00:00" ? (
-        <div className="text-[0.5rem] sm:text-xs mb-2">All Day</div>
-      ) : (
-        <div className="text-[0.5rem] sm:text-xs mb-2">
-          {military_to_normal(event.event_start)}
-          {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
-          {am_pm(event.event_end)}
-        </div>
+
+      {/* Only show more details in Desktop View */}
+      {!isMobile && (
+        <>
+          {event.event_start == "00:00" && event.event_end == "00:00" ? (
+            <div className="text-[0.5rem] sm:text-xs mb-2">All Day</div>
+          ) : (
+            <div className="text-[0.5rem] sm:text-xs mb-2">
+              {military_to_normal(event.event_start)}
+              {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
+              {am_pm(event.event_end)}
+            </div>
+          )}
+
+          <div className="text-[0.5rem] sm:text-xs">
+            {event.author_first_name} {event.author_last_name}
+          </div>
+        </>
       )}
-      <div className="text-[0.5rem] sm:text-xs">
-        {event.author_first_name} {event.author_last_name}
-      </div>
     </div>
   );
 };
