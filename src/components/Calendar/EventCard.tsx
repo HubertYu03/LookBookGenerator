@@ -488,7 +488,10 @@ const EventCard = ({
                   <>
                     <EventCardButton
                       ButtonIcon={Pencil}
-                      buttonFunction={() => setEditing(!editing)}
+                      buttonFunction={() => {
+                        setOpenComments(false);
+                        setEditing(!editing);
+                      }}
                       tooltip="Edit"
                     />
                     <EventCardButton

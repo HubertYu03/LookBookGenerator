@@ -55,7 +55,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
   );
 
   // States for the current view
-  const [view, setView] = useState<string>("Month");
+  const [view, setView] = useState<string>("Week");
 
   // States for creating an event
   const [openEventCreation, setOpenEventCreation] = useState<boolean>(false);
@@ -240,7 +240,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
           </Button>
 
           {/* Month Navigation Buttons */}
-          {!isMobile && (
+          {!isMobile && view == "Month" && (
             <>
               <Button variant="outline" onClick={get_previous_month}>
                 <ChevronLeftIcon />
