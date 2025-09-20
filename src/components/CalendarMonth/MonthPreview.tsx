@@ -50,7 +50,8 @@ const MonthPreview = ({
         date.getMonth() != currentMonth && "opacity-30"
       }`}
       onClick={() => {
-        if (isMobile) setDayOpen(true);
+        if (isMobile && date.getMonth() == currentMonth && events.length > 0)
+          setDayOpen(true);
       }}
     >
       <div className="flex flex-col items-center sm:items-start">
