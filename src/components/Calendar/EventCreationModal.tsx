@@ -22,7 +22,7 @@ import { ChevronDownIcon, Plus } from "lucide-react";
 
 // Importing global types
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import type { Event } from "@/types/global";
+import type { Event, User } from "@/types/global";
 import type { DateRange } from "react-day-picker";
 
 // Importing custom components
@@ -38,14 +38,18 @@ type EventCreationModalProps = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   getWeek: () => void;
+  getMonthEvents?: () => void;
   presetDate?: Date;
+  user: User;
 };
 
 const EventCreationModal = ({
   open,
   setOpen,
   getWeek,
+  getMonthEvents,
   presetDate,
+  user,
 }: EventCreationModalProps) => {
   // Event States
   const [eventTitle, setEventTitle] = useState<string>();
@@ -152,7 +156,9 @@ const EventCreationModal = ({
             }-${date.getDate() ?? ""}`,
             event_title: eventTitle,
             event_desc: eventDesc,
-            event_author: localStorage.getItem("PlayletUserID") as string,
+            author_first_name: user.first_name,
+            author_last_name: user.last_name,
+            author_id: localStorage.getItem("PlayletUserID") as string,
             event_color: eventColor,
             event_start: allDay ? "00:00" : (startTime as string),
             event_end: allDay ? "00:00" : (endTime as string),
@@ -173,7 +179,9 @@ const EventCreationModal = ({
           // Send a success message and refetch all the events
           toast.success("Events created successfully!");
           setOpen(false);
+          resetForm();
           getWeek();
+          if (getMonthEvents) getMonthEvents();
         }
       }
     } else {
@@ -187,7 +195,9 @@ const EventCreationModal = ({
         }-${date?.getDate() ?? ""}`,
         event_title: eventTitle,
         event_desc: eventDesc,
-        event_author: localStorage.getItem("PlayletUserID") as string,
+        author_first_name: user.first_name,
+        author_last_name: user.last_name,
+        author_id: localStorage.getItem("PlayletUserID") as string,
         event_color: eventColor,
         event_start: allDay ? "00:00" : (startTime as string),
         event_end: allDay ? "00:00" : (endTime as string),
@@ -208,9 +218,24 @@ const EventCreationModal = ({
         // Send a success message and refetch all the events
         toast.success("Event created successfully!");
         setOpen(false);
+        resetForm();
         getWeek();
+        if (getMonthEvents) getMonthEvents();
       }
     }
+  }
+
+  // Helper function to reset form
+  function resetForm() {
+    setEventTitle("");
+    setEventDesc("");
+    setDate(undefined);
+    setDateRange({ from: undefined, to: undefined });
+    setStartTime("");
+    setEndTime("");
+    setEventColor(undefined);
+    setAllDay(false);
+    setPickingRange(false);
   }
 
   useEffect(() => {

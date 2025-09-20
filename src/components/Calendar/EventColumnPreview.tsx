@@ -1,17 +1,13 @@
 // This preview shows each even on each Day column
 
 // Importing global types
-import type { Event, User } from "@/types/global";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-
-// Importing database
-import { supabase } from "@/lib/supabaseClient";
+import type { Event } from "@/types/global";
+import { type Dispatch, type SetStateAction } from "react";
 
 type EventColumnPreviewProps = {
   event: Event;
   setPreviewOpen: Dispatch<SetStateAction<boolean>>;
   setPreviewEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
-  setPreviewAuthor: React.Dispatch<React.SetStateAction<User | undefined>>;
 };
 
 // Helper functions for time formatting
@@ -42,14 +38,7 @@ const EventColumnPreview = ({
   event,
   setPreviewOpen,
   setPreviewEvent,
-  setPreviewAuthor,
 }: EventColumnPreviewProps) => {
-  // Loading state
-  const [loading, setLoading] = useState<boolean>(true);
-
-  // Getting the user of the event
-  const [author, setAuthor] = useState<User>();
-
   // Helper function for title formatting
   function title_length_format(title: string): string {
     if (title.length >= 16) {
@@ -59,26 +48,6 @@ const EventColumnPreview = ({
     }
   }
 
-  // Helper function to get the author of the event
-  async function get_author() {
-    let { data: users, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_id", event.event_author);
-
-    if (users) {
-      setAuthor(users[0]);
-      setLoading(false);
-    } else {
-      console.log(error);
-      return;
-    }
-  }
-
-  useEffect(() => {
-    get_author();
-  }, []);
-
   return (
     <div
       className="p-2 rounded-sm text-white hover:cursor-pointer hover:opacity-95"
@@ -86,30 +55,23 @@ const EventColumnPreview = ({
       onClick={() => {
         setPreviewOpen(true);
         setPreviewEvent(event);
-        setPreviewAuthor(author);
       }}
     >
-      {loading ? (
-        <div className="text-sm">Loading...</div>
+      <div className="text-xs sm:text-sm font-bold">
+        {title_length_format(event.event_title)}
+      </div>
+      {event.event_start == "00:00" && event.event_end == "00:00" ? (
+        <div className="text-[0.5rem] sm:text-xs mb-2">All Day</div>
       ) : (
-        <>
-          <div className="text-xs sm:text-sm font-bold">
-            {title_length_format(event.event_title)}
-          </div>
-          {event.event_start == "00:00" && event.event_end == "00:00" ? (
-            <div className="text-[0.5rem] sm:text-xs mb-2">All Day</div>
-          ) : (
-            <div className="text-[0.5rem] sm:text-xs mb-2">
-              {military_to_normal(event.event_start)}
-              {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
-              {am_pm(event.event_end)}
-            </div>
-          )}
-          <div className="text-[0.5rem] sm:text-xs">
-            {author?.first_name} {author?.last_name}
-          </div>
-        </>
+        <div className="text-[0.5rem] sm:text-xs mb-2">
+          {military_to_normal(event.event_start)}
+          {am_pm(event.event_start)} - {military_to_normal(event.event_end)}
+          {am_pm(event.event_end)}
+        </div>
       )}
+      <div className="text-[0.5rem] sm:text-xs">
+        {event.author_first_name} {event.author_last_name}
+      </div>
     </div>
   );
 };

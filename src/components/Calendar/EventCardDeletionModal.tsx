@@ -23,7 +23,8 @@ type EventCardDeletionModalProps = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   setEventPreviewOpen: Dispatch<SetStateAction<boolean>>;
-  getWeek: () => void;
+  getWeek?: () => void;
+  getMonthEvents?: () => void;
 };
 
 const EventCardDeletionModal = ({
@@ -33,6 +34,7 @@ const EventCardDeletionModal = ({
   setOpen,
   setEventPreviewOpen,
   getWeek,
+  getMonthEvents,
 }: EventCardDeletionModalProps) => {
   // Helper function to delete the event from the database
   async function delete_event() {
@@ -51,7 +53,8 @@ const EventCardDeletionModal = ({
     toast.success("Successfully deleted event!");
     setOpen(false);
     setEventPreviewOpen(false);
-    getWeek();
+    if (getWeek) getWeek();
+    if (getMonthEvents) getMonthEvents();
   }
 
   async function delete_event_group() {
@@ -70,7 +73,8 @@ const EventCardDeletionModal = ({
     toast.success("Successfully deleted event group!");
     setOpen(false);
     setEventPreviewOpen(false);
-    getWeek();
+    if (getWeek) getWeek();
+    if (getMonthEvents) getMonthEvents();
   }
 
   return (

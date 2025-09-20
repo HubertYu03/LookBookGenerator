@@ -35,9 +35,9 @@ import {
   Trash,
   Pencil,
   PinOff,
-  type LucideIcon,
   ChevronDownIcon,
   MessageSquare,
+  type LucideIcon,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Calendar } from "../ui/calendar";
@@ -84,18 +84,18 @@ type EventCardProps = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   event: Event | undefined;
-  author: User | undefined;
   user: User | undefined;
-  getWeek: () => void;
+  getWeek?: () => void;
+  getMonthEvents?: () => void;
 };
 
 const EventCard = ({
   open,
   setOpen,
   event,
-  author,
   user,
   getWeek,
+  getMonthEvents,
 }: EventCardProps) => {
   // State for pin button
   const [pinned, setPinned] = useState<boolean>(false);
@@ -247,10 +247,10 @@ const EventCard = ({
 
     // Check if there actually were any changes made
     if (
-      newEventTitle == event?.event_title &&
+      newEventTitle == event?.event_title.trimEnd() &&
       newEventStart == event.event_start &&
       newEventEnd == event.event_end &&
-      newEventDesc == event.event_desc &&
+      newEventDesc == event.event_desc.trimEnd() &&
       newEventDate.toISOString().split("T")[0] == event.event_date &&
       newEventColor == event.event_color
     ) {
@@ -265,7 +265,9 @@ const EventCard = ({
       event_date: newEventDate.toISOString().split("T")[0],
       event_title: newEventTitle,
       event_desc: newEventDesc,
-      event_author: localStorage.getItem("PlayletUserID") as string,
+      author_id: localStorage.getItem("PlayletUserID") as string,
+      author_first_name: event?.author_first_name as string,
+      author_last_name: event?.author_last_name as string,
       event_color: newEventColor as string,
       event_start: newEventStart,
       event_end: newEventEnd,
@@ -286,7 +288,8 @@ const EventCard = ({
     toast.success("Event updated successfully!");
     setEditing(false);
     setOpen(false);
-    getWeek();
+    if (getWeek) getWeek();
+    if (getMonthEvents) getMonthEvents();
   }
 
   // When the page is mounted
@@ -465,7 +468,8 @@ const EventCard = ({
         <DialogFooter>
           <div className="flex flex-col gap-3">
             <div className="text-sm text-gray-500">
-              Event Created By: {author?.first_name} {author?.last_name}
+              Event Created By: {event?.author_first_name}{" "}
+              {event?.author_last_name}
             </div>
 
             {!editing ? (
@@ -480,8 +484,7 @@ const EventCard = ({
                   buttonFunction={() => setOpenComments(!openComments)}
                   tooltip="Open Comments"
                 />
-                {event?.event_author ==
-                  localStorage.getItem("PlayletUserID") && (
+                {event?.author_id == localStorage.getItem("PlayletUserID") && (
                   <>
                     <EventCardButton
                       ButtonIcon={Pencil}
@@ -530,7 +533,8 @@ const EventCard = ({
         open={openDelete}
         setOpen={setOpenDelete}
         setEventPreviewOpen={setOpen}
-        getWeek={getWeek}
+        getWeek={getWeek as () => void}
+        getMonthEvents={getMonthEvents as () => void}
       />
     </Dialog>
   );

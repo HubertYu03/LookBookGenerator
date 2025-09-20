@@ -35,7 +35,6 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
   // States for event card viewing
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewEvent, setPreviewEvent] = useState<Event>();
-  const [previewAuthor, setPreviewAuthor] = useState<User>();
 
   async function get_events() {
     // Fix: format the date as YYYY-MM-DD without timezone shifting
@@ -71,7 +70,6 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
           key={index}
           setPreviewOpen={setPreviewOpen}
           setPreviewEvent={setPreviewEvent}
-          setPreviewAuthor={setPreviewAuthor}
         />
       ))}
       <div
@@ -92,6 +90,7 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
         setOpen={setModalOpen}
         getWeek={getWeek}
         presetDate={date}
+        user={user as User}
       />
 
       {/* Event Card Preview */}
@@ -99,7 +98,6 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
         open={previewOpen}
         setOpen={setPreviewOpen}
         event={previewEvent}
-        author={previewAuthor}
         user={user}
         getWeek={getWeek}
       />

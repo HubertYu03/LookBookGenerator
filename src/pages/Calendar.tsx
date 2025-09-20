@@ -2,6 +2,7 @@
 import DayColumn from "@/components/Calendar/DayColumn";
 import EventBody from "@/components/Calendar/EventBody";
 import EventCreationModal from "@/components/Calendar/EventCreationModal";
+import MonthView from "@/components/CalendarMonth/MonthView";
 import CalendarDocSheet from "@/components/Documentation/CalendarDocSheet";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
@@ -10,9 +11,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/lib/supabaseClient";
 
 // Importing global types
-import type { User } from "@/types/global";
+import type { User, Event } from "@/types/global";
 
 // Importing Icons
 import {
@@ -38,11 +47,80 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentWeek, setCurrentWeek] = useState<Date[]>([]);
 
+  // States for the month
+  const [monthDates, setMonthDates] = useState<Date[]>([]);
+  const [monthEvents, setMonthEvents] = useState<Event[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<number>(
+    new Date().getMonth()
+  );
+
+  // States for the current view
+  const [view, setView] = useState<string>("Month");
+
   // States for creating an event
   const [openEventCreation, setOpenEventCreation] = useState<boolean>(false);
 
   // States for Documentation
   const [openDocs, setOpenDocs] = useState<boolean>(false);
+
+  // Helper function to get the current dates of the month
+  function get_current_month() {
+    const year: number = selectedDate.getFullYear();
+    const month: number = selectedDate.getMonth();
+
+    // First day of the month
+    const firstOfMonth = new Date(year, month, 1);
+    const lastOfMonth = new Date(year, month + 1, 0);
+
+    const firstDayIndex = (firstOfMonth.getDay() + 7) % 7;
+    const totalDaysInMonth = lastOfMonth.getDate();
+
+    // Total cells needed: at least 28 (4 weeks), possibly 35 or 42
+    const totalCells = Math.ceil((firstDayIndex + totalDaysInMonth) / 7) * 7;
+
+    const startDate = new Date(year, month, 1 - firstDayIndex);
+    const dates: Date[] = [];
+
+    for (let i = 0; i < totalCells; i++) {
+      const current = new Date(startDate);
+      current.setDate(startDate.getDate() + i);
+      dates.push(current);
+    }
+
+    setMonthDates(dates);
+  }
+
+  // Helper function to format date
+  function formatDateLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensure two digits
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Helper fcuntion to get all the events from the current month
+  async function fetch_month_events() {
+    const year = selectedDate.getFullYear();
+
+    const startDate = new Date(year, currentMonth, 1);
+    const endDate = new Date(year, currentMonth + 1, 0); // 0 = last day of previous month
+
+    const start = formatDateLocal(startDate);
+    const end = formatDateLocal(endDate);
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .gte("event_date", start)
+      .lte("event_date", end);
+
+    if (error) {
+      console.error("Error fetching month events:", error);
+      return;
+    }
+
+    setMonthEvents(data || []);
+  }
 
   // Helper function to get the current week dates
   function get_current_week() {
@@ -79,8 +157,26 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     setSelectedDate(nextWeek);
   }
 
+  // Helper function to get the next month
+  function get_next_month() {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() + 1);
+
+    setSelectedDate(newDate); // ✅ Update the selected date
+    setCurrentMonth(newDate.getMonth()); // ✅ Update the month
+  }
+
+  // Helper function to get the previous month
+  function get_previous_month() {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() - 1);
+
+    setSelectedDate(newDate);
+    setCurrentMonth(newDate.getMonth());
+  }
+
   useEffect(() => {
-    // Get the current week on page load up
+    // Get the current events and dates on page load up
     get_current_week();
 
     // Change the tab title
@@ -90,20 +186,26 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
   // Update the current week if the selected date is changed
   useEffect(() => {
     get_current_week();
+    get_current_month();
+    fetch_month_events();
   }, [selectedDate]);
+
+  // Get the month events if the view changes
+  useEffect(() => {
+    if (view == "Month") {
+      fetch_month_events();
+    }
+  }, [view]);
 
   // Swipe handlers
   const handlers = useSwipeable({
-    onSwiping: (event) => {
-      event.event.preventDefault();
+    onSwipedLeft: () => {
+      if (view == "Week") get_next_week();
+      if (view == "Month") get_next_month();
     },
-    onSwipedLeft: (event) => {
-      event.event.preventDefault(); // Prevent default horizontal scroll
-      get_next_week();
-    },
-    onSwipedRight: (event) => {
-      event.event.preventDefault();
-      get_previous_week();
+    onSwipedRight: () => {
+      if (view == "Week") get_previous_week();
+      if (view == "Month") get_previous_month();
     },
     trackTouch: true,
     trackMouse: false,
@@ -111,7 +213,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
 
   return (
     <div className="p-4" style={{ touchAction: "pan-y" }} {...handlers}>
-      <div className="fixed bottom-8 right-8">
+      <div className="fixed bottom-8 right-8 z-50">
         {/* Button to create an event */}
         <Button
           size="lg"
@@ -127,6 +229,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
       {/* Top row buttons */}
       <div className="flex justify-end mb-6">
         <div className="flex gap-2">
+          {/* Documentation Button */}
           <Button
             variant="outline"
             className="hover:cursor-pointer"
@@ -135,6 +238,19 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
             {!isMobile && "How to Use"}
             <CircleQuestionMark />
           </Button>
+
+          {/* Month Navigation Buttons */}
+          {!isMobile && (
+            <>
+              <Button variant="outline" onClick={get_previous_month}>
+                <ChevronLeftIcon />
+              </Button>
+
+              <Button variant="outline" onClick={get_next_month}>
+                <ChevronRightIcon />
+              </Button>
+            </>
+          )}
 
           {/* Select the current date */}
           <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
@@ -168,11 +284,25 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
             </PopoverContent>
           </Popover>
 
+          {/* Selector that allows user to change the view */}
+          <Select value={view} onValueChange={setView}>
+            <SelectTrigger>
+              <SelectValue placeholder={`${view} View`} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Day">Day</SelectItem>
+              <SelectItem value="Week">Week</SelectItem>
+              <SelectItem value="Month">Month</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Button that sets the day to today */}
           <Button
             className="hover:cursor-pointer"
             onClick={() => {
-              setSelectedDate(new Date());
+              const today = new Date();
+              setSelectedDate(today);
+              setCurrentMonth(today.getMonth());
             }}
           >
             Today
@@ -182,48 +312,68 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
 
       {/* All the days */}
 
-      {/* The header */}
-      <div className="flex relative">
-        {/* Week Navigation Button !DO NOT SHOW ON MOBILE! */}
+      {/* Week View */}
+      {view == "Week" && (
+        <>
+          {/* Week View Headers */}
+          <div className="flex relative">
+            {!isMobile && (
+              <>
+                {/* Previous week */}
+                <Button
+                  className="absolute top-3.5 -left-2 hover:cursor-pointer"
+                  variant="outline"
+                  onClick={get_previous_week}
+                >
+                  <ChevronLeftIcon />
+                </Button>
+                {/* Next Week */}
+                <Button
+                  className="absolute top-3.5 -right-2 hover:cursor-pointer"
+                  variant="outline"
+                  onClick={get_next_week}
+                >
+                  <ChevronRightIcon />
+                </Button>
+              </>
+            )}
 
-        {/* Previous week */}
-        {!isMobile && (
-          <>
-            <Button
-              className="absolute top-3.5 -left-2 hover:cursor-pointer"
-              variant="outline"
-              onClick={get_previous_week}
-            >
-              <ChevronLeftIcon />
-            </Button>
+            {/* Week Day Headers */}
+            {currentWeek.map((week_day, index) => (
+              <DayColumn date={week_day} key={index} />
+            ))}
+          </div>
 
-            {/* Next Week */}
-            <Button
-              className="absolute top-3.5 -right-2 hover:cursor-pointer"
-              variant="outline"
-              onClick={get_next_week}
-            >
-              <ChevronRightIcon />
-            </Button>
-          </>
-        )}
+          {/* Event Week body */}
+          <div>
+            <EventBody
+              dates={currentWeek}
+              getWeek={get_current_week}
+              user={user}
+            />
+          </div>
+        </>
+      )}
 
-        {/* Week Day Headers */}
-        {currentWeek.map((week_day, index) => (
-          <DayColumn date={week_day} key={index} />
-        ))}
-      </div>
-
-      {/* Event body */}
-      <div>
-        <EventBody dates={currentWeek} getWeek={get_current_week} user={user} />
-      </div>
+      {/* Month View */}
+      {view === "Month" && (
+        <MonthView
+          monthDates={monthDates}
+          currentMonth={currentMonth as number}
+          events={monthEvents}
+          formatDateLocal={formatDateLocal}
+          user={user as User}
+          getMonthEvents={fetch_month_events}
+        />
+      )}
 
       {/* Modal to create an event */}
       <EventCreationModal
         open={openEventCreation}
         setOpen={setOpenEventCreation}
         getWeek={get_current_week}
+        getMonthEvents={fetch_month_events}
+        user={user as User}
       />
 
       <CalendarDocSheet open={openDocs} setOpenChange={setOpenDocs} />

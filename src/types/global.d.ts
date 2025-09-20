@@ -78,7 +78,9 @@ export type Event = {
   event_date: string;
   event_desc: string;
   event_title: string;
-  event_author: string;
+  author_first_name: string;
+  author_last_name: string;
+  author_id: string;
   event_color: string;
   event_start: string;
   event_end: string;

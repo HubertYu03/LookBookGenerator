@@ -11,7 +11,10 @@ const DayColumn = ({ date }: DayColumnProps) => {
                 `}
     >
       {/* Date Title */}
-      <div className="text-2xl">{date.getDate()}</div>
+      <div>{date.toLocaleDateString("en-US", { month: "short" })}</div>
+      <div className="text-2xl">
+        <div>{date.getDate()}</div>
+      </div>
       <div className="text-gray-500">
         {date.toLocaleDateString("en-US", { weekday: "short" })}
       </div>
