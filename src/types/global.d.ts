@@ -95,4 +95,6 @@ export type EventComment = {
   created_at: Date;
   text: string;
   author_id: string;
+  edited: boolean;
+  group_id: string | null;
 };

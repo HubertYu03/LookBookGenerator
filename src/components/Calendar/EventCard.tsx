@@ -114,7 +114,7 @@ const EventCard = ({
   const [openDelete, setOpenDelete] = useState<boolean>(false);
 
   // State for opening comments
-  const [openComments, setOpenComments] = useState<boolean>(false);
+  const [openComments, setOpenComments] = useState<boolean>(true);
 
   // Helper functions for time formatting
   function am_pm(value: string | undefined): string {
@@ -288,6 +288,7 @@ const EventCard = ({
     toast.success("Event updated successfully!");
     setEditing(false);
     setOpen(false);
+    setOpenComments(true);
     if (getWeek) getWeek();
     if (getMonthEvents) getMonthEvents();
   }
@@ -320,7 +321,6 @@ const EventCard = ({
       onOpenChange={() => {
         setOpen(false);
         setEditing(false);
-        setOpenComments(false);
       }}
     >
       <DialogContent aria-describedby={undefined}>
@@ -480,11 +480,6 @@ const EventCard = ({
                   buttonFunction={pin_event}
                   tooltip={pinned ? "Unpin" : "Pin"}
                 />
-                <EventCardButton
-                  ButtonIcon={MessageSquare}
-                  buttonFunction={() => setOpenComments(!openComments)}
-                  tooltip="Open Comments"
-                />
                 {event?.author_id == localStorage.getItem("PlayletUserID") && (
                   <>
                     <EventCardButton
@@ -509,7 +504,10 @@ const EventCard = ({
                   variant="destructive"
                   size="sm"
                   className="hover:cursor-pointer"
-                  onClick={() => setEditing(false)}
+                  onClick={() => {
+                    setEditing(false);
+                    setOpenComments(true);
+                  }}
                 >
                   Cancel
                 </Button>

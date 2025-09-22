@@ -98,7 +98,7 @@ const MonthEventPreview = ({ event, setOpen, setEvent }: MonthEventPreview) => {
       <div className="text-sm mt-4">
         <i>Event Description:</i> {event.event_desc}
       </div>
-      <div className="flex justify-end text-sm font-light">
+      <div className="flex justify-end text-sm font-light mt-2">
         <i>Event Created By</i>: {event.author_first_name}{" "}
         {event.author_last_name}
       </div>

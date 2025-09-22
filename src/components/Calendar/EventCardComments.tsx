@@ -30,6 +30,8 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
         created_at: new Date(),
         text: text,
         author_id: localStorage.getItem("PlayletUserID") as string,
+        edited: false,
+        group_id: null,
       };
 
       const { error } = await supabase
@@ -80,10 +82,21 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
       }}
     >
       <div className="h-52 overflow-scroll flex flex-col gap-3 pb-3">
-        {comments.map((comment, index) => (
-          <EventCommentCard comment={comment} key={index} />
+        {comments.map((comment) => (
+          <EventCommentCard
+            comment={comment}
+            getComments={get_comments}
+            key={comment.comment_id}
+          />
         ))}
+        {comments.length == 0 && (
+          <div className="flex h-11/12 items-center justify-center text-sm italic text-gray-400">
+            Be the first to add a comment!
+          </div>
+        )}
       </div>
+
+      {/* Comment Input */}
       <div className="flex flex-row gap-2">
         <Input
           type="text"
