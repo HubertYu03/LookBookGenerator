@@ -90,7 +90,7 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
   // Scroll to the bottom of the comments when a new one is created
   useEffect(() => {
     if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+      bottomRef.current.scrollIntoView();
     }
   }, [comments]);
 

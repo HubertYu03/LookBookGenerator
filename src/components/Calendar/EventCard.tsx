@@ -36,7 +36,6 @@ import {
   Pencil,
   PinOff,
   ChevronDownIcon,
-  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 import { Input } from "../ui/input";
