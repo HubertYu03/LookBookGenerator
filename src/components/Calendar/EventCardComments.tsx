@@ -29,10 +29,6 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
   // Recent Comment Reference for scrolling to the most recent comment
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Ref to help with disabling autofocus on commenting
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isInputEditable, setIsInputEditable] = useState(false);
-
   // Helper function to scroll to the most recent comment (bottom of the page)
   function scroll_to_bottom() {
     if (bottomRef.current) {
@@ -87,22 +83,8 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
     }
   }
 
-  // Helper function for handling enabling on mobile devices
-  function handleEnableEditing() {
-    if (!isInputEditable) {
-      setIsInputEditable(true);
-      // After setting editable, focus input manually
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
-    }
-  }
-
   useEffect(() => {
     get_comments();
-
-    // Remove focus on the comment input
-    inputRef.current?.blur();
   }, []);
 
   // Scroll to the bottom of the comments when a new one is created
@@ -143,17 +125,13 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
       </div>
 
       {/* Comment Input */}
-      <div className="flex flex-row gap-2" onClick={handleEnableEditing}>
+      <div className="flex flex-row gap-2">
         <Input
           type="text"
           className="bg-white"
           placeholder="Add Comment..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          ref={inputRef}
-          readOnly={!isInputEditable}
-          autoComplete="off"
-          autoCorrect="off"
         />
         <Button onClick={send_comment}>
           <Send />
