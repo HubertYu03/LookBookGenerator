@@ -87,6 +87,17 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
     }
   }
 
+  // Helper function for handling enabling on mobile devices
+  function handleEnableEditing() {
+    if (!isInputEditable) {
+      setIsInputEditable(true);
+      // After setting editable, focus input manually
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  }
+
   useEffect(() => {
     get_comments();
 
@@ -132,7 +143,7 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
       </div>
 
       {/* Comment Input */}
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-2" onClick={handleEnableEditing}>
         <Input
           type="text"
           className="bg-white"
@@ -141,7 +152,8 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
           onChange={(e) => setText(e.target.value)}
           ref={inputRef}
           readOnly={!isInputEditable}
-          onFocus={() => setIsInputEditable(true)}
+          autoComplete="off"
+          autoCorrect="off"
         />
         <Button onClick={send_comment}>
           <Send />
