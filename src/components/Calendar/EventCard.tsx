@@ -524,7 +524,10 @@ const EventCard = ({
 
         {/* Event Comment Section */}
         {openComments && (
-          <EventCardComments event_id={event?.event_id as string} />
+          <EventCardComments
+            event_id={event?.event_id as string}
+            event_group_id={event?.group_id}
+          />
         )}
       </DialogContent>
 

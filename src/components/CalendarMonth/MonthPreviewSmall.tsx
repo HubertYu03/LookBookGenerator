@@ -25,8 +25,8 @@ const MonthPreviewSmall = ({
           setEvent(event);
         }}
       >
-        {event.event_title.length > 15
-          ? event.event_title.slice(0, 15) + "..."
+        {event.event_title.length > 10
+          ? event.event_title.slice(0, 10) + "..."
           : event.event_title}
       </div>
     );

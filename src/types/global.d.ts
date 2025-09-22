@@ -96,5 +96,5 @@ export type EventComment = {
   text: string;
   author_id: string;
   edited: boolean;
-  group_id: string | null;
+  comment_group_id: string | null;
 };

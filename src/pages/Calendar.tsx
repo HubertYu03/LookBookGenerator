@@ -242,11 +242,19 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
           {/* Month Navigation Buttons */}
           {!isMobile && view == "Month" && (
             <>
-              <Button variant="outline" onClick={get_previous_month}>
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={get_previous_month}
+              >
                 <ChevronLeftIcon />
               </Button>
 
-              <Button variant="outline" onClick={get_next_month}>
+              <Button
+                variant="outline"
+                className="hover:cursor-pointer"
+                onClick={get_next_month}
+              >
                 <ChevronRightIcon />
               </Button>
             </>
@@ -290,7 +298,6 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
               <SelectValue placeholder={`${view} View`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Day">Day</SelectItem>
               <SelectItem value="Week">Week</SelectItem>
               <SelectItem value="Month">Month</SelectItem>
             </SelectContent>

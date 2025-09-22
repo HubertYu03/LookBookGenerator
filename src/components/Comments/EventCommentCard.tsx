@@ -15,7 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Textarea } from "../ui/textarea";
+import { Link } from "lucide-react";
+import { Switch } from "../ui/switch";
 
 type EventCommentCardProps = {
   comment: EventComment;
@@ -29,6 +36,8 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
   // States for editing comments
   const [editing, setEditing] = useState<boolean>(false);
   const [newComment, setNewComment] = useState<string>();
+  const [link, setLink] = useState<boolean>(false);
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // State for deleting the modal
@@ -56,28 +65,43 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
 
     if (newComment) {
       // First check if the comment actually changed
-      if (newComment.trim() == comment.text) {
+      if (newComment.trim() == comment.text && !link) {
         toast.warning("No changes made to comment!");
         return;
       } else {
-        const { error } = await supabase
-          .from("event_comments")
-          .update({ text: newComment.trim(), edited: true })
-          .eq("comment_id", comment.comment_id)
-          .select();
+        // First check to see if the comment you want to change is linked
+        if (link) {
+          const { error } = await supabase
+            .from("event_comments")
+            .update({ text: newComment.trim(), edited: true })
+            .eq("comment_group_id", comment.comment_group_id)
+            .select();
 
-        if (error) {
-          console.log(error);
-          return;
+          if (error) {
+            console.log(error);
+            return;
+          }
+        } else {
+          const { error } = await supabase
+            .from("event_comments")
+            .update({ text: newComment.trim(), edited: true })
+            .eq("comment_id", comment.comment_id)
+            .select();
+
+          if (error) {
+            console.log(error);
+            return;
+          }
         }
 
         // If comment successfully updates, refetch the comments and close editing
         getComments();
         setEditing(false);
+        setLink(false);
       }
+    } else {
+      toast.warning("Comment field is empty!");
     }
-
-    toast.warning("Comment field is empty!");
   }
 
   // Function to delete the current comment
@@ -86,6 +110,22 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
       .from("event_comments")
       .delete()
       .eq("comment_id", comment.comment_id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    // Once the comment is deleted refetch the comments
+    getComments();
+  }
+
+  // Function to delete all the linked comments
+  async function delete_linked_comments() {
+    const { error } = await supabase
+      .from("event_comments")
+      .delete()
+      .eq("comment_group_id", comment.comment_group_id);
 
     if (error) {
       console.log(error);
@@ -113,23 +153,36 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
     <Card>
       <CardContent>
         {editing ? (
-          <Textarea
-            className="text-sm w-64 sm:w-96"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            onKeyDownCapture={(e) => {
-              if (e.key == "Enter" && editing) {
-                e.preventDefault();
-                save_comment();
-              }
-            }}
-            ref={inputRef}
-          />
+          <div className="flex flex-col gap-2">
+            {/* Editing comment body */}
+            <Textarea
+              className="text-sm w-64 sm:w-96"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDownCapture={(e) => {
+                if (e.key == "Enter" && editing) {
+                  e.preventDefault();
+                  save_comment();
+                }
+              }}
+              ref={inputRef}
+            />
+
+            {/* Switch to edit linked comments */}
+            {comment.comment_group_id && (
+              <div className="flex flex-row items-center gap-2">
+                <Switch checked={link} onCheckedChange={() => setLink(!link)} />
+                <div className="text-xs text-gray-500">
+                  Save edit to all linked comments
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="text-sm">{comment.text}</div>
         )}
 
-        <div className="flex flex-row justify-between items-center mt-5">
+        <div className="flex flex-row justify-between items-center mt-3">
           {/* Author avatar and name */}
           <div className="flex flex-row items-center gap-2">
             <img
@@ -153,7 +206,7 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
 
         {/* Comment Card Footer Buttons */}
         {comment.author_id == localStorage.getItem("PlayletUserID") && (
-          <div className="flex flex-row justify-end -mb-4 gap-2">
+          <div className="flex flex-row justify-end -mb-4 gap-2 items-center">
             {editing ? (
               <>
                 {/* If editing, you can choose to cancel the edit or save it */}
@@ -177,6 +230,16 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
               </>
             ) : (
               <>
+                {comment.comment_group_id && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link size={12} className="hover:cursor-pointer" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>This comment is linked</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {/* Editing Button */}
                 <div
                   className="text-xs underline text-gray-500 
@@ -209,12 +272,31 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
               be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          {comment.comment_group_id && (
+            <div className="text-sm text-justify text-red-400">
+              This comment is linked with other comments. You can choose to just
+              delete this comment or all linked comments.
+            </div>
+          )}
+
           <AlertDialogFooter>
             <AlertDialogCancel className="hover:cursor-pointer">
               Cancel
             </AlertDialogCancel>
+
+            {/* If comment is linked be able to delete all the linked comments */}
+            {comment.comment_group_id && (
+              <AlertDialogAction
+                className="hover:cursor-pointer"
+                onClick={delete_linked_comments}
+              >
+                Delete Linked Comments
+              </AlertDialogAction>
+            )}
             <AlertDialogAction
-              className="hover:cursor-pointer"
+              className="hover:cursor-pointer bg-red-600 hover:bg-red-500
+              "
               onClick={delete_comment}
             >
               Delete Comment
