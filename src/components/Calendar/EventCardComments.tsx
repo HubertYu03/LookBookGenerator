@@ -1,17 +1,21 @@
 // Importing Icons
-import { Send } from "lucide-react";
+import { ChevronDownIcon, Send } from "lucide-react";
 
 // Importing UI Components
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
 // Importing dependencies
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { v4 } from "uuid";
 
 // Importing database
 import { supabase } from "@/lib/supabaseClient";
+
+// Importing Global Types
 import type { EventComment } from "@/types/global";
+
+// Importing custom components
 import EventCommentCard from "../Comments/EventCommentCard";
 
 type EventCardCommentsProps = {
@@ -22,6 +26,17 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
   const [comments, setComments] = useState<EventComment[]>([]);
   const [text, setText] = useState<string>("");
 
+  // Recent Comment Reference for scrolling to the most recent comment
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to scroll to the most recent comment (bottom of the page)
+  function scroll_to_bottom() {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  // Function to send the comment to the database
   async function send_comment() {
     if (text) {
       const new_comment: EventComment = {
@@ -49,6 +64,7 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
     }
   }
 
+  // Function to get all the comments for this event
   async function get_comments() {
     let { data: event_comments, error } = await supabase
       .from("event_comments")
@@ -71,9 +87,16 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
     get_comments();
   }, []);
 
+  // Scroll to the bottom of the comments when a new one is created
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [comments]);
+
   return (
     <div
-      className="bg-gray-100 p-2 rounded-sm"
+      className="bg-gray-100 p-2 rounded-sm relative"
       onKeyDownCapture={(e) => {
         if (e.key == "Enter") {
           e.preventDefault();
@@ -94,6 +117,9 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
             Be the first to add a comment!
           </div>
         )}
+
+        {/* Reference for scrolling to the bottom for new comments */}
+        <div ref={bottomRef} />
       </div>
 
       {/* Comment Input */}
@@ -109,6 +135,16 @@ const EventCardComments = ({ event_id }: EventCardCommentsProps) => {
           <Send />
         </Button>
       </div>
+
+      {comments.length > 1 && (
+        <Button
+          className="absolute bottom-14 left-1/2 transform -translate-x-1/2 hover:cursor-pointer"
+          size="sm"
+          onClick={scroll_to_bottom}
+        >
+          <ChevronDownIcon />
+        </Button>
+      )}
     </div>
   );
 };

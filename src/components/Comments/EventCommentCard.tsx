@@ -4,9 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "../ui/card";
 import { get_avatar } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { Pencil, Trash } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Input } from "../ui/input";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -18,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "../ui/textarea";
 
 type EventCommentCardProps = {
   comment: EventComment;
@@ -31,7 +29,7 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
   // States for editing comments
   const [editing, setEditing] = useState<boolean>(false);
   const [newComment, setNewComment] = useState<string>();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // State for deleting the modal
   const [openDelete, setOpenDelete] = useState<boolean>(false);
@@ -115,7 +113,8 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
     <Card>
       <CardContent>
         {editing ? (
-          <Input
+          <Textarea
+            className="text-sm w-64 sm:w-96"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDownCapture={(e) => {
@@ -139,14 +138,16 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
               alt="avatar"
             />
             <div className="text-xs">
-              {author?.first_name} {author?.last_name}
+              {author?.first_name} {author?.last_name}{" "}
+              {comment.edited && (
+                <span className="text-gray-500">(Edited)</span>
+              )}
             </div>
           </div>
 
           {/* Comment Date */}
-          <div className="flex flex-row gap-2 text-xs text-gray-500">
+          <div className="flex flex-row gap-2 text-right text-xs text-gray-500">
             {new Date(comment.created_at).toLocaleString()}
-            {comment.edited && <u>Edited</u>}
           </div>
         </div>
 
@@ -177,46 +178,28 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
             ) : (
               <>
                 {/* Editing Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="hover:cursor-pointer"
-                      onClick={() => setEditing(!editing)}
-                      tabIndex={-1}
-                    >
-                      <Pencil />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Edit</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div
+                  className="text-xs underline text-gray-500 
+                  hover:text-gray-600 hover:cursor-pointer select-none"
+                  onClick={() => setEditing(!editing)}
+                >
+                  Edit
+                </div>
 
-                {/* Deleting Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="hover:cursor-pointer"
-                      onClick={() => setOpenDelete(true)}
-                      tabIndex={-1}
-                    >
-                      <Trash />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Delete</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div
+                  className="text-xs underline text-gray-500 
+                  hover:text-gray-600 hover:cursor-pointer select-none"
+                  onClick={() => setOpenDelete(true)}
+                >
+                  Delete
+                </div>
               </>
             )}
           </div>
         )}
       </CardContent>
 
+      {/* Modal for deleting a comment */}
       <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -234,7 +217,7 @@ const EventCommentCard = ({ comment, getComments }: EventCommentCardProps) => {
               className="hover:cursor-pointer"
               onClick={delete_comment}
             >
-              Continue
+              Delete Comment
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
