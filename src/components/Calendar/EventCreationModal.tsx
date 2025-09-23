@@ -351,7 +351,6 @@ const EventCreationModal = ({
                   captionLayout="dropdown"
                   selected={dateRange}
                   onSelect={(range) => {
-                    console.log(range);
                     setDateRange(range ?? { from: undefined, to: undefined });
                   }}
                 />
@@ -439,7 +438,7 @@ const EventCreationModal = ({
         )}
 
         {/* Color Picker */}
-        <div className="grid w-full items-center gap-3">
+        <div className="overflow-x-auto w-full flex flex-col gap-2">
           <Label>
             Event Color
             <span className="text-red-500">{eventColor ? "" : "*"}</span>
@@ -448,7 +447,10 @@ const EventCreationModal = ({
 
           <div className="flex flex-row gap-2">
             <Label>Selected Color:</Label>
-            <div className="w-5 h-5" style={{ backgroundColor: eventColor }} />
+            <div
+              className="w-5 h-5 rounded"
+              style={{ backgroundColor: eventColor }}
+            />
           </div>
         </div>
 

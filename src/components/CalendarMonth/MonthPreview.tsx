@@ -27,6 +27,7 @@ type MonthPreviewProps = {
   currentMonth: number;
   user: User;
   getMonthEvents: () => void;
+  openPreview: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
 };
@@ -35,6 +36,7 @@ const MonthPreview = ({
   date,
   events,
   currentMonth,
+  openPreview,
   setOpen,
   setEvent,
 }: MonthPreviewProps) => {
@@ -95,7 +97,6 @@ const MonthPreview = ({
           )}
         </div>
       )}
-
       <Dialog open={dayOpen} onOpenChange={setDayOpen}>
         <DialogContent showCloseButton={!isMobile}>
           {/* Header section */}
@@ -109,8 +110,8 @@ const MonthPreview = ({
               })}
             </DialogTitle>
             <DialogDescription className="text-justify">
-              A more in depth view of the events for this day. Click or tap on
-              an event to view it in more detail.
+              A preview of events for this day. Click or tap on an event to view
+              it in more detail.
             </DialogDescription>
           </DialogHeader>
 
@@ -122,6 +123,7 @@ const MonthPreview = ({
                 key={event.event_id}
                 setOpen={setOpen}
                 setEvent={setEvent}
+                open={openPreview}
               />
             ))}
           </div>

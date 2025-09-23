@@ -37,6 +37,7 @@ import {
   PinOff,
   ChevronDownIcon,
   type LucideIcon,
+  CircleAlert,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Calendar } from "../ui/calendar";
@@ -45,6 +46,7 @@ import EventCardDeletionModal from "./EventCardDeletionModal";
 import EventColorPicker from "./EventColorPicker";
 import { Label } from "../ui/label";
 import EventCardComments from "./EventCardComments";
+import { Switch } from "../ui/switch";
 
 // Custom components for button
 type EventCardButtonProps = {
@@ -108,6 +110,9 @@ const EventCard = ({
   const [openDate, setOpenDate] = useState<boolean>(false);
   const [newEventDate, setNewEventDate] = useState<Date>();
   const [newEventColor, setNewEventColor] = useState<string>();
+
+  // State for linked editing
+  const [applyLinked, setApplyLinked] = useState<boolean>(false);
 
   // State for deletion modal
   const [openDelete, setOpenDelete] = useState<boolean>(false);
@@ -251,7 +256,8 @@ const EventCard = ({
       newEventEnd == event.event_end &&
       newEventDesc == event.event_desc.trimEnd() &&
       newEventDate.toISOString().split("T")[0] == event.event_date &&
-      newEventColor == event.event_color
+      newEventColor == event.event_color &&
+      !applyLinked
     ) {
       toast.warning("No changes have been made!");
       return;
@@ -274,20 +280,45 @@ const EventCard = ({
       group_id: event?.group_id as string | null,
     };
 
-    const { error } = await supabase
-      .from("events")
-      .update(updated_event)
-      .eq("event_id", event?.event_id as string)
-      .select();
+    if (applyLinked) {
+      // Multiple Event Update
+      const { error } = await supabase
+        .from("events")
+        .update({
+          event_title: newEventTitle,
+          event_desc: newEventDesc,
+          event_color: newEventColor as string,
+          event_start: newEventStart,
+          event_end: newEventEnd,
+        })
+        .eq("group_id", event?.group_id as string)
+        .select();
 
-    if (error) {
-      console.log(error);
+      if (error) {
+        console.log(error);
+        return;
+      }
+    } else {
+      // Single Event Update
+      const { error } = await supabase
+        .from("events")
+        .update(updated_event)
+        .eq("event_id", event?.event_id as string)
+        .select();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
     }
 
     toast.success("Event updated successfully!");
     setEditing(false);
     setOpen(false);
     setOpenComments(true);
+    setApplyLinked(false);
+
+    // Get week or month based on view
     if (getWeek) getWeek();
     if (getMonthEvents) getMonthEvents();
   }
@@ -410,6 +441,7 @@ const EventCard = ({
                       variant="outline"
                       id="date"
                       className="w-48 justify-between font-normal"
+                      disabled={applyLinked}
                     >
                       {newEventDate
                         ? newEventDate.toLocaleDateString()
@@ -436,6 +468,16 @@ const EventCard = ({
                 <div>{format_date(event?.event_date)}</div>
               )}
             </div>
+
+            {/* Show notice where you cannot change the date on a linked edit */}
+            {applyLinked && (
+              <div className="flex flex-row items-center gap-2">
+                <CircleAlert />
+                <div className="text-sm">
+                  Date cannot be changed for linked edits
+                </div>
+              </div>
+            )}
           </div>
         </DialogHeader>
 
@@ -458,19 +500,48 @@ const EventCard = ({
             <div className="flex flex-row gap-2">
               <Label>Selected Color:</Label>
               <div
-                className="w-5 h-5"
+                className="w-5 h-5 rounded"
                 style={{ backgroundColor: newEventColor }}
               />
             </div>
+
+            {event?.group_id && (
+              <div className="flex flex-row items-center gap-2 text-sm text-gray-500">
+                <Switch
+                  checked={applyLinked}
+                  onCheckedChange={() => {
+                    // Apply the linked editing
+                    setApplyLinked(!applyLinked);
+
+                    // Set the date to be unchangeable
+                    const [year, month, day] = event.event_date
+                      .split("-")
+                      .map(Number);
+                    setNewEventDate(new Date(year, month - 1, day));
+                  }}
+                />
+                <div>Apply changes to all linked events</div>
+              </div>
+            )}
           </>
         )}
 
         <DialogFooter>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col items-end gap-3">
             <div className="text-sm text-gray-500">
               Event Created By: {event?.author_first_name}{" "}
               {event?.author_last_name}
             </div>
+
+            {/* Warning that linked events will be updated */}
+            {applyLinked && (
+              <div className="flex flex-row items-center gap-2">
+                <CircleAlert color="red" />
+                <div className="text-sm text-red-500">
+                  Linked events will be updated!
+                </div>
+              </div>
+            )}
 
             {!editing ? (
               <div className="flex flex-row justify-end">
@@ -486,6 +557,7 @@ const EventCard = ({
                       buttonFunction={() => {
                         setOpenComments(false);
                         setEditing(!editing);
+                        setApplyLinked(false);
                       }}
                       tooltip="Edit"
                     />

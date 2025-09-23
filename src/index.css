@@ -140,3 +140,12 @@
   }
 }
 
+/* styles/globals.css or app/globals.css */
+.scrollbar-hidden {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE 10+ */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;                  /* Chrome, Safari, Opera */
+}

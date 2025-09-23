@@ -28,37 +28,48 @@ const MonthView = ({
   const [eventPreview, setEventPreview] = useState<Event>();
 
   return (
-    <div className="grid grid-cols-7 gap-2 min-h-[80vh]">
-      {monthDates.map((date) => {
-        const dayEvents = events
-          .filter((event) => event.event_date === formatDateLocal(date))
-          .sort((a, b) => {
-            // Compare event_start times
-            return a.event_start.localeCompare(b.event_start);
-          });
+    <div>
+      {/* Month Title */}
+      <div className="text-4xl sm:text-5xl ml-1 mb-2 font-bold">
+        {new Date(2000, currentMonth).toLocaleString("default", {
+          month: "long",
+        })}
+      </div>
 
-        return (
-          <MonthPreview
-            date={date}
-            events={dayEvents}
-            key={formatDateLocal(date)}
-            currentMonth={currentMonth}
-            user={user}
-            getMonthEvents={getMonthEvents}
-            setOpen={setOpenPreview}
-            setEvent={setEventPreview}
-          />
-        );
-      })}
+      {/* Days Grid */}
+      <div className="grid grid-cols-7 gap-2 min-h-[80vh]">
+        {monthDates.map((date) => {
+          const dayEvents: Event[] = events
+            .filter((event) => event.event_date === formatDateLocal(date))
+            .sort((a, b) => {
+              // Compare event_start times
+              return a.event_start.localeCompare(b.event_start);
+            });
 
-      {/* Event Card */}
-      <EventCard
-        event={eventPreview}
-        open={openPreview}
-        setOpen={setOpenPreview}
-        user={user}
-        getMonthEvents={getMonthEvents}
-      />
+          return (
+            <MonthPreview
+              date={date}
+              events={dayEvents}
+              key={formatDateLocal(date)}
+              currentMonth={currentMonth}
+              user={user}
+              getMonthEvents={getMonthEvents}
+              openPreview={openPreview}
+              setOpen={setOpenPreview}
+              setEvent={setEventPreview}
+            />
+          );
+        })}
+
+        {/* Event Card */}
+        <EventCard
+          event={eventPreview}
+          open={openPreview}
+          setOpen={setOpenPreview}
+          user={user}
+          getMonthEvents={getMonthEvents}
+        />
+      </div>
     </div>
   );
 };

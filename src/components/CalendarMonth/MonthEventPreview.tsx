@@ -2,13 +2,21 @@
 import type { Event } from "@/types/global";
 import { Calendar, Clock } from "lucide-react";
 
-type MonthEventPreview = {
+import MonthPreviewComments from "./MonthPreviewComments";
+
+type MonthEventPreviewProps = {
   event: Event;
+  open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
 };
 
-const MonthEventPreview = ({ event, setOpen, setEvent }: MonthEventPreview) => {
+const MonthEventPreview = ({
+  event,
+  open,
+  setOpen,
+  setEvent,
+}: MonthEventPreviewProps) => {
   // Variables for time format
   const [year, month, day] = event.event_date.split("-").map(Number);
 
@@ -57,7 +65,6 @@ const MonthEventPreview = ({ event, setOpen, setEvent }: MonthEventPreview) => {
     >
       {/* Event Title */}
       <div className="text-xl font-semibold mb-2">{event.event_title}</div>
-
       {/* Event Date and Time */}
       <div className="text-sm flex flex-col gap-1">
         <div className="flex flex-row gap-1 items-center">
@@ -102,6 +109,9 @@ const MonthEventPreview = ({ event, setOpen, setEvent }: MonthEventPreview) => {
         <i>Event Created By</i>: {event.author_first_name}{" "}
         {event.author_last_name}
       </div>
+
+      {/* Show a preview of the comments */}
+      <MonthPreviewComments eventId={event.event_id} open={open} />
     </div>
   );
 };
