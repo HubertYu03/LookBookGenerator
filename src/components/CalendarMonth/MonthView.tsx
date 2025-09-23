@@ -13,6 +13,7 @@ type MonthViewProps = {
   formatDateLocal: (value: Date) => string;
   user: User;
   getMonthEvents: () => void;
+  twoMonth: boolean;
 };
 
 const MonthView = ({
@@ -22,6 +23,7 @@ const MonthView = ({
   formatDateLocal,
   user,
   getMonthEvents,
+  twoMonth,
 }: MonthViewProps) => {
   // States for event card modal from month view
   const [openPreview, setOpenPreview] = useState<boolean>(false);
@@ -57,6 +59,7 @@ const MonthView = ({
               openPreview={openPreview}
               setOpen={setOpenPreview}
               setEvent={setEventPreview}
+              twoMonth={twoMonth}
             />
           );
         })}

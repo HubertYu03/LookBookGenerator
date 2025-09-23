@@ -39,6 +39,7 @@ type EventCreationModalProps = {
   setOpen: Dispatch<SetStateAction<boolean>>;
   getWeek: () => void;
   getMonthEvents?: () => void;
+  getSecondMonthEvents?: () => void;
   presetDate?: Date;
   user: User;
 };
@@ -48,6 +49,7 @@ const EventCreationModal = ({
   setOpen,
   getWeek,
   getMonthEvents,
+  getSecondMonthEvents,
   presetDate,
   user,
 }: EventCreationModalProps) => {
@@ -190,6 +192,7 @@ const EventCreationModal = ({
           resetForm();
           getWeek();
           if (getMonthEvents) getMonthEvents();
+          if (getSecondMonthEvents) getSecondMonthEvents();
         }
       }
     } else {
@@ -229,6 +232,7 @@ const EventCreationModal = ({
         resetForm();
         getWeek();
         if (getMonthEvents) getMonthEvents();
+        if (getSecondMonthEvents) getSecondMonthEvents();
       }
     }
   }

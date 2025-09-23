@@ -47,15 +47,21 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentWeek, setCurrentWeek] = useState<Date[]>([]);
 
-  // States for the month
+  // States for the month views
   const [monthDates, setMonthDates] = useState<Date[]>([]);
+  const [secondMonthDates, setSecondMonthDates] = useState<Date[]>([]);
+
   const [monthEvents, setMonthEvents] = useState<Event[]>([]);
-  const [currentMonth, setCurrentMonth] = useState<number>(
-    new Date().getMonth()
+  const [secondMonthEvents, setSecondMonthEvents] = useState<Event[]>([]);
+
+  const [currentMonthDate, setCurrentMonthDate] = useState<Date>(new Date());
+  const [secondMonthDate, setSecondMonthDate] = useState<Date>(
+    new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
   );
 
   // States for the current view
   const [view, setView] = useState<string>("Week");
+  const isTwoMonthView = view === "TwoMonth";
 
   // States for creating an event
   const [openEventCreation, setOpenEventCreation] = useState<boolean>(false);
@@ -90,6 +96,31 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     setMonthDates(dates);
   }
 
+  // Helper function to get the second month for two month view
+  function get_current_second_month() {
+    const year = secondMonthDate.getFullYear();
+    const month = secondMonthDate.getMonth();
+
+    const firstOfMonth = new Date(year, month, 1);
+    const lastOfMonth = new Date(year, month + 1, 0);
+
+    const firstDayIndex = (firstOfMonth.getDay() + 7) % 7;
+    const totalDaysInMonth = lastOfMonth.getDate();
+
+    const totalCells = Math.ceil((firstDayIndex + totalDaysInMonth) / 7) * 7;
+
+    const startDate = new Date(year, month, 1 - firstDayIndex);
+    const dates: Date[] = [];
+
+    for (let i = 0; i < totalCells; i++) {
+      const current = new Date(startDate);
+      current.setDate(startDate.getDate() + i);
+      dates.push(current);
+    }
+
+    setSecondMonthDates(dates);
+  }
+
   // Helper function to format date
   function formatDateLocal(date: Date): string {
     const year = date.getFullYear();
@@ -100,10 +131,11 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
 
   // Helper fcuntion to get all the events from the current month
   async function fetch_month_events() {
-    const year = selectedDate.getFullYear();
+    const month = currentMonthDate.getMonth();
+    const year = currentMonthDate.getFullYear();
 
-    const startDate = new Date(year, currentMonth, 1);
-    const endDate = new Date(year, currentMonth + 1, 0); // 0 = last day of previous month
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, year + 1, 0); // 0 = last day of previous month
 
     const start = formatDateLocal(startDate);
     const end = formatDateLocal(endDate);
@@ -120,6 +152,31 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     }
 
     setMonthEvents(data || []);
+  }
+
+  // Helper function to get the event from the second month
+  async function fetch_second_month_events() {
+    const year = secondMonthDate.getFullYear();
+    const month = secondMonthDate.getMonth();
+
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
+
+    const start = formatDateLocal(startDate);
+    const end = formatDateLocal(endDate);
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .gte("event_date", start)
+      .lte("event_date", end);
+
+    if (error) {
+      console.error("Error fetching second month events:", error);
+      return;
+    }
+
+    setSecondMonthEvents(data || []);
   }
 
   // Helper function to get the current week dates
@@ -160,19 +217,55 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
   // Helper function to get the next month
   function get_next_month() {
     const newDate = new Date(selectedDate);
-    newDate.setMonth(selectedDate.getMonth() + 1);
-
-    setSelectedDate(newDate); // ✅ Update the selected date
-    setCurrentMonth(newDate.getMonth()); // ✅ Update the month
-  }
-
-  // Helper function to get the previous month
-  function get_previous_month() {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(selectedDate.getMonth() - 1);
+    newDate.setMonth(newDate.getMonth() + 1);
 
     setSelectedDate(newDate);
-    setCurrentMonth(newDate.getMonth());
+    setCurrentMonthDate(newDate);
+  }
+
+  function get_previous_month() {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+
+    setSelectedDate(newDate);
+    setCurrentMonthDate(newDate);
+  }
+
+  // Helper function to get the next two month view
+  function get_next_two_months() {
+    const newPrimaryDate = new Date(selectedDate);
+    newPrimaryDate.setMonth(newPrimaryDate.getMonth() + 1);
+
+    const newSecondDate = new Date(newPrimaryDate);
+    newSecondDate.setMonth(newPrimaryDate.getMonth() + 1);
+
+    setSelectedDate(newPrimaryDate);
+    setCurrentMonthDate(newPrimaryDate);
+    setSecondMonthDate(newSecondDate);
+  }
+
+  // Helper function to get the previous two month view
+  function get_previous_two_months() {
+    const newPrimaryDate = new Date(selectedDate);
+    newPrimaryDate.setMonth(newPrimaryDate.getMonth() - 1);
+
+    const newSecondDate = new Date(newPrimaryDate);
+    newSecondDate.setMonth(newPrimaryDate.getMonth() + 1);
+
+    setSelectedDate(newPrimaryDate);
+    setCurrentMonthDate(newPrimaryDate);
+    setSecondMonthDate(newSecondDate);
+  }
+
+  // Wrapper functions for getting next and previous time periods (months)
+  function get_next() {
+    if (view == "Month") get_next_month();
+    if (view == "TwoMonth") get_next_two_months();
+  }
+
+  function get_previous() {
+    if (view == "Month") get_previous_month();
+    if (view == "TwoMonth") get_previous_two_months();
   }
 
   useEffect(() => {
@@ -185,15 +278,32 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
 
   // Update the current week if the selected date is changed
   useEffect(() => {
-    get_current_week();
-    get_current_month();
-    fetch_month_events();
-  }, [selectedDate]);
+    if (view == "Week") get_current_week();
+
+    if (view == "Month") {
+      get_current_month();
+    }
+
+    if (view == "TwoMonth") {
+      get_current_month();
+      get_current_second_month();
+      fetch_month_events();
+      fetch_second_month_events();
+    }
+  }, [selectedDate, currentMonthDate, secondMonthDate]);
 
   // Get the month events if the view changes
   useEffect(() => {
-    if (view == "Month") {
+    if (view === "Month") {
+      get_current_month();
       fetch_month_events();
+    }
+
+    if (view === "TwoMonth") {
+      get_current_month();
+      get_current_second_month();
+      fetch_month_events();
+      fetch_second_month_events();
     }
   }, [view]);
 
@@ -240,12 +350,12 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
           </Button>
 
           {/* Month Navigation Buttons */}
-          {!isMobile && view == "Month" && (
+          {!isMobile && view != "Week" && (
             <>
               <Button
                 variant="outline"
                 className="hover:cursor-pointer"
-                onClick={get_previous_month}
+                onClick={get_previous}
               >
                 <ChevronLeftIcon />
               </Button>
@@ -253,7 +363,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
               <Button
                 variant="outline"
                 className="hover:cursor-pointer"
-                onClick={get_next_month}
+                onClick={get_next}
               >
                 <ChevronRightIcon />
               </Button>
@@ -285,6 +395,10 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
                 onSelect={(date) => {
                   if (date) {
                     setSelectedDate(date);
+                    setCurrentMonthDate(date);
+                    setSecondMonthDate(
+                      new Date(date.getFullYear(), date.getMonth() + 1, 1)
+                    );
                     setDatePickerOpen(false);
                   }
                 }}
@@ -300,6 +414,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
             <SelectContent>
               <SelectItem value="Week">Week</SelectItem>
               <SelectItem value="Month">Month</SelectItem>
+              {!isMobile && <SelectItem value="TwoMonth">2 Month</SelectItem>}
             </SelectContent>
           </Select>
 
@@ -309,7 +424,10 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
             onClick={() => {
               const today = new Date();
               setSelectedDate(today);
-              setCurrentMonth(today.getMonth());
+              setCurrentMonthDate(today);
+              setSecondMonthDate(
+                new Date(today.getFullYear(), today.getMonth() + 1, 1)
+              );
             }}
           >
             Today
@@ -366,12 +484,36 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
       {view === "Month" && (
         <MonthView
           monthDates={monthDates}
-          currentMonth={currentMonth as number}
+          currentMonth={currentMonthDate.getMonth()}
           events={monthEvents}
           formatDateLocal={formatDateLocal}
           user={user as User}
           getMonthEvents={fetch_month_events}
+          twoMonth={isTwoMonthView}
         />
+      )}
+
+      {view == "TwoMonth" && (
+        <div className="flex flex-row justify-between">
+          <MonthView
+            monthDates={monthDates}
+            currentMonth={currentMonthDate.getMonth()}
+            events={monthEvents}
+            formatDateLocal={formatDateLocal}
+            user={user as User}
+            getMonthEvents={fetch_month_events}
+            twoMonth={isTwoMonthView}
+          />
+          <MonthView
+            monthDates={secondMonthDates}
+            currentMonth={secondMonthDate.getMonth()}
+            events={secondMonthEvents}
+            formatDateLocal={formatDateLocal}
+            user={user as User}
+            getMonthEvents={fetch_second_month_events}
+            twoMonth={isTwoMonthView}
+          />
+        </div>
       )}
 
       {/* Modal to create an event */}
@@ -380,6 +522,9 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
         setOpen={setOpenEventCreation}
         getWeek={get_current_week}
         getMonthEvents={fetch_month_events}
+        getSecondMonthEvents={
+          isTwoMonthView ? fetch_second_month_events : undefined
+        }
         user={user as User}
       />
 

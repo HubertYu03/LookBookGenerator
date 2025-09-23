@@ -5,6 +5,7 @@ type MonthPreviewSmallProps = {
   index: number;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
+  twoMonth: boolean;
 };
 
 const MonthPreviewSmall = ({
@@ -12,6 +13,7 @@ const MonthPreviewSmall = ({
   index,
   setOpen,
   setEvent,
+  twoMonth,
 }: MonthPreviewSmallProps) => {
   if (index < 2) {
     return (
@@ -25,7 +27,11 @@ const MonthPreviewSmall = ({
           setEvent(event);
         }}
       >
-        {event.event_title.length > 10
+        {twoMonth
+          ? event.event_title.length > 3
+            ? event.event_title.slice(0, 3) + "..."
+            : event.event_title
+          : event.event_title.length > 10
           ? event.event_title.slice(0, 10) + "..."
           : event.event_title}
       </div>

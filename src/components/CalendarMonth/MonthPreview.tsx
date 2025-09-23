@@ -30,6 +30,7 @@ type MonthPreviewProps = {
   openPreview: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvent: React.Dispatch<React.SetStateAction<Event | undefined>>;
+  twoMonth: boolean;
 };
 
 const MonthPreview = ({
@@ -39,6 +40,7 @@ const MonthPreview = ({
   openPreview,
   setOpen,
   setEvent,
+  twoMonth,
 }: MonthPreviewProps) => {
   // Check to see if the viewport is mobile
   const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -48,8 +50,8 @@ const MonthPreview = ({
 
   return (
     <div
-      className={`p-2 border rounded h-30 ${
-        date.getMonth() != currentMonth && "opacity-30"
+      className={`p-2 border rounded min-h-30 sm:min-w-19 ${
+        date.getMonth() != currentMonth && "invisible"
       }`}
       onClick={() => {
         if (isMobile && date.getMonth() == currentMonth && events.length > 0)
@@ -70,13 +72,14 @@ const MonthPreview = ({
               index={index}
               setOpen={setOpen}
               setEvent={setEvent}
+              twoMonth={twoMonth}
             />
           ))}
 
           {/* View all events buttons */}
           {events.length >= 3 && (
             <div
-              className="flex flex-row items-center justify-center p-1 
+              className="flex flex-row items-center justify-center p-1
             text-xs rounded-sm hover:bg-gray-200 hover:cursor-pointer"
               onClick={() => setDayOpen(true)}
             >
