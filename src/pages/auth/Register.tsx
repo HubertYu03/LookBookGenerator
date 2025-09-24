@@ -21,6 +21,9 @@ import {
 // Importing dependencies
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { v4 } from "uuid";
+
+// Importing Icons
 import { Check, Eye, EyeClosed, X } from "lucide-react";
 
 // Custom input component
@@ -94,6 +97,7 @@ const Register = () => {
         user_id: data.user?.id,
         first_name: firstName,
         last_name: lastName,
+        personal_calendar_id: v4(),
       };
 
       const { error: user_error } = await supabase

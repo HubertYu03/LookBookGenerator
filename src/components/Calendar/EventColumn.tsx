@@ -22,9 +22,16 @@ type EventColumnProps = {
   dates: Date[];
   getWeek: () => void;
   user: User | undefined;
+  calendar_id: string;
 };
 
-const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
+const EventColumn = ({
+  date,
+  dates,
+  getWeek,
+  user,
+  calendar_id,
+}: EventColumnProps) => {
   // The events of the column
   const [events, setEvents] = useState<Event[]>();
 
@@ -48,6 +55,7 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
       .from("events")
       .select("*")
       .eq("event_date", formattedDate)
+      .eq("calendar_id", calendar_id)
       .order("event_start", { ascending: true });
 
     if (events) {
@@ -91,6 +99,7 @@ const EventColumn = ({ date, dates, getWeek, user }: EventColumnProps) => {
         getWeek={getWeek}
         presetDate={date}
         user={user as User}
+        calendar_id={calendar_id}
       />
 
       {/* Event Card Preview */}

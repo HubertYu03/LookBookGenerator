@@ -1,9 +1,4 @@
 // Importing UI components
-import DayColumn from "@/components/Calendar/DayColumn";
-import EventBody from "@/components/Calendar/EventBody";
-import EventCreationModal from "@/components/Calendar/EventCreationModal";
-import MonthView from "@/components/CalendarMonth/MonthView";
-import CalendarDocSheet from "@/components/Documentation/CalendarDocSheet";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
@@ -18,7 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabaseClient";
+
+// Importing custom components
+import EventCreationModal from "@/components/Calendar/EventCreationModal";
+import CalendarDocSheet from "@/components/Documentation/CalendarDocSheet";
+import DayColumn from "@/components/Calendar/DayColumn";
+import EventBody from "@/components/Calendar/EventBody";
+import MonthView from "@/components/CalendarMonth/MonthView";
 
 // Importing global types
 import type { User, Event } from "@/types/global";
@@ -35,13 +36,21 @@ import {
 // Importing Dependencies
 import { useEffect, useState } from "react";
 import { useSwipeable } from "react-swipeable";
+import { useParams } from "react-router-dom";
 
+// Importing Database
+import { supabase } from "@/lib/supabaseClient";
+
+// Props for the page
 type CalendarProps = {
   user: User | undefined;
   isMobile: boolean;
 };
 
 const Calendar = ({ user, isMobile }: CalendarProps) => {
+  // Get the calendar id
+  const { calendar_id } = useParams();
+
   // Date States
   const [datePickerOpen, setDatePickerOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -143,6 +152,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     const { data, error } = await supabase
       .from("events")
       .select("*")
+      .eq("calendar_id", calendar_id)
       .gte("event_date", start)
       .lte("event_date", end);
 
@@ -168,6 +178,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
     const { data, error } = await supabase
       .from("events")
       .select("*")
+      .eq("calendar_id", calendar_id)
       .gte("event_date", start)
       .lte("event_date", end);
 
@@ -475,6 +486,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
               dates={currentWeek}
               getWeek={get_current_week}
               user={user}
+              calendar_id={calendar_id as string}
             />
           </div>
         </>
@@ -526,6 +538,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
           isTwoMonthView ? fetch_second_month_events : undefined
         }
         user={user as User}
+        calendar_id={calendar_id as string}
       />
 
       <CalendarDocSheet open={openDocs} setOpenChange={setOpenDocs} />

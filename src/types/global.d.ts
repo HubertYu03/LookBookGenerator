@@ -58,6 +58,7 @@ export type User = {
   last_name: string;
   avatar: string;
   pinned_events: string[];
+  personal_calendar_id: string;
 };
 
 // Comment Type
@@ -86,6 +87,7 @@ export type Event = {
   event_end: string;
   whole_day: boolean;
   group_id: string | null;
+  calendar_id: string;
 };
 
 // Calendar Comments

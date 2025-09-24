@@ -29,6 +29,7 @@ import {
   MapPlus,
   CalendarDays,
   Menu,
+  CalendarSearch,
 } from "lucide-react";
 import logo from "/PlayletLogo.png";
 
@@ -51,8 +52,9 @@ import SidebarProfileFooter from "./components/Sidebar/SidebarProfileFooter";
 
 import type { User } from "./types/global";
 import LoginCard from "./components/Auth/LoginCard";
-import Calendar from "./pages/Calendar";
+import Calendar from "./pages/Calendar/Calendar";
 import MobileSidebar from "./components/Sidebar/MobileSidebar";
+import AllCalendars from "./pages/Calendar/AllCalendars";
 
 window.Buffer = Buffer;
 
@@ -174,7 +176,7 @@ function App() {
 
       <Routes>
         {/* Desktop device */}
-        {isDesktop && (
+        {isDesktop && userData && (
           <Route
             path="/*"
             element={
@@ -246,11 +248,18 @@ function App() {
 
                       <SidebarGroupLabel>Calendar</SidebarGroupLabel>
                       <SidebarMenu>
-                        {/* View Your Location Books */}
+                        {/* View Your Personal Calendar */}
                         <SidebarLinks
-                          title="Calendar"
-                          path="/calendar"
+                          title="My Calendar"
+                          path={`/calendar/${userData.personal_calendar_id}`}
                           icon={CalendarDays}
+                        />
+
+                        {/* View all your calendars */}
+                        <SidebarLinks
+                          title="All Calendars"
+                          path={`/allcalendars`}
+                          icon={CalendarSearch}
                         />
                       </SidebarMenu>
                     </SidebarContent>
@@ -299,10 +308,14 @@ function App() {
                           element={<LocationBookGenerator />}
                         />
                         <Route
-                          path="/calendar"
+                          path="/calendar/:calendar_id"
                           element={
                             <Calendar user={userData} isMobile={isMobile} />
                           }
+                        />
+                        <Route
+                          path="/allcalendars"
+                          element={<AllCalendars user={userData} />}
                         />
                       </Routes>
                     </div>
@@ -314,7 +327,7 @@ function App() {
         )}
 
         {/* Mobile Device */}
-        {isMobile && (
+        {isMobile && userData && (
           <Route
             path="/*"
             element={
@@ -335,8 +348,12 @@ function App() {
                     element={<LocationBookGenerator />}
                   />
                   <Route
-                    path="/calendar"
+                    path="/calendar/:id"
                     element={<Calendar user={userData} isMobile={isMobile} />}
+                  />
+                  <Route
+                    path="/allcalendars"
+                    element={<AllCalendars user={userData} />}
                   />
                 </Routes>
               </>

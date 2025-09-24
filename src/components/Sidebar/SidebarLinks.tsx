@@ -23,7 +23,9 @@ export default function SidebarLinks({
         className="hover:cursor-pointer"
         onClick={() => {
           navigate(path);
-          window.location.reload();
+          if (path.includes("generator")) {
+            window.location.reload();
+          }
         }}
       >
         <div className="flex flex-row items-center gap-2">

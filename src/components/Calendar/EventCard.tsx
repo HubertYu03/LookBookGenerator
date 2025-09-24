@@ -278,6 +278,7 @@ const EventCard = ({
       event_end: newEventEnd,
       whole_day: event?.whole_day as boolean,
       group_id: event?.group_id as string | null,
+      calendar_id: event?.calendar_id as string,
     };
 
     if (applyLinked) {

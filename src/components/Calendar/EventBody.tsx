@@ -8,9 +8,10 @@ type EventBodyProps = {
   dates: Date[];
   getWeek: () => void;
   user: User | undefined;
+  calendar_id: string;
 };
 
-const EventBody = ({ dates, getWeek, user }: EventBodyProps) => {
+const EventBody = ({ dates, getWeek, user, calendar_id }: EventBodyProps) => {
   return (
     <div className="flex flex-row h-[77vh] overflow-y-auto overflow-x-hidden">
       {dates.map((date, index) => (
@@ -23,6 +24,7 @@ const EventBody = ({ dates, getWeek, user }: EventBodyProps) => {
             dates={dates}
             getWeek={getWeek}
             user={user}
+            calendar_id={calendar_id}
           />
         </div>
       ))}

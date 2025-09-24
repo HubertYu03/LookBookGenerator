@@ -82,16 +82,34 @@ const LoginCard = ({ current_path, setAuth }: LoginCardProps) => {
     }
   }
 
+  // Get User
+  async function get_session(): Promise<boolean> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   useEffect(() => {
     // Change the tab title
     document.title = "Playlet Tools | Login";
 
     // Check if the user is logged in
-    const user_id: string | null = localStorage.getItem("PlayletUserID");
+    const checkSession = async () => {
+      const session = await get_session();
+      if (session) {
+        navigate("/");
+      } else {
+        localStorage.removeItem("PlayerUserID");
+      }
+    };
 
-    if (user_id) {
-      navigate("/");
-    }
+    checkSession();
   }, []);
 
   // Clear all errors when updating inputs

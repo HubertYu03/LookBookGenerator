@@ -42,6 +42,7 @@ type EventCreationModalProps = {
   getSecondMonthEvents?: () => void;
   presetDate?: Date;
   user: User;
+  calendar_id: string;
 };
 
 const EventCreationModal = ({
@@ -52,6 +53,7 @@ const EventCreationModal = ({
   getSecondMonthEvents,
   presetDate,
   user,
+  calendar_id,
 }: EventCreationModalProps) => {
   // Event States
   const [eventTitle, setEventTitle] = useState<string>();
@@ -174,6 +176,7 @@ const EventCreationModal = ({
             event_end: allDay ? "00:00" : (endTime as string),
             whole_day: false,
             group_id: group_id,
+            calendar_id: calendar_id,
           };
 
           events.push(new_event);
@@ -214,6 +217,7 @@ const EventCreationModal = ({
         event_end: allDay ? "00:00" : (endTime as string),
         whole_day: false,
         group_id: null,
+        calendar_id: calendar_id,
       };
 
       // Insert the new event into the database
