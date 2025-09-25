@@ -59,6 +59,7 @@ export type User = {
   avatar: string;
   pinned_events: string[];
   personal_calendar_id: string;
+  calendar_ids: string[];
 };
 
 // Comment Type
@@ -73,6 +74,16 @@ export type Comment = {
 };
 
 // Calendar Types
+export type Calendar = {
+  calendar_id: string;
+  calendar_name: string;
+  calendar_desc: string | undefined;
+  created_at: Date;
+  author_id: string;
+  private: boolean;
+  personal: boolean;
+};
+
 export type Event = {
   event_id: string;
   created_at: Date;

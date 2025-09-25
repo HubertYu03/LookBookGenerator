@@ -25,6 +25,7 @@ import { v4 } from "uuid";
 
 // Importing Icons
 import { Check, Eye, EyeClosed, X } from "lucide-react";
+import type { Calendar, User } from "@/types/global";
 
 // Custom input component
 type TextInputProps = {
@@ -92,12 +93,19 @@ const Register = () => {
       }
       console.log(data);
 
+      // Add personal calendar ID
+      const calendar_id: string = v4();
+
       // Once the user is registered, add the data to the database
-      const user = {
-        user_id: data.user?.id,
-        first_name: firstName,
-        last_name: lastName,
-        personal_calendar_id: v4(),
+      const user: User = {
+        user_id: data.user?.id as string,
+        first_name: firstName as string,
+        last_name: lastName as string,
+        created_at: new Date(),
+        avatar: "cat",
+        pinned_events: [],
+        personal_calendar_id: calendar_id,
+        calendar_ids: [],
       };
 
       const { error: user_error } = await supabase
@@ -107,6 +115,27 @@ const Register = () => {
 
       if (user_error) {
         console.log(user_error);
+        return;
+      }
+
+      // Add initial calendar
+      const personal_calendar: Calendar = {
+        calendar_id: calendar_id,
+        calendar_name: `${firstName} ${lastName}'s Calendar`,
+        created_at: new Date(),
+        author_id: data.user?.id as string,
+        private: true,
+        personal: true,
+      };
+
+      const { error: calendar_error } = await supabase
+        .from("calendar")
+        .insert(personal_calendar)
+        .select();
+
+      if (calendar_error) {
+        console.log(calendar_error);
+        return;
       } else {
         sign_in();
       }
@@ -126,6 +155,7 @@ const Register = () => {
       } else {
         localStorage.setItem("PlayletUserID", data.user.id);
         navigate("/");
+        window.location.reload();
       }
     }
   }

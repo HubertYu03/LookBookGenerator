@@ -15,12 +15,14 @@ import {
   MapPlus,
   CalendarDays,
   type LucideIcon,
+  CalendarSearch,
 } from "lucide-react";
 import logo from "/PlayletLogo.png";
 
 // Importing dependencies
 import { useNavigate } from "react-router-dom";
 import { v4 } from "uuid";
+import type { User } from "@/types/global";
 
 // Custom component for icon and label mobile sidebar links
 type IconLabelLinkProps = {
@@ -52,9 +54,10 @@ const IconLabelLink = ({ Icon, label, path, setOpen }: IconLabelLinkProps) => {
 type MobileSidebarProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  user: User;
 };
 
-const MobileSidebar = ({ open, setOpen }: MobileSidebarProps) => {
+const MobileSidebar = ({ open, setOpen, user }: MobileSidebarProps) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent
@@ -112,8 +115,14 @@ const MobileSidebar = ({ open, setOpen }: MobileSidebarProps) => {
           <div className="flex flex-col gap-2">
             <IconLabelLink
               Icon={CalendarDays}
-              label="Calendar"
-              path="/calendar"
+              label="My Calendar"
+              path={`/calendar/${user.personal_calendar_id}`}
+              setOpen={setOpen}
+            />
+            <IconLabelLink
+              Icon={CalendarSearch}
+              label="My Calendars"
+              path="/allcalendars"
               setOpen={setOpen}
             />
           </div>

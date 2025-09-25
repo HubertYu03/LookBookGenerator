@@ -23,7 +23,7 @@ export default function SidebarLinks({
         className="hover:cursor-pointer"
         onClick={() => {
           navigate(path);
-          if (path.includes("generator")) {
+          if (path.includes("generator") || path.includes("calendar/")) {
             window.location.reload();
           }
         }}

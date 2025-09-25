@@ -13,7 +13,7 @@ type EventBodyProps = {
 
 const EventBody = ({ dates, getWeek, user, calendar_id }: EventBodyProps) => {
   return (
-    <div className="flex flex-row h-[77vh] overflow-y-auto overflow-x-hidden">
+    <div className="flex flex-row max-h-[77vh] overflow-y-auto overflow-x-hidden">
       {dates.map((date, index) => (
         <div
           className="w-1/7 flex flex-col items-center justify-start"
