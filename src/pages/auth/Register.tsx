@@ -122,6 +122,7 @@ const Register = () => {
       const personal_calendar: Calendar = {
         calendar_id: calendar_id,
         calendar_name: `${firstName} ${lastName}'s Calendar`,
+        calendar_desc: undefined,
         created_at: new Date(),
         author_id: data.user?.id as string,
         private: true,
