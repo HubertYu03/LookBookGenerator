@@ -23,9 +23,6 @@ export default function SidebarLinks({
         className="hover:cursor-pointer"
         onClick={() => {
           navigate(path);
-          if (path.includes("generator") || path.includes("calendar/")) {
-            window.location.reload();
-          }
         }}
       >
         <div className="flex flex-row items-center gap-2">

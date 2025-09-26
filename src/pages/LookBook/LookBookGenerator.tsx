@@ -721,15 +721,54 @@ const LookBookGenerator = () => {
     setLoading(false);
   }
 
+  // Helper funciton to reset field on remount
+  function reset() {
+    // Reset states
+    setLoading(true);
+    setExists(false);
+    setCanEdit(true);
+    setAuthorData(null);
+    setCurrentError("");
+    setCurrentEmpty(0);
+    setProjectName(null);
+    setCrewName(null);
+    setDirectorName(null);
+    setDate(undefined);
+    setOpen(false);
+    setOpenHowTo(false);
+
+    // Reset roles to initial
+    setRoles([
+      {
+        id: randomFiveDigit(),
+        roleName: null,
+        wardrobeStyle: null,
+        colorPalette: null,
+        additionalNotes: null,
+        stylingSuggestions: [],
+        accessories: [],
+        newly_created: true,
+      },
+    ]);
+  }
+
   // When the page loads, get the saved data if it exists
   useEffect(() => {
+    // Change the tab title
     document.title = "Lookbook Editor";
 
+    // Clear all toasts
+    toast.dismiss();
+
+    // Reset all field on load up
+    reset();
+
+    // Get lookbook data if it exists
     get_lookbook_data();
 
     // Get the current User
     get_user(String(localStorage.getItem("PlayletUserID")), setCurrentUser);
-  }, []);
+  }, [look_book_id]);
 
   return (
     <div className="p-6 space-y-4 relative z-0" id="top-of-page">

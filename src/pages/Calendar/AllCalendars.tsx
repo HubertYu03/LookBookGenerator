@@ -1,9 +1,22 @@
+// Importing UI Components
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+
+// Importing Custom Components
 import CalendarCard from "@/components/Calendar/CalendarCard";
 import CalendarCreationModal from "@/components/Calendar/CalendarCreationModal";
-import { Button } from "@/components/ui/button";
-import type { User } from "@/types/global";
+
+// Importing Icons
 import { Plus } from "lucide-react";
-import { useState } from "react";
+
+// Importing database
+import { supabase } from "@/lib/supabaseClient";
+
+// Importing global types
+import type { User } from "@/types/global";
+
+// Importing dependencies
+import { useEffect, useState } from "react";
 
 type AllCalendarsProps = {
   user: User;
@@ -12,10 +25,31 @@ type AllCalendarsProps = {
 
 const AllCalendars = ({ user, isMobile }: AllCalendarsProps) => {
   // Calendar list state
-  const [calenders, setCalenders] = useState<string[]>(user.calendar_ids);
+  const [calenders, setCalenders] = useState<string[]>([]);
 
   // State for opening creation modal
   const [openCreate, setOpenCreate] = useState<boolean>(false);
+
+  async function get_calendars() {
+    const { data, error } = await supabase
+      .from("users")
+      .select("calendar_ids")
+      .eq("user_id", user.user_id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching updated calendars:", error);
+      return;
+    }
+
+    setCalenders(data.calendar_ids);
+  }
+
+  useEffect(() => {
+    toast.dismiss();
+
+    get_calendars();
+  }, []);
 
   return (
     <div className="p-6 space-y-4">
@@ -34,7 +68,11 @@ const AllCalendars = ({ user, isMobile }: AllCalendarsProps) => {
       {/* Show all calendars */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {calenders.map((calendar_id) => (
-          <CalendarCard calendar_id={calendar_id} key={calendar_id} />
+          <CalendarCard
+            calendar_id={calendar_id}
+            key={calendar_id}
+            getCalendars={get_calendars}
+          />
         ))}
       </div>
 

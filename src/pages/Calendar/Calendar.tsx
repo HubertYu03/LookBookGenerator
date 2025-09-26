@@ -285,7 +285,7 @@ const Calendar = ({ user, isMobile }: CalendarProps) => {
 
     // Change the tab title
     document.title = "Playet Tools | Calendar";
-  }, []);
+  }, [calendar_id]);
 
   // Update the current week if the selected date is changed
   useEffect(() => {

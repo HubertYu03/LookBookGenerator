@@ -440,16 +440,45 @@ const LocationBookGenerator = () => {
     setRefreshKey((prev) => prev + 1);
   }
 
+  // Helper function to reset field for page loadup
+  function reset() {
+    // Reset all internal state when navigating to a new lookbook
+    setLoading(true);
+    setExists(false);
+    setProjectName(null);
+    setCrewName(null);
+    setDirectorName(null);
+    setDate(undefined);
+    setCurrentError("");
+    setCurrentEmpty(0);
+    setCanEdit(true);
+    setAuthorData(null);
+    setLocations([
+      {
+        id: randomFiveDigit(),
+        scene: null,
+        time_of_day: null,
+        location_type: null,
+        location_name: null,
+        images: [],
+        newly_created: true,
+      },
+    ]);
+  }
+
   useEffect(() => {
     // Clear all the toasts
     toast.dismiss();
+
+    // Reset field on start up
+    reset();
 
     // Get the location book data
     get_location_book_data();
 
     // Get the current user
     get_user(String(localStorage.getItem("PlayletUserID")), setCurrentUser);
-  }, []);
+  }, [location_book_id]);
 
   return (
     <div className="p-6 space-y-4" id="top-of-page">
